@@ -89,9 +89,18 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
         if (currentTasks == null) currentTasks = current.createSection("tasks");
         int added = 0;
         for (String id : defaultTasks.getKeys(false)) {
-            if (!currentTasks.contains(id)) {
-                currentTasks.set(id, defaultTasks.getConfigurationSection(id).getValues(true));
+            ConfigurationSection defaultsForTask = defaultTasks.getConfigurationSection(id);
+            ConfigurationSection existingTask = currentTasks.getConfigurationSection(id);
+            if (existingTask == null) {
+                currentTasks.set(id, defaultsForTask.getValues(true));
                 added++;
+            } else {
+                for (String key : defaultsForTask.getKeys(false)) {
+                    if (!existingTask.contains(key)) {
+                        existingTask.set(key, defaultsForTask.get(key));
+                        added++;
+                    }
+                }
             }
         }
         try {
