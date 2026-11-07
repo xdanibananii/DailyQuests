@@ -129,9 +129,9 @@ public final class CrateSystem implements Listener {
             player.sendMessage(ChatColor.RED + "System skrzynek jest chwilowo niedostępny.");
             return;
         }
-        Inventory inv = Bukkit.createInventory(null, 27, TITLE);
+        Inventory inv = Bukkit.createInventory(null, 54, TITLE);
         ItemStack pane = item(Material.GRAY_STAINED_GLASS_PANE, " ", List.of());
-        for (int i = 0; i < 27; i++) inv.setItem(i, pane);
+        for (int i = 0; i < 54; i++) inv.setItem(i, pane);
         inv.setItem(4, item(Material.NETHER_STAR, ChatColor.GOLD + "★ SKRZYNKA DAILYQUESTS ★",
                 List.of(ChatColor.GRAY + "Losuj wyjątkowe nagrody!", "",
                         ChatColor.YELLOW + "Koszt: " + COST + " gwiazdek",
@@ -147,8 +147,8 @@ public final class CrateSystem implements Listener {
         ItemMeta meta = chest.getItemMeta();
         meta.getPersistentDataContainer().set(crateKey, PersistentDataType.BYTE, (byte) 1);
         chest.setItemMeta(meta);
-        inv.setItem(13, chest);
-        inv.setItem(22, item(Material.GOLD_INGOT, ChatColor.GOLD + "Twoje gwiazdki",
+        inv.setItem(22, chest);
+        inv.setItem(49, item(Material.GOLD_INGOT, ChatColor.GOLD + "Twoje gwiazdki",
                 List.of(ChatColor.YELLOW + "" + getStars(player.getUniqueId()) + " ★")));
         player.openInventory(inv);
         player.playSound(player.getLocation(), Sound.BLOCK_CHEST_OPEN, 0.7f, 1.1f);
@@ -157,7 +157,7 @@ public final class CrateSystem implements Listener {
     @EventHandler public void onClick(InventoryClickEvent event) {
         if (!TITLE.equals(event.getView().getTitle())) return;
         event.setCancelled(true);
-        if (!(event.getWhoClicked() instanceof Player player) || event.getRawSlot() != 13) return;
+        if (!(event.getWhoClicked() instanceof Player player) || event.getRawSlot() != 22) return;
         if (opening.containsKey(player.getUniqueId())) return;
         if (!spend(player.getUniqueId(), COST)) {
             player.sendMessage(ChatColor.RED + "Nie masz wystarczająco gwiazdek! Potrzebujesz " + COST + " ★.");
@@ -193,13 +193,36 @@ public final class CrateSystem implements Listener {
             open(player);
             return;
         }
+
+        // CS-style roulette: a strip of rewards moves from right to left.
+        // The winning reward is fixed before the animation and stops under the center marker.
+        final int winnerIndex = 48;
+        final int finalOffset = winnerIndex - 4;
+        List<Reward> strip = new ArrayList<>();
+        for (int i = 0; i <= winnerIndex + 4; i++) strip.add(choose(rewards));
         Reward won = choose(rewards);
+        strip.set(winnerIndex, won);
+
         Inventory inv = player.getOpenInventory().getTopInventory();
-        player.sendMessage(ChatColor.LIGHT_PURPLE + "★ Skrzynka ruszyła... powodzenia!");
+        player.sendMessage(ChatColor.LIGHT_PURPLE + "★ Ruletka skrzynki ruszyła! Obserwuj środek...");
         player.playSound(player.getLocation(), Sound.BLOCK_CHEST_OPEN, 1f, 0.8f);
+
+        ItemStack frame = item(Material.GRAY_STAINED_GLASS_PANE, " ", List.of());
+        ItemStack marker = item(Material.YELLOW_STAINED_GLASS_PANE,
+                ChatColor.GOLD + "▼ WYGRANA ▼", List.of(ChatColor.YELLOW + "Nagroda zatrzyma się tutaj"));
+        for (int slot = 0; slot < 54; slot++) {
+            int row = slot / 9;
+            if (row != 2) inv.setItem(slot, frame);
+        }
+        inv.setItem(13, marker);
+        inv.setItem(31, marker);
+        inv.setItem(4, item(Material.NETHER_STAR, ChatColor.GOLD + "★ LOSOWANIE ★",
+                List.of(ChatColor.GRAY + "Nagroda pod wskaźnikiem zostanie przyznana")));
+
         BukkitTask task = new BukkitRunnable() {
-            int step = 0;
-            int visual = 0;
+            int offset = 0;
+            int ticksUntilMove = 0;
+
             @Override public void run() {
                 if (!player.isOnline()) {
                     cancel();
@@ -207,20 +230,34 @@ public final class CrateSystem implements Listener {
                     refund(player.getUniqueId(), COST);
                     return;
                 }
-                step++;
-                int interval = step < 14 ? 1 : step < 23 ? 2 : step < 30 ? 3 : 5;
-                if (step % interval != 0) return;
-                Reward shown = rewards.get(random.nextInt(rewards.size()));
-                inv.setItem(13, rewardItem(shown, true));
-                player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 0.45f, 0.7f + (visual * 0.035f));
-                visual++;
-                if (step >= 38) {
+                if (ticksUntilMove > 0) {
+                    ticksUntilMove--;
+                    return;
+                }
+
+                for (int column = 0; column < 9; column++) {
+                    Reward shown = strip.get(offset + column);
+                    inv.setItem(18 + column, rewardItem(shown, true));
+                }
+                offset++;
+                int remaining = finalOffset - offset;
+                player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 0.55f,
+                        Math.min(1.8f, 0.65f + offset * 0.018f));
+
+                if (offset >= finalOffset + 1) {
                     cancel();
                     opening.remove(player.getUniqueId());
+                    inv.setItem(22, rewardItem(won, false));
+                    player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 1f, 1.6f);
                     deliver(player, won);
+                    return;
                 }
+
+                // Fast start, then increasingly long pauses for a satisfying stop.
+                ticksUntilMove = remaining > 25 ? 0 : remaining > 15 ? 1
+                        : remaining > 9 ? 2 : remaining > 5 ? 3 : remaining > 2 ? 5 : 8;
             }
-        }.runTaskTimer(plugin, 2L, 2L);
+        }.runTaskTimer(plugin, 1L, 1L);
         opening.put(player.getUniqueId(), task);
     }
 
