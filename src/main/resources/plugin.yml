@@ -1,0 +1,15 @@
+name: DailyQuests
+version: 1.0.0
+main: pl.dailyquests.DailyQuestsPlugin
+api-version: '26.3'
+author: DailyQuests
+description: Indywidualne codzienne zadania dla graczy.
+commands:
+  zadania:
+    description: Otwiera codzienne zadania.
+    usage: /zadania [reload]
+    aliases: [dailyquests, dq]
+permissions:
+  dailyquests.admin:
+    description: Zarządzanie pluginem DailyQuests.
+    default: op
