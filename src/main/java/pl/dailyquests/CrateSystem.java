@@ -84,7 +84,7 @@ public final class CrateSystem implements Listener {
                 yaml.set(base + "name", "&aBloki żelaza");
                 yaml.set(base + "lore", List.of("&7Przydatny budulec"));
             }
-            if (material.equals("ELYTRA")) yaml.set(base + "tier", "LEGENDARY");
+            if (material.equals("ELYTRA")) { yaml.set(base + "tier", "LEGENDARY"); yaml.set(base + "weight", 1); }
         }
         try {
             yaml.save(file);
