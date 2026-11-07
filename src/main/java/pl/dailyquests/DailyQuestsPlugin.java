@@ -90,15 +90,18 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
         } catch(SQLException e){getLogger().warning(e.getMessage());}
         ConfigurationSection sec=pool();
         if(sec==null || sec.getKeys(false).isEmpty()) return new ArrayList<>();
+        Set<String> recent=new HashSet<>();
+        try(PreparedStatement h=db.prepareStatement("SELECT task_id FROM task_history WHERE uuid=? AND assigned_day>=date(?, '-3 days')")){h.setString(1,p.getUniqueId().toString());h.setString(2,day);try(ResultSet r=h.executeQuery()){while(r.next())recent.add(r.getString(1));}}catch(SQLException ignored){}
         List<String> ids=new ArrayList<>(sec.getKeys(false));
         ids.removeIf(id -> { ConfigurationSection c=sec.getConfigurationSection(id); String d=c==null?"OVERWORLD":c.getString("dimension","OVERWORLD").toUpperCase(Locale.ROOT); return (d.equals("NETHER")&&!getConfig().getBoolean("dimensions.nether-enabled",false)) || (d.equals("END")&&!getConfig().getBoolean("dimensions.end-enabled",false)); });
         Collections.shuffle(ids);
         List<Task> chosen=new ArrayList<>();
-        for(String id:ids){Task t=loadTask(id);if(t!=null){chosen.add(t);if(chosen.size()==5)break;}}
+        for(String id:ids){if(recent.contains(id))continue;Task t=loadTask(id);if(t!=null){chosen.add(t);if(chosen.size()==5)break;}}
+        if(chosen.size()<5)for(String id:ids){if(chosen.stream().anyMatch(t->t.id.equals(id)))continue;Task t=loadTask(id);if(t!=null){chosen.add(t);if(chosen.size()==5)break;}}
         try(PreparedStatement del=db.prepareStatement("DELETE FROM player_tasks WHERE uuid=?")) {
             del.setString(1,p.getUniqueId().toString());del.executeUpdate();
         }catch(SQLException ignored){}
-        for(int i=0;i<chosen.size();i++) save(p.getUniqueId(),i,chosen.get(i));
+        for(int i=0;i<chosen.size();i++){save(p.getUniqueId(),i,chosen.get(i));try(PreparedStatement h=db.prepareStatement("INSERT OR REPLACE INTO task_history(uuid,task_id,assigned_day) VALUES(?,?,?)")){h.setString(1,p.getUniqueId().toString());h.setString(2,chosen.get(i).id);h.setString(3,day);h.executeUpdate();}catch(SQLException ignored){}}
         cache.put(p.getUniqueId(),chosen); return chosen;
     }
 
@@ -311,6 +314,12 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
         if(e.getState()!=PlayerFishEvent.State.CAUGHT_FISH)return;
         for(Task t:ensureTasks(e.getPlayer()))if(t.type.equals("FISH")&&dimensionMatches(t,e.getPlayer().getWorld()))update(e.getPlayer(),t,1);
     }
+    private void updateWeekly(Player p,int amount){String week=weekKey();try(PreparedStatement q=db.prepareStatement("INSERT INTO weekly_tasks(uuid,week,progress,claimed) VALUES(?,?,?,0) ON CONFLICT(uuid,week) DO UPDATE SET progress=MIN(500,progress+excluded.progress)")){q.setString(1,p.getUniqueId().toString());q.setString(2,week);q.setInt(3,amount);q.executeUpdate();}catch(SQLException e){getLogger().warning(e.getMessage());}}
+    @EventHandler public void onConsume(PlayerItemConsumeEvent e){for(Task t:ensureTasks(e.getPlayer()))if(t.type.equals("EAT")&&(t.target.equals("ANY")||t.target.equals(e.getItem().getType().name())))update(e.getPlayer(),t,1);}
+    @EventHandler public void onEnchant(org.bukkit.event.enchantment.EnchantItemEvent e){for(Task t:ensureTasks(e.getEnchanter()))if(t.type.equals("ENCHANT"))update(e.getEnchanter(),t,1);}
+    @EventHandler public void onBreed(org.bukkit.event.entity.EntityBreedEvent e){if(e.getBreeder() instanceof Player p)for(Task t:ensureTasks(p))if(t.type.equals("BREED")&&(t.target.equals("ANY")||t.target.equals(e.getEntityType().name())))update(p,t,1);}
+    @EventHandler public void onTrade(org.bukkit.event.inventory.TradeEvent e){if(e.getWhoClicked() instanceof Player p)for(Task t:ensureTasks(p))if(t.type.equals("TRADE"))update(p,t,1);}
+    @EventHandler public void onAnvil(InventoryClickEvent e){if(e.getView().getType()==InventoryType.ANVIL&&e.getRawSlot()==2&&!e.isCancelled()&&e.getWhoClicked() instanceof Player p)for(Task t:ensureTasks(p))if(t.type.equals("ANVIL"))update(p,t,1);}
     @EventHandler public void onMove(PlayerMoveEvent e){
         if(e.getTo()==null)return;
         Location a=e.getFrom(),b=e.getTo();if(a.getWorld()!=b.getWorld()||a.getBlockX()==b.getBlockX()&&a.getBlockZ()==b.getBlockZ())return;
@@ -318,6 +327,8 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
         Location prev=lastWalk.put(e.getPlayer().getUniqueId(),b.clone());
         if(prev==null||prev.getWorld()!=b.getWorld())return;
         int d=(int)Math.floor(Math.sqrt(Math.pow(b.getX()-prev.getX(),2)+Math.pow(b.getZ()-prev.getZ(),2)));
+        if(d>0&&e.getPlayer().isSwimming())updateWeekly(e.getPlayer(),d);
+        if(d>0&&e.getPlayer().isSwimming())for(Task t:ensureTasks(e.getPlayer()))if(t.type.equals("SWIM")&&dimensionMatches(t,b.getWorld()))update(e.getPlayer(),t,d);
         if(d>0)for(Task t:ensureTasks(e.getPlayer()))if(t.type.equals("WALK")&&dimensionMatches(t,b.getWorld()))update(e.getPlayer(),t,d);
     }
     @EventHandler public void onInventoryClick(InventoryClickEvent e){
