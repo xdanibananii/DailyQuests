@@ -231,9 +231,9 @@ public final class CrateSystem implements Listener {
         ItemStack won = rewardItem(reward, false);
         Map<Integer, ItemStack> overflow = player.getInventory().addItem(won);
         overflow.values().forEach(item -> player.getWorld().dropItemNaturally(player.getLocation(), item));
-        String tierColor = tierColor(reward.tier);
+        ChatColor tierColor = tierColor(reward.tier);
         player.sendMessage(ChatColor.GOLD + "━━━━━━━━━━━━━━━━━━━━━━━━");
-        player.sendMessage(ChatColor.GOLD + "★ " + tierColor + "WYL0SOWANO: " + reward.name);
+        player.sendMessage(ChatColor.GOLD + "★ " + tierColor + "WYLOSOWANO: " + reward.name);
         player.sendMessage(ChatColor.GRAY + "Rzadkość: " + tierColor + reward.tier);
         player.sendMessage(ChatColor.GOLD + "━━━━━━━━━━━━━━━━━━━━━━━━");
         player.playSound(player.getLocation(), reward.tier.equals("LEGENDARY") ? Sound.UI_TOAST_CHALLENGE_COMPLETE : Sound.ENTITY_PLAYER_LEVELUP, 1f, reward.tier.equals("LEGENDARY") ? 0.8f : 1.2f);
