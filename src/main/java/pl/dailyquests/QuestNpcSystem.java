@@ -55,6 +55,30 @@ public final class QuestNpcSystem implements Listener {
             plugin.getLogger().severe("Nie mozna utworzyc tabeli kontraktow NPC: " + ex.getMessage());
         }
         loadDefaultPool();
+        restoreNpc();
+    }
+
+
+    private void restoreNpc() {
+        if (!npcFile.exists()) return;
+        YamlConfiguration yaml = YamlConfiguration.loadConfiguration(npcFile);
+        World world = Bukkit.getWorld(yaml.getString("world", ""));
+        if (world == null || !yaml.contains("x")) return;
+        Location location = new Location(world, yaml.getDouble("x"), yaml.getDouble("y"), yaml.getDouble("z"),
+                (float) yaml.getDouble("yaw"), (float) yaml.getDouble("pitch"));
+        world.getChunkAt(location).load();
+        String savedUuid = yaml.getString("uuid", "");
+        Entity existing = null;
+        try { if (!savedUuid.isBlank()) existing = Bukkit.getEntity(UUID.fromString(savedUuid)); }
+        catch (IllegalArgumentException ignored) {}
+        if (existing instanceof Villager villager) {
+            configure(villager);
+            return;
+        }
+        Villager villager = (Villager) world.spawnEntity(location, EntityType.VILLAGER);
+        configure(villager);
+        yaml.set("uuid", villager.getUniqueId().toString());
+        saveNpc(yaml);
     }
 
     private void loadDefaultPool() {
