@@ -227,9 +227,14 @@ public final class QuestNpcSystem implements Listener {
             player.sendMessage(ChatColor.RED + "Mistrz Zlecen: Dziś nie mam dla ciebie żadnej pracy. Wróć jutro.");
             return;
         }
-        player.sendMessage(ChatColor.GOLD + "Mistrz Zlecen " + ChatColor.DARK_GRAY + "» " + ChatColor.YELLOW
+        player.sendMessage(ChatColor.GOLD + "Mistrz Zleceń " + ChatColor.DARK_GRAY + "» " + ChatColor.YELLOW
                 + (c.claimed ? "Dobra robota, podróżniku. Jutro znajdę dla ciebie coś nowego."
                 : "Witaj, wędrowcze. Mam dla ciebie sprawę do załatwienia..."));
+        if (!c.claimed) {
+            player.sendMessage(ChatColor.GRAY + "Mistrz Zleceń: " + c.description);
+            player.sendMessage(ChatColor.GRAY + "Przynieś mi " + ChatColor.YELLOW + c.amount + "x "
+                    + pretty(Material.valueOf(c.material)) + ChatColor.GRAY + ", a nie pożałujesz.");
+        }
         open(player, c);
     }
 
