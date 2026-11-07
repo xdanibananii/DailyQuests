@@ -38,7 +38,7 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
     @Override public void onEnable() {
         saveDefaultConfig();
         saveResource("tasks.yml", false);
-        File poolMarker = new File(getDataFolder(), "quest-pool-v2.done");
+        File poolMarker = new File(getDataFolder(), "quest-pool-v3.done");
         if (!poolMarker.exists()) {
             saveResource("tasks.yml", true);
             try { poolMarker.createNewFile(); } catch (java.io.IOException ex) { getLogger().warning("Nie zapisano znacznika aktualizacji puli zadan: " + ex.getMessage()); }
