@@ -171,6 +171,7 @@ public final class CrateSystem implements Listener {
                 if (!player.isOnline()) {
                     cancel();
                     opening.remove(player.getUniqueId());
+                    refund(player.getUniqueId(), COST);
                     return;
                 }
                 step++;
@@ -245,6 +246,18 @@ public final class CrateSystem implements Listener {
         }
         updateStats(player.getUniqueId(), reward.tier.equals("LEGENDARY"));
         Bukkit.getScheduler().runTaskLater(plugin, () -> { if (player.isOnline()) open(player); }, 50L);
+    }
+
+    private void refund(UUID uuid, int amount) {
+        if (db == null) return;
+        try (PreparedStatement st = db.prepareStatement(
+                "INSERT INTO dq_wallet(uuid,stars) VALUES(?,?) ON CONFLICT(uuid) DO UPDATE SET stars=stars+excluded.stars")) {
+            st.setString(1, uuid.toString());
+            st.setInt(2, amount);
+            st.executeUpdate();
+        } catch (SQLException ex) {
+            plugin.getLogger().warning("Nie udało się zwrócić gwiazdek: " + ex.getMessage());
+        }
     }
 
     private void updateStats(UUID uuid, boolean legendary) {
