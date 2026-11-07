@@ -7,6 +7,7 @@ tasks:
   break_stone:
     name: "&bRocky Balboa"
     description: "&7Wykop 64 bloki kamienia"
+    difficulty: EASY
     type: BREAK
     target: STONE
     amount: 64
@@ -16,6 +17,7 @@ tasks:
   break_oak:
     name: "&2Drwal z Rivendell"
     description: "&7Zbierz 32 kłody dębu"
+    difficulty: EASY
     type: BREAK
     target: OAK_LOG
     amount: 32
@@ -25,6 +27,7 @@ tasks:
   break_coal:
     name: "&6There and Back Again"
     description: "&7Wydobądź 24 rudy węgla"
+    difficulty: EASY
     type: BREAK
     target: COAL_ORE
     amount: 24
@@ -34,6 +37,7 @@ tasks:
   break_iron:
     name: "&fIron Man"
     description: "&7Wydobądź 12 rud żelaza"
+    difficulty: EASY
     type: BREAK
     target: IRON_ORE
     amount: 12
@@ -43,6 +47,7 @@ tasks:
   kill_zombie:
     name: "&2The Walking Dead"
     description: "&7Pokonaj 10 zombie"
+    difficulty: EASY
     type: KILL
     target: ZOMBIE
     amount: 10
@@ -52,6 +57,7 @@ tasks:
   kill_skeleton:
     name: "&fBone Collector"
     description: "&7Pokonaj 8 szkieletów"
+    difficulty: EASY
     type: KILL
     target: SKELETON
     amount: 8
@@ -61,6 +67,7 @@ tasks:
   kill_spider:
     name: "&cArachnofobia"
     description: "&7Pokonaj 8 pająków"
+    difficulty: EASY
     type: KILL
     target: SPIDER
     amount: 8
@@ -70,6 +77,7 @@ tasks:
   kill_creeper:
     name: "&aNo Country for Creepers"
     description: "&7Pokonaj 5 creeperów"
+    difficulty: MEDIUM
     type: KILL
     target: CREEPER
     amount: 5
@@ -79,6 +87,7 @@ tasks:
   craft_torch:
     name: "&eLet There Be Light"
     description: "&7Wytwórz 32 pochodnie"
+    difficulty: EASY
     type: CRAFT
     target: TORCH
     amount: 32
@@ -88,6 +97,7 @@ tasks:
   craft_bread:
     name: "&6Breaking Bread"
     description: "&7Wytwórz 12 chlebów"
+    difficulty: EASY
     type: CRAFT
     target: BREAD
     amount: 12
@@ -97,6 +107,7 @@ tasks:
   craft_chest:
     name: "&6Bob Budowniczy"
     description: "&7Wytwórz 8 skrzyń"
+    difficulty: EASY
     type: CRAFT
     target: CHEST
     amount: 8
@@ -106,6 +117,7 @@ tasks:
   fish_any:
     name: "&bWielki Błękit"
     description: "&7Złów 5 ryb lub przedmiotów"
+    difficulty: MEDIUM
     type: FISH
     target: ANY
     amount: 5
@@ -115,6 +127,7 @@ tasks:
   walk_1000:
     name: "&dForrest Gump"
     description: "&7Przejdź 1000 bloków"
+    difficulty: MEDIUM
     type: WALK
     target: ANY
     amount: 1000
@@ -124,6 +137,7 @@ tasks:
   walk_500:
     name: "&aMały krok dla Steve’a"
     description: "&7Przejdź 500 bloków"
+    difficulty: EASY
     type: WALK
     target: ANY
     amount: 500
@@ -135,6 +149,7 @@ tasks:
   break_diamond:
     name: "&bDiamentowa gorączka"
     description: "&7Wydobądź 5 rud diamentu"
+    difficulty: MEDIUM
     type: BREAK
     target: DIAMOND_ORE
     amount: 5
@@ -144,6 +159,7 @@ tasks:
   break_obsidian:
     name: "&5Czarna brama"
     description: "&7Wydobądź 16 bloków obsydianu"
+    difficulty: MEDIUM
     type: BREAK
     target: OBSIDIAN
     amount: 16
@@ -153,6 +169,7 @@ tasks:
   kill_enderman_overworld:
     name: "&5Łowca z cienia"
     description: "&7Pokonaj 5 endermanów w Overworldzie"
+    difficulty: MEDIUM
     type: KILL
     target: ENDERMAN
     amount: 5
@@ -162,6 +179,7 @@ tasks:
   kill_phantom:
     name: "&9Nocny patrol"
     description: "&7Pokonaj 4 fantomy"
+    difficulty: MEDIUM
     type: KILL
     target: PHANTOM
     amount: 4
@@ -171,6 +189,7 @@ tasks:
   craft_golden_apple:
     name: "&6Złoty standard"
     description: "&7Wytwórz 2 złote jabłka"
+    difficulty: MEDIUM
     type: CRAFT
     target: GOLDEN_APPLE
     amount: 2
@@ -180,6 +199,7 @@ tasks:
   walk_3000:
     name: "&dWładca szlaków"
     description: "&7Przejdź 3000 bloków"
+    difficulty: MEDIUM
     type: WALK
     target: ANY
     amount: 3000
@@ -189,6 +209,7 @@ tasks:
   fish_treasure:
     name: "&bPiraci z Minecrafta"
     description: "&7Złów 12 ryb lub skarbów"
+    difficulty: MEDIUM
     type: FISH
     target: ANY
     amount: 12
@@ -200,6 +221,7 @@ tasks:
   nether_quartz:
     name: "&fBiały pył"
     description: "&7Wydobądź 48 rud kwarcu w Netherze"
+    difficulty: MEDIUM
     type: BREAK
     dimension: NETHER
     target: NETHER_QUARTZ_ORE
@@ -210,6 +232,7 @@ tasks:
   nether_gold:
     name: "&6Gorączka złota"
     description: "&7Wydobądź 24 rudy złota Netheru"
+    difficulty: MEDIUM
     type: BREAK
     dimension: NETHER
     target: NETHER_GOLD_ORE
@@ -220,6 +243,7 @@ tasks:
   nether_magma:
     name: "&cGorący temat"
     description: "&7Zbierz 32 bloki magmy"
+    difficulty: MEDIUM
     type: BREAK
     dimension: NETHER
     target: MAGMA_BLOCK
@@ -230,6 +254,7 @@ tasks:
   nether_blaze:
     name: "&6Ghostbusters: Nether"
     description: "&7Pokonaj 8 płomyków"
+    difficulty: HARD
     type: KILL
     dimension: NETHER
     target: BLAZE
@@ -240,6 +265,7 @@ tasks:
   nether_wither_skeleton:
     name: "&8Czarna straż"
     description: "&7Pokonaj 10 witherowych szkieletów"
+    difficulty: HARD
     type: KILL
     dimension: NETHER
     target: WITHER_SKELETON
@@ -250,6 +276,7 @@ tasks:
   nether_piglin:
     name: "&6Układ z piglinem"
     description: "&7Pokonaj 12 piglinów"
+    difficulty: MEDIUM
     type: KILL
     dimension: NETHER
     target: PIGLIN
@@ -260,6 +287,7 @@ tasks:
   nether_walk:
     name: "&cAutostrada do piekła"
     description: "&7Przejdź 1500 bloków w Netherze"
+    difficulty: MEDIUM
     type: WALK
     dimension: NETHER
     target: ANY
@@ -270,6 +298,7 @@ tasks:
   nether_ancient_debris:
     name: "&5Ostatnia ruda"
     description: "&7Wydobądź 4 pradawne zgliszcza"
+    difficulty: HARD
     type: BREAK
     dimension: NETHER
     target: ANCIENT_DEBRIS
@@ -282,6 +311,7 @@ tasks:
   end_enderman:
     name: "&5Panowie Endu"
     description: "&7Pokonaj 20 endermanów w Endzie"
+    difficulty: HARD
     type: KILL
     dimension: THE_END
     target: ENDERMAN
@@ -292,6 +322,7 @@ tasks:
   end_chorus:
     name: "&dOgród na końcu świata"
     description: "&7Zbierz 32 owoce refrenusu"
+    difficulty: MEDIUM
     type: BREAK
     dimension: THE_END
     target: CHORUS_FLOWER
@@ -302,6 +333,7 @@ tasks:
   end_obsidian:
     name: "&5Czarna geometria"
     description: "&7Wydobądź 32 bloki obsydianu w Endzie"
+    difficulty: HARD
     type: BREAK
     dimension: THE_END
     target: OBSIDIAN
@@ -312,6 +344,7 @@ tasks:
   end_shulker:
     name: "&dPudełko niespodzianka"
     description: "&7Pokonaj 8 shulkerów"
+    difficulty: HARD
     type: KILL
     dimension: THE_END
     target: SHULKER
@@ -322,6 +355,7 @@ tasks:
   end_walk:
     name: "&5Interstellar"
     description: "&7Przejdź 2500 bloków w Endzie"
+    difficulty: HARD
     type: WALK
     dimension: THE_END
     target: ANY
@@ -332,6 +366,7 @@ tasks:
   end_dragon_breath:
     name: "&dOstatni boss"
     description: "&7Pokonaj smoka Endu"
+    difficulty: HARD
     type: KILL
     dimension: THE_END
     target: ENDER_DRAGON
@@ -342,6 +377,7 @@ tasks:
   end_crystal:
     name: "&dSmocza technologia"
     description: "&7Wytwórz 4 kryształy Endu"
+    difficulty: HARD
     type: CRAFT
     dimension: THE_END
     target: END_CRYSTAL
@@ -352,6 +388,7 @@ tasks:
   end_purpur:
     name: "&5Purpurowa architektura"
     description: "&7Wydobądź 64 bloki purpuru"
+    difficulty: HARD
     type: BREAK
     dimension: THE_END
     target: PURPUR_BLOCK
