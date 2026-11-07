@@ -125,14 +125,36 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
             if(before<actual.amount && actual.progress>=actual.amount){
                 p.playSound(p.getLocation(),Sound.UI_TOAST_CHALLENGE_COMPLETE,0.8f,1.0f);
                 p.sendMessage(ChatColor.GOLD+"★ "+ChatColor.GREEN+"Ukończono zadanie: "+ChatColor.WHITE+ChatColor.stripColor(actual.name)+ChatColor.GRAY+" — nagroda czeka w "+ChatColor.YELLOW+"/zadania");
-            } else {
-                p.playSound(p.getLocation(),Sound.UI_BUTTON_CLICK,0.25f,1.6f);
             }
             break;
         }
     }
 
+    private void rerollAll(CommandSender sender) {
+        try (PreparedStatement st=db.prepareStatement("DELETE FROM player_tasks WHERE day=?")) {
+            st.setString(1,today());
+            st.executeUpdate();
+        } catch (SQLException ex) {
+            sender.sendMessage(ChatColor.RED+"Nie udalo sie przerolowac zadan: "+ex.getMessage());
+            getLogger().warning("Blad /dq roll: "+ex.getMessage());
+            return;
+        }
+        cache.clear();
+        for (Player online : Bukkit.getOnlinePlayers()) {
+            List<Task> newTasks=ensureTasks(online);
+            online.sendMessage(ChatColor.GOLD+"★ "+ChatColor.YELLOW+"Administrator wylosowal nowe zadania dzienne!");
+            online.sendMessage(ChatColor.GRAY+"Twoj dotychczasowy postep zostal wyzerowany. Otworz "+ChatColor.YELLOW+"/zadania");
+            if (TITLE.equals(online.getOpenInventory().getTitle())) open(online);
+        }
+        sender.sendMessage(ChatColor.GREEN+"Przerolowano zadania dla wszystkich graczy. Usunieto tez dzisiejszy postep graczy offline.");
+    }
+
     @Override public boolean onCommand(CommandSender sender,Command command,String label,String[] args) {
+        if(args.length>0 && args[0].equalsIgnoreCase("roll")) {
+            if(!sender.hasPermission("dailyquests.admin")){sender.sendMessage(ChatColor.RED+"Brak uprawnien.");return true;}
+            rerollAll(sender);
+            return true;
+        }
         if(args.length>0 && (args[0].equalsIgnoreCase("nether") || args[0].equalsIgnoreCase("end"))) {
             if(!sender.hasPermission("dailyquests.admin")){sender.sendMessage(ChatColor.RED+"Brak uprawnien.");return true;}
             String dimension=args[0].toLowerCase(Locale.ROOT), path="dimensions."+dimension+"-enabled";
