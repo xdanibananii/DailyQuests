@@ -12,7 +12,7 @@ tasks:
     amount: 64
     reward-xp: 120
     reward-item: IRON_INGOT
-    reward-item-amount: 3
+    reward-item-amount: 4
   break_oak:
     name: "&fLeśnik"
     description: "&7Zbierz 32 kłody dębu"
@@ -47,8 +47,8 @@ tasks:
     target: ZOMBIE
     amount: 10
     reward-xp: 150
-    reward-item: GOLD_INGOT
-    reward-item-amount: 2
+    reward-item: IRON_INGOT
+    reward-item-amount: 3
   kill_skeleton:
     name: "&fŁowca kości"
     description: "&7Pokonaj 8 szkieletów"
@@ -64,9 +64,9 @@ tasks:
     type: KILL
     target: SPIDER
     amount: 8
-    reward-xp: 130
-    reward-item: STRING
-    reward-item-amount: 8
+    reward-xp: 150
+    reward-item: GOLD_INGOT
+    reward-item-amount: 2
   kill_creeper:
     name: "&fRozbrajacz"
     description: "&7Pokonaj 5 creeperów"
@@ -74,8 +74,8 @@ tasks:
     target: CREEPER
     amount: 5
     reward-xp: 180
-    reward-item: GUNPOWDER
-    reward-item-amount: 8
+    reward-item: TNT
+    reward-item-amount: 2
   craft_torch:
     name: "&fŚwiatło w ciemności"
     description: "&7Wytwórz 32 pochodnie"
@@ -83,8 +83,8 @@ tasks:
     target: TORCH
     amount: 32
     reward-xp: 100
-    reward-item: COAL
-    reward-item-amount: 8
+    reward-item: TORCH
+    reward-item-amount: 16
   craft_bread:
     name: "&fPiekarz"
     description: "&7Wytwórz 12 chlebów"
@@ -92,8 +92,8 @@ tasks:
     target: BREAD
     amount: 12
     reward-xp: 120
-    reward-item: WHEAT
-    reward-item-amount: 12
+    reward-item: GOLD_INGOT
+    reward-item-amount: 2
   craft_chest:
     name: "&fStolarz"
     description: "&7Wytwórz 8 skrzyń"
@@ -101,8 +101,8 @@ tasks:
     target: CHEST
     amount: 8
     reward-xp: 100
-    reward-item: OAK_PLANKS
-    reward-item-amount: 16
+    reward-item: IRON_INGOT
+    reward-item-amount: 2
   fish_any:
     name: "&fWędkarz"
     description: "&7Złów 5 ryb lub przedmiotów"
