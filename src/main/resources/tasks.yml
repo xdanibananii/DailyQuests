@@ -359,3 +359,65 @@ tasks:
     reward-xp: 500
     reward-item: SHULKER_SHELL
     reward-item-amount: 1
+
+  # Nowe typy zadań
+  swim_300:
+    name: "&bAquaman"
+    description: "&7Przepłyń 300 bloków"
+    type: SWIM
+    difficulty: MEDIUM
+    target: ANY
+    amount: 300
+    reward-xp: 220
+    reward-item: COD
+    reward-item-amount: 8
+  eat_food:
+    name: "&6Głodny jak wilk"
+    description: "&7Zjedz 16 posiłków"
+    type: EAT
+    difficulty: EASY
+    target: ANY
+    amount: 16
+    reward-xp: 130
+    reward-item: COOKED_BEEF
+    reward-item-amount: 6
+  enchant_items:
+    name: "&5Niech stanie się magia"
+    description: "&7Zaklnij 5 przedmiotów"
+    type: ENCHANT
+    difficulty: HARD
+    target: ANY
+    amount: 5
+    reward-xp: 400
+    reward-item: LAPIS_LAZULI
+    reward-item-amount: 24
+  breed_animals:
+    name: "&dArka Noego"
+    description: "&7Rozmnóż 5 zwierząt"
+    type: BREED
+    difficulty: MEDIUM
+    target: ANY
+    amount: 5
+    reward-xp: 250
+    reward-item: WHEAT
+    reward-item-amount: 32
+  villager_trades:
+    name: "&aHandlarz z sąsiedztwa"
+    description: "&7Dokonaj 10 wymian z osadnikami"
+    type: TRADE
+    difficulty: MEDIUM
+    target: ANY
+    amount: 10
+    reward-xp: 300
+    reward-item: EMERALD
+    reward-item-amount: 5
+  anvil_repairs:
+    name: "&7Jeszcze będzie jak nowe"
+    description: "&7Użyj kowadła 5 razy"
+    type: ANVIL
+    difficulty: HARD
+    target: ANY
+    amount: 5
+    reward-xp: 350
+    reward-item: IRON_INGOT
+    reward-item-amount: 12
