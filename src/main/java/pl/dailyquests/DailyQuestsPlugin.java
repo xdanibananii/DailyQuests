@@ -209,6 +209,10 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
         sender.sendMessage(ChatColor.YELLOW + "/dq top" + ChatColor.GRAY + " — ranking graczy");
         if (sender.hasPermission("dailyquests.admin")) {
             sender.sendMessage(ChatColor.DARK_AQUA + "Komendy administratora:");
+            sender.sendMessage(ChatColor.YELLOW + "/dq gwiazdki dodaj <gracz> <ilość>" + ChatColor.GRAY + " — dodaje gwiazdki");
+            sender.sendMessage(ChatColor.YELLOW + "/dq gwiazdki usun <gracz> <ilość>" + ChatColor.GRAY + " — usuwa gwiazdki");
+            sender.sendMessage(ChatColor.YELLOW + "/dq gwiazdki ustaw <gracz> <ilość>" + ChatColor.GRAY + " — ustawia saldo");
+            sender.sendMessage(ChatColor.YELLOW + "/dq gwiazdki sprawdz <gracz>" + ChatColor.GRAY + " — sprawdza saldo gracza");
             sender.sendMessage(ChatColor.YELLOW + "/dq roll" + ChatColor.GRAY + " — losuje ponownie zadania wszystkim graczom");
             sender.sendMessage(ChatColor.YELLOW + "/dq nether [on|off]" + ChatColor.GRAY + " — włącza/wyłącza zadania z Netheru");
             sender.sendMessage(ChatColor.YELLOW + "/dq end [on|off]" + ChatColor.GRAY + " — włącza/wyłącza zadania z Endu");
@@ -223,7 +227,48 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
         if(args.length>0 && args[0].equalsIgnoreCase("top")){showLeaderboard(sender);return true;}
         if(args.length>0 && args[0].equalsIgnoreCase("weekly")){showWeekly(sender);return true;}
         if(args.length>0 && args[0].equalsIgnoreCase("skrzynka")){if(sender instanceof Player p)crateSystem.open(p);else sender.sendMessage("Ta komenda jest dla graczy.");return true;}
-        if(args.length>0 && args[0].equalsIgnoreCase("gwiazdki")){if(sender instanceof Player p)crateSystem.showBalance(p);else sender.sendMessage("Ta komenda jest dla graczy.");return true;}
+        if(args.length>0 && args[0].equalsIgnoreCase("gwiazdki")) {
+            if(args.length==1) {
+                if(sender instanceof Player p)crateSystem.showBalance(p);
+                else sender.sendMessage(ChatColor.YELLOW+"Użycie: /dq gwiazdki sprawdz <gracz>");
+                return true;
+            }
+            if(!sender.hasPermission("dailyquests.admin")) {
+                sender.sendMessage(ChatColor.RED+"Brak uprawnień.");
+                return true;
+            }
+            String action=args[1].toLowerCase(Locale.ROOT);
+            if(!Set.of("dodaj","usun","ustaw","sprawdz").contains(action) ||
+                    args.length != (action.equals("sprawdz") ? 3 : 4)) {
+                sender.sendMessage(ChatColor.YELLOW+"Użycie: /dq gwiazdki <dodaj|usun|ustaw|sprawdz> <gracz> [ilość]");
+                return true;
+            }
+            @SuppressWarnings("deprecation")
+            OfflinePlayer target=Bukkit.getOfflinePlayer(args[2]);
+            if(!target.hasPlayedBefore() && !target.isOnline()) {
+                sender.sendMessage(ChatColor.RED+"Ten gracz nie był jeszcze na serwerze: "+args[2]);
+                return true;
+            }
+            if(action.equals("sprawdz")) {
+                sender.sendMessage(ChatColor.GOLD+"★ "+target.getName()+": "+crateSystem.getStars(target.getUniqueId())+" gwiazdek.");
+                return true;
+            }
+            int amount;
+            try {
+                amount=Integer.parseInt(args[3]);
+                if(amount<0) throw new NumberFormatException();
+            } catch(NumberFormatException ex) {
+                sender.sendMessage(ChatColor.RED+"Podaj nieujemną liczbę całkowitą.");
+                return true;
+            }
+            if(crateSystem.modifyStars(target.getUniqueId(),action,amount)) {
+                int balance=crateSystem.getStars(target.getUniqueId());
+                sender.sendMessage(ChatColor.GREEN+"Zmieniono gwiazdki gracza "+target.getName()+". Aktualne saldo: "+balance+" ★");
+                if(target.isOnline() && target.getPlayer()!=null)
+                    target.getPlayer().sendMessage(ChatColor.GOLD+"★ Administrator zmienił Twoje gwiazdki. Saldo: "+balance+" ★");
+            } else sender.sendMessage(ChatColor.RED+"Nie udało się zmienić gwiazdek (sprawdź konsolę).");
+            return true;
+        }
         if(args.length>0 && args[0].equalsIgnoreCase("roll")) {
             if(!sender.hasPermission("dailyquests.admin")){sender.sendMessage(ChatColor.RED+"Brak uprawnien.");return true;}
             rerollAll(sender);
