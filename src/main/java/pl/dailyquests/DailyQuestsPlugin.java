@@ -156,12 +156,45 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
         String type=e.getEntityType().name();
         for(Task t:ensureTasks(p))if(t.type.equals("KILL")&&(t.target.equals("ANY")||t.target.equals(type)))update(p,t,1);
     }
-    @EventHandler public void onCraft(CraftItemEvent e){
-        if(!(e.getWhoClicked() instanceof Player p))return;
-        if(e.isCancelled())return;
-        String type=e.getCurrentItem().getType().name();int count=e.isShiftClick()?e.getCurrentItem().getAmount():e.getCurrentItem().getAmount();
-        for(Task t:ensureTasks(p))if(t.type.equals("CRAFT")&&(t.target.equals("ANY")||t.target.equals(type)))update(p,t,count);
+    private int getCraftedAmount(CraftItemEvent e) {
+        ItemStack result = e.getRecipe().getResult();
+        int outputPerCraft = Math.max(1, result.getAmount());
+        if (!e.isShiftClick()) return outputPerCraft;
+        ItemStack[] matrix = e.getInventory().getMatrix();
+        int crafts = Integer.MAX_VALUE;
+        if (e.getRecipe() instanceof ShapedRecipe shaped) {
+            Map<Character, ItemStack> ingredients = shaped.getIngredientMap();
+            Map<Character, Integer> required = new HashMap<>();
+            for (String line : shaped.getShape()) for (char symbol : line.toCharArray())
+                if (symbol != ' ' && ingredients.get(symbol) != null) required.merge(symbol, 1, Integer::sum);
+            for (Map.Entry<Character, Integer> entry : required.entrySet()) {
+                ItemStack ingredient = ingredients.get(entry.getKey());
+                int available = 0;
+                for (ItemStack item : matrix) if (item != null && item.getType() == ingredient.getType()) available += item.getAmount();
+                crafts = Math.min(crafts, available / entry.getValue());
+            }
+        } else if (e.getRecipe() instanceof ShapelessRecipe shapeless) {
+            Map<Material, Integer> required = new HashMap<>();
+            for (ItemStack ingredient : shapeless.getIngredientList())
+                if (ingredient != null && !ingredient.getType().isAir()) required.merge(ingredient.getType(), 1, Integer::sum);
+            for (Map.Entry<Material, Integer> entry : required.entrySet()) {
+                int available = 0;
+                for (ItemStack item : matrix) if (item != null && item.getType() == entry.getKey()) available += item.getAmount();
+                crafts = Math.min(crafts, available / entry.getValue());
+            }
+        } else return outputPerCraft;
+        if (crafts == Integer.MAX_VALUE || crafts <= 0) return outputPerCraft;
+        return crafts * outputPerCraft;
     }
+
+    @EventHandler public void onCraft(CraftItemEvent e) {
+        if (!(e.getWhoClicked() instanceof Player p) || e.isCancelled()) return;
+        String type = e.getRecipe().getResult().getType().name();
+        int count = getCraftedAmount(e);
+        for (Task t : ensureTasks(p))
+            if (t.type.equals("CRAFT") && (t.target.equals("ANY") || t.target.equals(type))) update(p, t, count);
+    }
+
     @EventHandler public void onFish(PlayerFishEvent e){
         if(e.getState()!=PlayerFishEvent.State.CAUGHT_FISH)return;
         for(Task t:ensureTasks(e.getPlayer()))if(t.type.equals("FISH"))update(e.getPlayer(),t,1);
