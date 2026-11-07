@@ -16,6 +16,8 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.sql.*;
 import java.time.*;
 import java.util.*;
@@ -40,7 +42,7 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
         saveResource("tasks.yml", false);
         File poolMarker = new File(getDataFolder(), "quest-pool-v3.done");
         if (!poolMarker.exists()) {
-            saveResource("tasks.yml", true);
+            mergeDefaultTasks();
             try { poolMarker.createNewFile(); } catch (java.io.IOException ex) { getLogger().warning("Nie zapisano znacznika aktualizacji puli zadan: " + ex.getMessage()); }
         }
         try { zone = ZoneId.of(getConfig().getString("timezone", "Europe/Warsaw")); }
@@ -69,6 +71,35 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
 
     @Override public void onDisable() {
         if (db != null) try { db.close(); } catch (SQLException ignored) {}
+    }
+
+    private void mergeDefaultTasks() {
+        File poolFile = new File(getDataFolder(), "tasks.yml");
+        org.bukkit.configuration.file.YamlConfiguration current = org.bukkit.configuration.file.YamlConfiguration.loadConfiguration(poolFile);
+        org.bukkit.configuration.file.YamlConfiguration defaults;
+        try (InputStreamReader reader = new InputStreamReader(Objects.requireNonNull(getResource("tasks.yml")), StandardCharsets.UTF_8)) {
+            defaults = org.bukkit.configuration.file.YamlConfiguration.loadConfiguration(reader);
+        } catch (Exception ex) {
+            getLogger().warning("Nie udało się wczytać domyślnej puli zadań: " + ex.getMessage());
+            return;
+        }
+        ConfigurationSection defaultTasks = defaults.getConfigurationSection("tasks");
+        if (defaultTasks == null) return;
+        ConfigurationSection currentTasks = current.getConfigurationSection("tasks");
+        if (currentTasks == null) currentTasks = current.createSection("tasks");
+        int added = 0;
+        for (String id : defaultTasks.getKeys(false)) {
+            if (!currentTasks.contains(id)) {
+                currentTasks.set(id, defaultTasks.getConfigurationSection(id).getValues(true));
+                added++;
+            }
+        }
+        try {
+            current.save(poolFile);
+            getLogger().info("Zaktualizowano pulę zadań. Dodano " + added + " nowych pozycji; własne zadania zachowano.");
+        } catch (java.io.IOException ex) {
+            getLogger().warning("Nie udało się zapisać puli zadań: " + ex.getMessage());
+        }
     }
 
     private String today() { return LocalDate.now(zone).toString(); }
