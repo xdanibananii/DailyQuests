@@ -1,0 +1,5 @@
+# Strefa czasowa resetu. Dla Polski: Europe/Warsaw
+timezone: Europe/Warsaw
+daily-tasks: 5
+gui-title: "&8Codzienne zadania"
+gui-size: 45
