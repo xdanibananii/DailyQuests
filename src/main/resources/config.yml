@@ -3,3 +3,11 @@ timezone: Europe/Warsaw
 daily-tasks: 5
 gui-title: "&8Codzienne zadania"
 gui-size: 45
+
+# Testowe czyszczenie postepow przy najblizszym uruchomieniu
+reset-data-on-next-start: true
+
+# Wymiary dodatkowe sa domyslnie nieaktywne
+dimensions:
+  nether-enabled: false
+  end-enabled: false
