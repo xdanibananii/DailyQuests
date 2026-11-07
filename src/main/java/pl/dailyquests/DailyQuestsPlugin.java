@@ -30,7 +30,7 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
     private static final String TITLE = ChatColor.DARK_GRAY + "Codzienne zadania";
 
     private static final class Task {
-        String id, name, description, type, target, rewardItem, dimension;
+        String id, name, description, type, target, rewardItem, dimension, difficulty;
         int amount, xp, itemAmount, progress;
         boolean claimed;
     }
@@ -50,6 +50,9 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
             db = DriverManager.getConnection("jdbc:sqlite:" + new File(getDataFolder(), "dailyquests.db").getAbsolutePath());
             try (Statement s = db.createStatement()) {
                 s.executeUpdate("CREATE TABLE IF NOT EXISTS player_tasks (uuid TEXT NOT NULL, day TEXT NOT NULL, slot INTEGER NOT NULL, task_id TEXT NOT NULL, progress INTEGER NOT NULL DEFAULT 0, claimed INTEGER NOT NULL DEFAULT 0, PRIMARY KEY(uuid,day,slot))");
+                s.executeUpdate("CREATE TABLE IF NOT EXISTS player_stats (uuid TEXT PRIMARY KEY, streak INTEGER NOT NULL DEFAULT 0, last_streak_day TEXT NOT NULL DEFAULT '', total_completed INTEGER NOT NULL DEFAULT 0)");
+                s.executeUpdate("CREATE TABLE IF NOT EXISTS weekly_tasks (uuid TEXT NOT NULL, week TEXT NOT NULL, progress INTEGER NOT NULL DEFAULT 0, claimed INTEGER NOT NULL DEFAULT 0, PRIMARY KEY(uuid,week))");
+                s.executeUpdate("CREATE TABLE IF NOT EXISTS task_history (uuid TEXT NOT NULL, task_id TEXT NOT NULL, assigned_day TEXT NOT NULL, PRIMARY KEY(uuid,task_id,assigned_day))");
                 File resetMarker = new File(getDataFolder(), "test-reset-v2.done");
                 if (!resetMarker.exists()) {
                     s.executeUpdate("DELETE FROM player_tasks");
@@ -103,7 +106,7 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
         ConfigurationSection s=pool(); if(s==null || !s.isConfigurationSection(id)) return null;
         ConfigurationSection c=s.getConfigurationSection(id); Task t=new Task();
         t.id=id;t.name=color(c.getString("name",id));t.description=color(c.getString("description",""));
-        t.type=c.getString("type","").toUpperCase(Locale.ROOT);t.target=c.getString("target","ANY").toUpperCase(Locale.ROOT);t.dimension=c.getString("dimension","OVERWORLD").toUpperCase(Locale.ROOT);
+        t.type=c.getString("type","").toUpperCase(Locale.ROOT);t.target=c.getString("target","ANY").toUpperCase(Locale.ROOT);t.dimension=c.getString("dimension","OVERWORLD").toUpperCase(Locale.ROOT);t.difficulty=c.getString("difficulty","MEDIUM").toUpperCase(Locale.ROOT);
         t.amount=Math.max(1,c.getInt("amount",1));t.xp=Math.max(0,c.getInt("reward-xp",0));
         t.rewardItem=c.getString("reward-item","").toUpperCase(Locale.ROOT);t.itemAmount=Math.max(1,c.getInt("reward-item-amount",1));return t;
     }
@@ -150,6 +153,8 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
     }
 
     @Override public boolean onCommand(CommandSender sender,Command command,String label,String[] args) {
+        if(args.length>0 && args[0].equalsIgnoreCase("top")){showLeaderboard(sender);return true;}
+        if(args.length>0 && args[0].equalsIgnoreCase("weekly")){showWeekly(sender);return true;}
         if(args.length>0 && args[0].equalsIgnoreCase("roll")) {
             if(!sender.hasPermission("dailyquests.admin")){sender.sendMessage(ChatColor.RED+"Brak uprawnien.");return true;}
             rerollAll(sender);
@@ -177,6 +182,12 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
         return t.dimension.equals("OVERWORLD") ? actual.equals("NORMAL") : t.dimension.equals(actual);
     }
 
+    private String weekKey(){java.time.temporal.WeekFields wf=java.time.temporal.WeekFields.ISO;LocalDate d=LocalDate.now(zone);return d.get(wf.weekBasedYear())+"-W"+String.format(Locale.ROOT,"%02d",d.get(wf.weekOfWeekBasedYear()));}
+    private void incrementCompleted(UUID uuid){try(PreparedStatement p=db.prepareStatement("INSERT INTO player_stats(uuid,total_completed) VALUES(?,1) ON CONFLICT(uuid) DO UPDATE SET total_completed=total_completed+1")){p.setString(1,uuid.toString());p.executeUpdate();}catch(SQLException e){getLogger().warning(e.getMessage());}}
+    private void updateStreak(Player p){String day=today();try(PreparedStatement q=db.prepareStatement("SELECT streak,last_streak_day FROM player_stats WHERE uuid=?")){q.setString(1,p.getUniqueId().toString());try(ResultSet r=q.executeQuery()){int streak=0;String last="";if(r.next()){streak=r.getInt(1);last=r.getString(2);}if(day.equals(last))return;String yesterday=LocalDate.now(zone).minusDays(1).toString();streak=last.equals(yesterday)?streak+1:1;try(PreparedStatement u=db.prepareStatement("INSERT INTO player_stats(uuid,streak,last_streak_day) VALUES(?,?,?) ON CONFLICT(uuid) DO UPDATE SET streak=excluded.streak,last_streak_day=excluded.last_streak_day")){u.setString(1,p.getUniqueId().toString());u.setInt(2,streak);u.setString(3,day);u.executeUpdate();}p.sendMessage(ChatColor.GOLD+"Seria ukończonych dni: "+ChatColor.YELLOW+streak+" ★");if(streak%7==0){p.giveExp(500);p.sendMessage(ChatColor.LIGHT_PURPLE+"7-dniowa seria! Bonus: 500 XP.");}}}}catch(SQLException e){getLogger().warning(e.getMessage());}}
+    private void showWeekly(CommandSender sender){if(!(sender instanceof Player p)){sender.sendMessage("Tylko gracz może sprawdzić wyzwanie.");return;}String week=weekKey();int progress=0;boolean claimed=false;try(PreparedStatement q=db.prepareStatement("SELECT progress,claimed FROM weekly_tasks WHERE uuid=? AND week=?")){q.setString(1,p.getUniqueId().toString());q.setString(2,week);try(ResultSet r=q.executeQuery()){if(r.next()){progress=r.getInt(1);claimed=r.getInt(2)==1;}}}catch(SQLException e){p.sendMessage(ChatColor.RED+"Błąd odczytu wyzwania.");return;}p.sendMessage(ChatColor.GOLD+"━━ WYZWANIE TYGODNIA ━━");p.sendMessage(ChatColor.YELLOW+"Przepłyń 500 bloków.");p.sendMessage(ChatColor.GRAY+"Postęp: "+ChatColor.AQUA+progress+"/500");if(progress>=500&&!claimed){try(PreparedStatement u=db.prepareStatement("INSERT INTO weekly_tasks(uuid,week,progress,claimed) VALUES(?,?,500,1) ON CONFLICT(uuid,week) DO UPDATE SET claimed=1")){u.setString(1,p.getUniqueId().toString());u.setString(2,week);u.executeUpdate();}catch(SQLException ignored){}p.giveExp(1500);p.getInventory().addItem(new ItemStack(Material.EMERALD,5));p.sendMessage(ChatColor.GREEN+"Nagroda: 1500 XP i 5 szmaragdów!");}else if(claimed)p.sendMessage(ChatColor.GREEN+"Nagroda odebrana.");else p.sendMessage(ChatColor.GRAY+"Nagroda zostanie dostępna po ukończeniu.");}
+    private void showLeaderboard(CommandSender sender){sender.sendMessage(ChatColor.GOLD+"━━ RANKING DAILY QUESTS ━━");try(Statement s=db.createStatement();ResultSet r=s.executeQuery("SELECT uuid,total_completed,streak FROM player_stats ORDER BY total_completed DESC LIMIT 10")){int i=1;while(r.next()){OfflinePlayer op=Bukkit.getOfflinePlayer(UUID.fromString(r.getString(1)));sender.sendMessage(ChatColor.YELLOW+"#"+i+" "+ChatColor.WHITE+(op.getName()==null?"Gracz":op.getName())+ChatColor.GRAY+" — "+ChatColor.GREEN+r.getInt(2)+" zadań "+ChatColor.DARK_GRAY+"(seria: "+r.getInt(3)+")");i++;}if(i==1)sender.sendMessage(ChatColor.GRAY+"Brak wyników.");}catch(SQLException e){sender.sendMessage(ChatColor.RED+"Błąd rankingu.");}}
+
     private void open(Player p) {
         List<Task> tasks=ensureTasks(p);
         Inventory inv=Bukkit.createInventory(null,54,TITLE);
@@ -201,6 +212,8 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
             String status=t.claimed?ChatColor.GREEN+"✔ ODEBRANO":t.progress>=t.amount?ChatColor.GOLD+"★ GOTOWE — ODBIERZ!":ChatColor.YELLOW+"◷ W TRAKCIE";
             List<String> lore=new ArrayList<>();
             lore.add(ChatColor.GRAY+t.description);
+            ChatColor tier=t.difficulty.equals("HARD")?ChatColor.RED:t.difficulty.equals("EASY")?ChatColor.GREEN:ChatColor.YELLOW;
+            lore.add(tier+"Trudność: "+(t.difficulty.equals("HARD")?"TRUDNE":t.difficulty.equals("EASY")?"ŁATWE":"ŚREDNIE"));
             lore.add("");
             lore.add(ChatColor.DARK_GRAY+"POSTĘP");
             lore.add(progressBar(t.progress,t.amount));
@@ -317,11 +330,12 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
         if(t.progress<t.amount){p.sendMessage(ChatColor.RED+"To zadanie nie jest jeszcze ukonczone.");return;}
         t.claimed=true;save(p.getUniqueId(),index,t);
         if(t.xp>0)p.giveExp(t.xp);
+        incrementCompleted(p.getUniqueId());
         Material reward=material(t.rewardItem);
         if(reward!=null){ItemStack item=new ItemStack(reward,t.itemAmount);Map<Integer,ItemStack> overflow=p.getInventory().addItem(item);overflow.values().forEach(it->p.getWorld().dropItemNaturally(p.getLocation(),it));}
         p.sendMessage(ChatColor.GREEN+"Odebrano nagrode za: "+ChatColor.RESET+t.name);
         boolean all=tasks.size()==5&&tasks.stream().allMatch(x->x.claimed);
-        if(all){p.giveExp(250);p.sendMessage(ChatColor.GOLD+"Ukonczyles wszystkie 5 zadan! Bonus: 250 XP.");}
+        if(all){p.giveExp(250);updateStreak(p);p.sendMessage(ChatColor.GOLD+"Ukonczyles wszystkie 5 zadan! Bonus: 250 XP.");}
         open(p);
     }
     @EventHandler public void onDrag(InventoryDragEvent e){if(TITLE.equals(e.getView().getTitle()))e.setCancelled(true);}
