@@ -27,6 +27,7 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
     private Connection db;
     private ZoneId zone;
     private final Map<UUID, List<Task>> cache = new ConcurrentHashMap<>();
+    private org.bukkit.configuration.file.YamlConfiguration tasksConfig;
     private final Map<UUID, Location> lastWalk = new ConcurrentHashMap<>();
     private final Random random = new Random();
     private final Set<UUID> rerollMode = ConcurrentHashMap.newKeySet();
@@ -48,6 +49,7 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
             mergeDefaultTasks();
             try { poolMarker.createNewFile(); } catch (java.io.IOException ex) { getLogger().warning("Nie zapisano znacznika aktualizacji puli zadan: " + ex.getMessage()); }
         }
+        reloadTaskPool();
         try { zone = ZoneId.of(getConfig().getString("timezone", "Europe/Warsaw")); }
         catch (Exception ex) { zone = ZoneId.systemDefault(); getLogger().warning("Nieprawidlowa strefa czasowa; uzywam strefy serwera."); }
         try {
@@ -122,10 +124,14 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
     Connection database() { return db; }
 
     private String today() { return LocalDate.now(zone).toString(); }
-    private ConfigurationSection pool() { return getConfigSection(); }
-    private ConfigurationSection getConfigSection() {
-        var cfg = org.bukkit.configuration.file.YamlConfiguration.loadConfiguration(new File(getDataFolder(), "tasks.yml"));
-        return cfg.getConfigurationSection("tasks");
+    private void reloadTaskPool() {
+        File file = new File(getDataFolder(), "tasks.yml");
+        tasksConfig = org.bukkit.configuration.file.YamlConfiguration.loadConfiguration(file);
+    }
+
+    private ConfigurationSection pool() {
+        if (tasksConfig == null) reloadTaskPool();
+        return tasksConfig.getConfigurationSection("tasks");
     }
 
     private List<Task> ensureTasks(Player p) {
@@ -319,7 +325,7 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
         }
         if(args.length>0 && args[0].equalsIgnoreCase("reload")){
             if(!sender.hasPermission("dailyquests.admin")){sender.sendMessage(ChatColor.RED+"Brak uprawnien.");return true;}
-            reloadConfig();cache.clear();sender.sendMessage(ChatColor.GREEN+"DailyQuests: przeladowano config.");return true;
+            reloadConfig();reloadTaskPool();cache.clear();sender.sendMessage(ChatColor.GREEN+"DailyQuests: przeladowano konfigurację i pulę zadań.");return true;
         }
         if(!(sender instanceof Player p)){sender.sendMessage("Ta komenda jest dla graczy.");return true;}
         open(p);return true;
