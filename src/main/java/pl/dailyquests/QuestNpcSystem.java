@@ -248,8 +248,8 @@ public final class QuestNpcSystem implements Listener {
                         ChatColor.WHITE + "Przynieś: " + ChatColor.YELLOW + c.amount + "x " + pretty(material),
                         ChatColor.GRAY + "Masz przy sobie: " + ChatColor.AQUA + owned + "/" + c.amount,
                         "", ChatColor.GOLD + "Nagroda:",
-                        ChatColor.YELLOW + c.stars + " ★",
-                        ChatColor.GREEN + c.xp + " XP",
+                        ChatColor.YELLOW.toString() + c.stars + " ★",
+                        ChatColor.GREEN.toString() + c.xp + " XP",
                         "", c.claimed ? ChatColor.GREEN + "✔ KONTRAKT ODDANY" : ChatColor.YELLOW + "W TRAKCIE")));
         inv.setItem(31, item(c.claimed ? Material.LIME_DYE : Material.EMERALD,
                 c.claimed ? ChatColor.GREEN + "Kontrakt wykonany" : ChatColor.GREEN + "ODDAJ ZLECENIE",
