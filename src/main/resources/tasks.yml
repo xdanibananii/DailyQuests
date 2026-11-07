@@ -1,0 +1,132 @@
+# Pula zadań. type: BREAK, KILL, CRAFT, FISH, WALK
+# target: materiał / typ encji / materiał wyniku craftingu / ANY dla dowolnego
+# reward-xp: punkty doświadczenia Minecrafta
+# reward-item: opcjonalny przedmiot, np. EMERALD
+# reward-item-amount: liczba przedmiotów
+tasks:
+  break_stone:
+    name: "&fKamieniarz"
+    description: "&7Wykop 64 bloki kamienia"
+    type: BREAK
+    target: STONE
+    amount: 64
+    reward-xp: 120
+    reward-item: IRON_INGOT
+    reward-item-amount: 3
+  break_oak:
+    name: "&fLeśnik"
+    description: "&7Zbierz 32 kłody dębu"
+    type: BREAK
+    target: OAK_LOG
+    amount: 32
+    reward-xp: 100
+    reward-item: BREAD
+    reward-item-amount: 8
+  break_coal:
+    name: "&fGórnik"
+    description: "&7Wydobądź 24 rudy węgla"
+    type: BREAK
+    target: COAL_ORE
+    amount: 24
+    reward-xp: 100
+    reward-item: TORCH
+    reward-item-amount: 16
+  break_iron:
+    name: "&fPoszukiwacz żelaza"
+    description: "&7Wydobądź 12 rud żelaza"
+    type: BREAK
+    target: IRON_ORE
+    amount: 12
+    reward-xp: 150
+    reward-item: IRON_INGOT
+    reward-item-amount: 4
+  kill_zombie:
+    name: "&fPogromca zombie"
+    description: "&7Pokonaj 10 zombie"
+    type: KILL
+    target: ZOMBIE
+    amount: 10
+    reward-xp: 150
+    reward-item: GOLD_INGOT
+    reward-item-amount: 2
+  kill_skeleton:
+    name: "&fŁowca kości"
+    description: "&7Pokonaj 8 szkieletów"
+    type: KILL
+    target: SKELETON
+    amount: 8
+    reward-xp: 150
+    reward-item: ARROW
+    reward-item-amount: 16
+  kill_spider:
+    name: "&fPajęczy łowca"
+    description: "&7Pokonaj 8 pająków"
+    type: KILL
+    target: SPIDER
+    amount: 8
+    reward-xp: 130
+    reward-item: STRING
+    reward-item-amount: 8
+  kill_creeper:
+    name: "&fRozbrajacz"
+    description: "&7Pokonaj 5 creeperów"
+    type: KILL
+    target: CREEPER
+    amount: 5
+    reward-xp: 180
+    reward-item: GUNPOWDER
+    reward-item-amount: 8
+  craft_torch:
+    name: "&fŚwiatło w ciemności"
+    description: "&7Wytwórz 32 pochodnie"
+    type: CRAFT
+    target: TORCH
+    amount: 32
+    reward-xp: 100
+    reward-item: COAL
+    reward-item-amount: 8
+  craft_bread:
+    name: "&fPiekarz"
+    description: "&7Wytwórz 12 chlebów"
+    type: CRAFT
+    target: BREAD
+    amount: 12
+    reward-xp: 120
+    reward-item: WHEAT
+    reward-item-amount: 12
+  craft_chest:
+    name: "&fStolarz"
+    description: "&7Wytwórz 8 skrzyń"
+    type: CRAFT
+    target: CHEST
+    amount: 8
+    reward-xp: 100
+    reward-item: OAK_PLANKS
+    reward-item-amount: 16
+  fish_any:
+    name: "&fWędkarz"
+    description: "&7Złów 5 ryb lub przedmiotów"
+    type: FISH
+    target: ANY
+    amount: 5
+    reward-xp: 160
+    reward-item: COOKED_COD
+    reward-item-amount: 4
+  walk_1000:
+    name: "&fPodróżnik"
+    description: "&7Przejdź 1000 bloków"
+    type: WALK
+    target: ANY
+    amount: 1000
+    reward-xp: 180
+    reward-item: BAKED_POTATO
+    reward-item-amount: 8
+  walk_500:
+    name: "&fSpacerowicz"
+    description: "&7Przejdź 500 bloków"
+    type: WALK
+    target: ANY
+    amount: 500
+    reward-xp: 100
+    reward-item: BREAD
+    reward-item-amount: 4
