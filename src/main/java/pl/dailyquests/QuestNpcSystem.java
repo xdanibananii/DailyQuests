@@ -274,13 +274,14 @@ public final class QuestNpcSystem implements Listener {
                         "", ChatColor.DARK_GRAY + "Przedmioty zostaną pobrane",
                         ChatColor.DARK_GRAY + "dopiero po zatwierdzeniu zlecenia.")));
 
-        inv.setItem(22, item(Material.FILLED_MAP, ChatColor.GOLD + c.name,
-                List.of(ChatColor.GRAY + "ZLECENIE DNIA",
-                        "",
-                        ChatColor.WHITE + c.description,
-                        "",
-                        c.claimed ? ChatColor.GREEN + "✔ To zlecenie zostało już rozliczone."
-                                : ChatColor.YELLOW + "Czeka na twoją dostawę.")));
+        List<String> mapLore = new ArrayList<>();
+        mapLore.add(ChatColor.GRAY + "ZLECENIE DNIA");
+        mapLore.add("");
+        mapLore.addAll(wrapLore(c.description, 38));
+        mapLore.add("");
+        mapLore.add(c.claimed ? ChatColor.GREEN + "✔ To zlecenie zostało już rozliczone."
+                : ChatColor.YELLOW + "Czeka na twoją dostawę.");
+        inv.setItem(22, item(Material.FILLED_MAP, ChatColor.GOLD + c.name, mapLore));
 
         inv.setItem(24, item(Material.CHEST, ChatColor.GOLD + "WYNAGRODZENIE",
                 List.of(ChatColor.GRAY + "Za wykonanie zlecenia otrzymasz:",
@@ -409,6 +410,28 @@ public final class QuestNpcSystem implements Listener {
             left -= take;
             if (left <= 0) break;
         }
+    }
+
+    /**
+     * Minecraft nie zawija automatycznie długich linii lore w tooltipach.
+     * Dzielimy opis na krótkie linie, aby podpowiedź nie rozciągała się przez ekran.
+     */
+    private List<String> wrapLore(String text, int maxLength) {
+        String plain = ChatColor.stripColor(text == null ? "" : text).trim();
+        List<String> lines = new ArrayList<>();
+        if (plain.isEmpty()) return lines;
+
+        StringBuilder line = new StringBuilder();
+        for (String word : plain.split("\\s+")) {
+            if (line.length() > 0 && line.length() + 1 + word.length() > maxLength) {
+                lines.add(ChatColor.GRAY + line.toString());
+                line.setLength(0);
+            }
+            if (line.length() > 0) line.append(' ');
+            line.append(word);
+        }
+        if (line.length() > 0) lines.add(ChatColor.GRAY + line.toString());
+        return lines;
     }
 
     private ItemStack item(Material material, String name, List<String> lore) {
