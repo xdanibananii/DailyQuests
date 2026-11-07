@@ -6,8 +6,8 @@ author: DailyQuests
 description: Indywidualne codzienne zadania dla graczy.
 commands:
   zadania:
-    description: Otwiera codzienne zadania.
-    usage: /zadania [reload]
+    description: Otwiera zadania, ranking i wyzwanie tygodnia.
+    usage: /zadania | /dq weekly | /dq top | /dq roll | /dq nether [off] | /dq end [off]
     aliases: [dailyquests, dq]
 permissions:
   dailyquests.admin:
