@@ -38,6 +38,11 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
     @Override public void onEnable() {
         saveDefaultConfig();
         saveResource("tasks.yml", false);
+        File poolMarker = new File(getDataFolder(), "quest-pool-v2.done");
+        if (!poolMarker.exists()) {
+            saveResource("tasks.yml", true);
+            try { poolMarker.createNewFile(); } catch (java.io.IOException ex) { getLogger().warning("Nie zapisano znacznika aktualizacji puli zadan: " + ex.getMessage()); }
+        }
         try { zone = ZoneId.of(getConfig().getString("timezone", "Europe/Warsaw")); }
         catch (Exception ex) { zone = ZoneId.systemDefault(); getLogger().warning("Nieprawidlowa strefa czasowa; uzywam strefy serwera."); }
         try {
@@ -45,7 +50,12 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
             db = DriverManager.getConnection("jdbc:sqlite:" + new File(getDataFolder(), "dailyquests.db").getAbsolutePath());
             try (Statement s = db.createStatement()) {
                 s.executeUpdate("CREATE TABLE IF NOT EXISTS player_tasks (uuid TEXT NOT NULL, day TEXT NOT NULL, slot INTEGER NOT NULL, task_id TEXT NOT NULL, progress INTEGER NOT NULL DEFAULT 0, claimed INTEGER NOT NULL DEFAULT 0, PRIMARY KEY(uuid,day,slot))");
-                if (getConfig().getBoolean("reset-data-on-next-start", false)) { s.executeUpdate("DELETE FROM player_tasks"); getConfig().set("reset-data-on-next-start", false); saveConfig(); getLogger().info("Wyczyszczono dane testowe graczy."); }
+                File resetMarker = new File(getDataFolder(), "test-reset-v2.done");
+                if (!resetMarker.exists()) {
+                    s.executeUpdate("DELETE FROM player_tasks");
+                    try { resetMarker.createNewFile(); } catch (java.io.IOException ex) { getLogger().warning("Nie zapisano znacznika resetu: " + ex.getMessage()); }
+                    getLogger().info("Wyczyszczono dane testowe graczy.");
+                }
             }
         } catch (SQLException e) { getLogger().severe("Nie mozna otworzyc SQLite: " + e.getMessage()); getServer().getPluginManager().disablePlugin(this); return; }
         Objects.requireNonNull(getCommand("zadania")).setExecutor(this);
