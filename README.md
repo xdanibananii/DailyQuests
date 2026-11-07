@@ -1,0 +1,2 @@
+# DailyQuests
+DailyQuests plugin
