@@ -267,9 +267,9 @@ public final class QuestNpcSystem implements Listener {
         int owned = count(player, required);
         inv.setItem(20, item(required, ChatColor.YELLOW + "WYMAGANE TOWARY",
                 List.of(ChatColor.GRAY + "Dostarcz mi:",
-                        ChatColor.WHITE + c.amount + " × " + polishName(required),
+                        ChatColor.WHITE.toString() + c.amount + " × " + polishName(required),
                         "", ChatColor.GRAY + "W twoim ekwipunku: "
-                                + (owned >= c.amount ? ChatColor.GREEN : ChatColor.RED)
+                                + (owned >= c.amount ? ChatColor.GREEN.toString() : ChatColor.RED.toString())
                                 + Math.min(owned, c.amount) + ChatColor.GRAY + " / " + c.amount,
                         "", ChatColor.DARK_GRAY + "Przedmioty zostaną pobrane",
                         ChatColor.DARK_GRAY + "dopiero po zatwierdzeniu zlecenia.")));
