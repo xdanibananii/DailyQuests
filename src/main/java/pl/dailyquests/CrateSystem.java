@@ -40,6 +40,7 @@ public final class CrateSystem implements Listener {
         this.plugin = plugin;
         this.crateKey = new NamespacedKey(plugin, "dq_crate_button");
         plugin.saveResource("rewards.yml", false);
+        balanceExistingRewards();
         Connection connection = null;
         try {
             connection = DriverManager.getConnection("jdbc:sqlite:" + new File(plugin.getDataFolder(), "dailyquests.db").getAbsolutePath());
@@ -51,6 +52,46 @@ public final class CrateSystem implements Listener {
             plugin.getLogger().severe("Nie można uruchomić systemu skrzynek: " + ex.getMessage());
         }
         this.db = connection;
+    }
+
+    private void balanceExistingRewards() {
+        File marker = new File(plugin.getDataFolder(), "rewards-balance-v2.done");
+        if (marker.exists()) return;
+        File file = new File(plugin.getDataFolder(), "rewards.yml");
+        YamlConfiguration yaml = YamlConfiguration.loadConfiguration(file);
+        List<Map<?, ?>> rows = yaml.getMapList("rewards");
+        for (int i = 0; i < rows.size(); i++) {
+            String base = "rewards." + i + ".";
+            String tier = yaml.getString(base + "tier", "COMMON").toUpperCase(Locale.ROOT);
+            int weight = switch (tier) {
+                case "UNCOMMON" -> 60;
+                case "RARE" -> 20;
+                case "EPIC" -> 5;
+                case "LEGENDARY" -> 1;
+                default -> 130;
+            };
+            yaml.set(base + "weight", weight);
+
+            String material = yaml.getString(base + "material", "").toUpperCase(Locale.ROOT);
+            int amount = yaml.getInt(base + "amount", 1);
+            if (material.equals("DIAMOND") && tier.equals("UNCOMMON")) yaml.set(base + "amount", Math.min(amount, 3));
+            if (material.equals("DIAMOND") && tier.equals("RARE")) yaml.set(base + "amount", Math.min(amount, 6));
+            if (material.equals("EXPERIENCE_BOTTLE")) yaml.set(base + "amount", Math.min(amount, 24));
+            if (material.equals("GOLDEN_CARROT")) yaml.set(base + "amount", Math.min(amount, 16));
+            if (material.equals("TOTEM_OF_UNDYING") && tier.equals("UNCOMMON")) {
+                yaml.set(base + "material", "IRON_BLOCK");
+                yaml.set(base + "amount", 4);
+                yaml.set(base + "name", "&aBloki żelaza");
+                yaml.set(base + "lore", List.of("&7Przydatny budulec"));
+            }
+            if (material.equals("ELYTRA")) yaml.set(base + "tier", "LEGENDARY");
+        }
+        try {
+            yaml.save(file);
+            if (marker.createNewFile()) plugin.getLogger().info("Zastosowano balans nagród skrzynek (v2).");
+        } catch (java.io.IOException ex) {
+            plugin.getLogger().warning("Nie udało się zbalansować rewards.yml: " + ex.getMessage());
+        }
     }
 
     public void close() {
