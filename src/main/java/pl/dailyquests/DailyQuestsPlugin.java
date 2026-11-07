@@ -156,7 +156,7 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
             lore.add("");
             lore.add(ChatColor.DARK_GRAY+"POSTĘP");
             lore.add(progressBar(t.progress,t.amount));
-            lore.add(ChatColor.WHITE+t.progress+ChatColor.GRAY+" / "+ChatColor.WHITE+t.amount);
+            lore.add(ChatColor.WHITE.toString()+t.progress+ChatColor.GRAY+" / "+ChatColor.WHITE+t.amount);
             lore.add("");
             lore.add(ChatColor.DARK_GRAY+"NAGRODA");
             lore.add(ChatColor.GREEN+"✦ "+t.xp+" XP");
