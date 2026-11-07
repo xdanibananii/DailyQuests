@@ -168,7 +168,7 @@ public final class CrateSystem implements Listener {
             int step = 0;
             int visual = 0;
             @Override public void run() {
-                if (!player.isOnline() || !TITLE.equals(player.getOpenInventory().getTitle())) {
+                if (!player.isOnline()) {
                     cancel();
                     opening.remove(player.getUniqueId());
                     return;
@@ -198,10 +198,10 @@ public final class CrateSystem implements Listener {
             try {
                 Reward reward = new Reward();
                 reward.material = Material.valueOf(String.valueOf(row.get("material")).toUpperCase(Locale.ROOT));
-                reward.amount = Math.max(1, Integer.parseInt(String.valueOf(row.getOrDefault("amount", 1))));
-                reward.weight = Math.max(0, Integer.parseInt(String.valueOf(row.getOrDefault("weight", 1))));
-                reward.tier = String.valueOf(row.getOrDefault("tier", "COMMON")).toUpperCase(Locale.ROOT);
-                reward.name = color(String.valueOf(row.getOrDefault("name", pretty(reward.material.name()))));
+                reward.amount = Math.max(1, Integer.parseInt(String.valueOf(value(row, "amount", 1))));
+                reward.weight = Math.max(0, Integer.parseInt(String.valueOf(value(row, "weight", 1))));
+                reward.tier = String.valueOf(value(row, "tier", "COMMON")).toUpperCase(Locale.ROOT);
+                reward.name = color(String.valueOf(value(row, "name", pretty(reward.material.name()))));
                 Object loreValue = row.get("lore");
                 reward.lore = new ArrayList<>();
                 if (loreValue instanceof List<?> lines) for (Object line : lines) reward.lore.add(color(String.valueOf(line)));
@@ -301,6 +301,8 @@ public final class CrateSystem implements Listener {
             out.add(Character.toUpperCase(part.charAt(0)) + part.substring(1));
         return out.toString();
     }
+
+    private Object value(Map<?,?> map, String key, Object fallback) { return map.containsKey(key) ? map.get(key) : fallback; }
 
     private String color(String value) {
         return ChatColor.translateAlternateColorCodes('&', value == null ? "" : value);
