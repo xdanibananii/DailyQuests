@@ -30,6 +30,7 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
     private final Map<UUID, Location> lastWalk = new ConcurrentHashMap<>();
     private final Random random = new Random();
     private static final String TITLE = ChatColor.DARK_GRAY + "Codzienne zadania";
+    private CrateSystem crateSystem;
 
     private static final class Task {
         String id, name, description, type, target, rewardItem, dimension, difficulty;
@@ -64,12 +65,15 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
             }
         } catch (SQLException e) { getLogger().severe("Nie mozna otworzyc SQLite: " + e.getMessage()); getServer().getPluginManager().disablePlugin(this); return; }
         Objects.requireNonNull(getCommand("zadania")).setExecutor(this);
+        crateSystem = new CrateSystem(this);
         getServer().getPluginManager().registerEvents(this, this);
+        getServer().getPluginManager().registerEvents(crateSystem, this);
         for (Player p : Bukkit.getOnlinePlayers()) ensureTasks(p);
         getLogger().info("DailyQuests wlaczony.");
     }
 
     @Override public void onDisable() {
+        if (crateSystem != null) crateSystem.close();
         if (db != null) try { db.close(); } catch (SQLException ignored) {}
     }
 
@@ -200,6 +204,8 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
         sender.sendMessage(ChatColor.YELLOW + "/zadania" + ChatColor.GRAY + " — otwiera codzienne zadania");
         sender.sendMessage(ChatColor.YELLOW + "/dq help" + ChatColor.GRAY + " — wyświetla tę pomoc");
         sender.sendMessage(ChatColor.YELLOW + "/dq weekly" + ChatColor.GRAY + " — wyzwanie tygodnia");
+        sender.sendMessage(ChatColor.YELLOW + "/dq skrzynka" + ChatColor.GRAY + " — otwiera skrzynkę za 20 gwiazdek");
+        sender.sendMessage(ChatColor.YELLOW + "/dq gwiazdki" + ChatColor.GRAY + " — sprawdza saldo gwiazdek");
         sender.sendMessage(ChatColor.YELLOW + "/dq top" + ChatColor.GRAY + " — ranking graczy");
         if (sender.hasPermission("dailyquests.admin")) {
             sender.sendMessage(ChatColor.DARK_AQUA + "Komendy administratora:");
@@ -216,6 +222,8 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
         if(args.length>0 && args[0].equalsIgnoreCase("help")) { showHelp(sender); return true; }
         if(args.length>0 && args[0].equalsIgnoreCase("top")){showLeaderboard(sender);return true;}
         if(args.length>0 && args[0].equalsIgnoreCase("weekly")){showWeekly(sender);return true;}
+        if(args.length>0 && args[0].equalsIgnoreCase("skrzynka")){if(sender instanceof Player p)crateSystem.open(p);else sender.sendMessage("Ta komenda jest dla graczy.");return true;}
+        if(args.length>0 && args[0].equalsIgnoreCase("gwiazdki")){if(sender instanceof Player p)crateSystem.showBalance(p);else sender.sendMessage("Ta komenda jest dla graczy.");return true;}
         if(args.length>0 && args[0].equalsIgnoreCase("roll")) {
             if(!sender.hasPermission("dailyquests.admin")){sender.sendMessage(ChatColor.RED+"Brak uprawnien.");return true;}
             rerollAll(sender);
@@ -440,7 +448,7 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
         if(reward!=null){ItemStack item=new ItemStack(reward,t.itemAmount);Map<Integer,ItemStack> overflow=p.getInventory().addItem(item);overflow.values().forEach(it->p.getWorld().dropItemNaturally(p.getLocation(),it));}
         p.sendMessage(ChatColor.GREEN+"Odebrano nagrode za: "+ChatColor.RESET+t.name);
         boolean all=tasks.size()==5&&tasks.stream().allMatch(x->x.claimed);
-        if(all){p.giveExp(250);updateStreak(p);p.sendMessage(ChatColor.GOLD+"Ukonczyles wszystkie 5 zadan! Bonus: 250 XP.");}
+        if(all){p.giveExp(250);updateStreak(p);crateSystem.awardStars(p,5);p.sendMessage(ChatColor.GOLD+"Ukonczyles wszystkie 5 zadan! Bonus: 250 XP i +5 gwiazdek do skrzynki.");}
         open(p);
     }
     @EventHandler public void onDrag(InventoryDragEvent e){if(TITLE.equals(e.getView().getTitle()))e.setCancelled(true);}
