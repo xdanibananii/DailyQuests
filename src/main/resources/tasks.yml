@@ -5,7 +5,7 @@
 # reward-item-amount: liczba przedmiotów
 tasks:
   break_stone:
-    name: "&fKamieniarz"
+    name: "&bRocky Balboa"
     description: "&7Wykop 64 bloki kamienia"
     type: BREAK
     target: STONE
@@ -14,7 +14,7 @@ tasks:
     reward-item: IRON_INGOT
     reward-item-amount: 4
   break_oak:
-    name: "&fLeśnik"
+    name: "&2Drwal z Rivendell"
     description: "&7Zbierz 32 kłody dębu"
     type: BREAK
     target: OAK_LOG
@@ -23,7 +23,7 @@ tasks:
     reward-item: BREAD
     reward-item-amount: 8
   break_coal:
-    name: "&fGórnik"
+    name: "&6There and Back Again"
     description: "&7Wydobądź 24 rudy węgla"
     type: BREAK
     target: COAL_ORE
@@ -32,7 +32,7 @@ tasks:
     reward-item: TORCH
     reward-item-amount: 16
   break_iron:
-    name: "&fPoszukiwacz żelaza"
+    name: "&fIron Man"
     description: "&7Wydobądź 12 rud żelaza"
     type: BREAK
     target: IRON_ORE
@@ -41,7 +41,7 @@ tasks:
     reward-item: IRON_INGOT
     reward-item-amount: 4
   kill_zombie:
-    name: "&fPogromca zombie"
+    name: "&2The Walking Dead"
     description: "&7Pokonaj 10 zombie"
     type: KILL
     target: ZOMBIE
@@ -50,7 +50,7 @@ tasks:
     reward-item: IRON_INGOT
     reward-item-amount: 3
   kill_skeleton:
-    name: "&fŁowca kości"
+    name: "&fBone Collector"
     description: "&7Pokonaj 8 szkieletów"
     type: KILL
     target: SKELETON
@@ -59,7 +59,7 @@ tasks:
     reward-item: ARROW
     reward-item-amount: 16
   kill_spider:
-    name: "&fPajęczy łowca"
+    name: "&cArachnofobia"
     description: "&7Pokonaj 8 pająków"
     type: KILL
     target: SPIDER
@@ -68,7 +68,7 @@ tasks:
     reward-item: GOLD_INGOT
     reward-item-amount: 2
   kill_creeper:
-    name: "&fRozbrajacz"
+    name: "&aNo Country for Creepers"
     description: "&7Pokonaj 5 creeperów"
     type: KILL
     target: CREEPER
@@ -77,7 +77,7 @@ tasks:
     reward-item: TNT
     reward-item-amount: 2
   craft_torch:
-    name: "&fŚwiatło w ciemności"
+    name: "&eLet There Be Light"
     description: "&7Wytwórz 32 pochodnie"
     type: CRAFT
     target: TORCH
@@ -86,7 +86,7 @@ tasks:
     reward-item: TORCH
     reward-item-amount: 16
   craft_bread:
-    name: "&fPiekarz"
+    name: "&6Breaking Bread"
     description: "&7Wytwórz 12 chlebów"
     type: CRAFT
     target: BREAD
@@ -95,7 +95,7 @@ tasks:
     reward-item: GOLD_INGOT
     reward-item-amount: 2
   craft_chest:
-    name: "&fStolarz"
+    name: "&6Bob Budowniczy"
     description: "&7Wytwórz 8 skrzyń"
     type: CRAFT
     target: CHEST
@@ -104,7 +104,7 @@ tasks:
     reward-item: IRON_INGOT
     reward-item-amount: 2
   fish_any:
-    name: "&fWędkarz"
+    name: "&bWielki Błękit"
     description: "&7Złów 5 ryb lub przedmiotów"
     type: FISH
     target: ANY
@@ -113,7 +113,7 @@ tasks:
     reward-item: COOKED_COD
     reward-item-amount: 4
   walk_1000:
-    name: "&fPodróżnik"
+    name: "&dForrest Gump"
     description: "&7Przejdź 1000 bloków"
     type: WALK
     target: ANY
@@ -122,7 +122,7 @@ tasks:
     reward-item: BAKED_POTATO
     reward-item-amount: 8
   walk_500:
-    name: "&fSpacerowicz"
+    name: "&aMały krok dla Steve’a"
     description: "&7Przejdź 500 bloków"
     type: WALK
     target: ANY
@@ -130,3 +130,232 @@ tasks:
     reward-xp: 100
     reward-item: BREAD
     reward-item-amount: 4
+
+  # Dodatkowe wyzwania Overworld
+  break_diamond:
+    name: "&bDiamentowa gorączka"
+    description: "&7Wydobądź 5 rud diamentu"
+    type: BREAK
+    target: DIAMOND_ORE
+    amount: 5
+    reward-xp: 350
+    reward-item: DIAMOND
+    reward-item-amount: 2
+  break_obsidian:
+    name: "&5Czarna brama"
+    description: "&7Wydobądź 16 bloków obsydianu"
+    type: BREAK
+    target: OBSIDIAN
+    amount: 16
+    reward-xp: 400
+    reward-item: GOLDEN_APPLE
+    reward-item-amount: 1
+  kill_enderman_overworld:
+    name: "&5Łowca z cienia"
+    description: "&7Pokonaj 5 endermanów w Overworldzie"
+    type: KILL
+    target: ENDERMAN
+    amount: 5
+    reward-xp: 300
+    reward-item: ENDER_PEARL
+    reward-item-amount: 4
+  kill_phantom:
+    name: "&9Nocny patrol"
+    description: "&7Pokonaj 4 fantomy"
+    type: KILL
+    target: PHANTOM
+    amount: 4
+    reward-xp: 280
+    reward-item: PHANTOM_MEMBRANE
+    reward-item-amount: 2
+  craft_golden_apple:
+    name: "&6Złoty standard"
+    description: "&7Wytwórz 2 złote jabłka"
+    type: CRAFT
+    target: GOLDEN_APPLE
+    amount: 2
+    reward-xp: 350
+    reward-item: GOLDEN_CARROT
+    reward-item-amount: 8
+  walk_3000:
+    name: "&dWładca szlaków"
+    description: "&7Przejdź 3000 bloków"
+    type: WALK
+    target: ANY
+    amount: 3000
+    reward-xp: 350
+    reward-item: SADDLE
+    reward-item-amount: 1
+  fish_treasure:
+    name: "&bPiraci z Minecrafta"
+    description: "&7Złów 12 ryb lub skarbów"
+    type: FISH
+    target: ANY
+    amount: 12
+    reward-xp: 320
+    reward-item: NAME_TAG
+    reward-item-amount: 2
+
+  # Nether — dostępne po /dq nether
+  nether_quartz:
+    name: "&fBiały pył"
+    description: "&7Wydobądź 48 rud kwarcu w Netherze"
+    type: BREAK
+    dimension: NETHER
+    target: NETHER_QUARTZ_ORE
+    amount: 48
+    reward-xp: 300
+    reward-item: QUARTZ
+    reward-item-amount: 24
+  nether_gold:
+    name: "&6Gorączka złota"
+    description: "&7Wydobądź 24 rudy złota Netheru"
+    type: BREAK
+    dimension: NETHER
+    target: NETHER_GOLD_ORE
+    amount: 24
+    reward-xp: 320
+    reward-item: GOLD_INGOT
+    reward-item-amount: 8
+  nether_magma:
+    name: "&cGorący temat"
+    description: "&7Zbierz 32 bloki magmy"
+    type: BREAK
+    dimension: NETHER
+    target: MAGMA_BLOCK
+    amount: 32
+    reward-xp: 250
+    reward-item: MAGMA_CREAM
+    reward-item-amount: 8
+  nether_blaze:
+    name: "&6Ghostbusters: Nether"
+    description: "&7Pokonaj 8 płomyków"
+    type: KILL
+    dimension: NETHER
+    target: BLAZE
+    amount: 8
+    reward-xp: 450
+    reward-item: BLAZE_ROD
+    reward-item-amount: 6
+  nether_wither_skeleton:
+    name: "&8Czarna straż"
+    description: "&7Pokonaj 10 witherowych szkieletów"
+    type: KILL
+    dimension: NETHER
+    target: WITHER_SKELETON
+    amount: 10
+    reward-xp: 500
+    reward-item: COAL
+    reward-item-amount: 24
+  nether_piglin:
+    name: "&6Układ z piglinem"
+    description: "&7Pokonaj 12 piglinów"
+    type: KILL
+    dimension: NETHER
+    target: PIGLIN
+    amount: 12
+    reward-xp: 350
+    reward-item: GOLD_INGOT
+    reward-item-amount: 10
+  nether_walk:
+    name: "&cAutostrada do piekła"
+    description: "&7Przejdź 1500 bloków w Netherze"
+    type: WALK
+    dimension: NETHER
+    target: ANY
+    amount: 1500
+    reward-xp: 400
+    reward-item: FIRE_RESISTANCE_POTION
+    reward-item-amount: 2
+  nether_ancient_debris:
+    name: "&5Ostatnia ruda"
+    description: "&7Wydobądź 4 pradawne zgliszcza"
+    type: BREAK
+    dimension: NETHER
+    target: ANCIENT_DEBRIS
+    amount: 4
+    reward-xp: 650
+    reward-item: NETHERITE_SCRAP
+    reward-item-amount: 2
+
+  # End — dostępne po /dq end
+  end_enderman:
+    name: "&5Panowie Endu"
+    description: "&7Pokonaj 20 endermanów w Endzie"
+    type: KILL
+    dimension: THE_END
+    target: ENDERMAN
+    amount: 20
+    reward-xp: 500
+    reward-item: ENDER_PEARL
+    reward-item-amount: 16
+  end_chorus:
+    name: "&dOgród na końcu świata"
+    description: "&7Zbierz 32 owoce refrenusu"
+    type: BREAK
+    dimension: THE_END
+    target: CHORUS_FLOWER
+    amount: 32
+    reward-xp: 400
+    reward-item: CHORUS_FRUIT
+    reward-item-amount: 16
+  end_obsidian:
+    name: "&5Czarna geometria"
+    description: "&7Wydobądź 32 bloki obsydianu w Endzie"
+    type: BREAK
+    dimension: THE_END
+    target: OBSIDIAN
+    amount: 32
+    reward-xp: 450
+    reward-item: ENDER_PEARL
+    reward-item-amount: 12
+  end_shulker:
+    name: "&dPudełko niespodzianka"
+    description: "&7Pokonaj 8 shulkerów"
+    type: KILL
+    dimension: THE_END
+    target: SHULKER
+    amount: 8
+    reward-xp: 600
+    reward-item: SHULKER_SHELL
+    reward-item-amount: 2
+  end_walk:
+    name: "&5Interstellar"
+    description: "&7Przejdź 2500 bloków w Endzie"
+    type: WALK
+    dimension: THE_END
+    target: ANY
+    amount: 2500
+    reward-xp: 550
+    reward-item: ENDER_PEARL
+    reward-item-amount: 16
+  end_dragon_breath:
+    name: "&dOstatni oddech"
+    description: "&7Zbierz 8 smoczych oddechów"
+    type: FISH
+    dimension: THE_END
+    target: ANY
+    amount: 8
+    reward-xp: 700
+    reward-item: DRAGON_BREATH
+    reward-item-amount: 2
+  end_crystal:
+    name: "&dSmocza technologia"
+    description: "&7Wytwórz 4 kryształy Endu"
+    type: CRAFT
+    dimension: THE_END
+    target: END_CRYSTAL
+    amount: 4
+    reward-xp: 650
+    reward-item: END_CRYSTAL
+    reward-item-amount: 2
+  end_purpur:
+    name: "&5Purpurowa architektura"
+    description: "&7Wydobądź 64 bloki purpuru"
+    type: BREAK
+    dimension: THE_END
+    target: PURPUR_BLOCK
+    amount: 64
+    reward-xp: 500
+    reward-item: SHULKER_SHELL
+    reward-item-amount: 1
