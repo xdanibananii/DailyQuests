@@ -1,0 +1,88 @@
+# Dodatkowe kontrakty Mistrza Zlecen.
+# item = material wymagany do oddania; amount = wymagana liczba przedmiotow.
+# Nagrody: reward-stars oraz reward-xp.
+contracts:
+  cowhide_delivery:
+    name: "&6Skóry dla garbarza"
+    description: "&7Garbarz z południa pilnie potrzebuje świeżych skór."
+    item: LEATHER
+    amount: 10
+    reward-stars: 5
+    reward-xp: 180
+  undead_supplies:
+    name: "&2Zapasy po zmroku"
+    description: "&7Nieumarli zostawiają po sobie przydatne resztki. Przynieś mi trochę."
+    item: ROTTEN_FLESH
+    amount: 16
+    reward-stars: 4
+    reward-xp: 150
+  iron_for_repairs:
+    name: "&fŻelazo na naprawy"
+    description: "&7Strażnicy potrzebują materiału do naprawy uzbrojenia."
+    item: IRON_INGOT
+    amount: 16
+    reward-stars: 6
+    reward-xp: 220
+  fisher_order:
+    name: "&bDostawa znad rzeki"
+    description: "&7Karczmarz obiecał rybną ucztę. Nie każ mu czekać."
+    item: COD
+    amount: 12
+    reward-stars: 5
+    reward-xp: 180
+  lumber_contract:
+    name: "&6Drewno na budowę"
+    description: "&7Cieśla rozbudowuje trakt. Potrzebuje solidnych dębowych bali."
+    item: OAK_LOG
+    amount: 24
+    reward-stars: 6
+    reward-xp: 220
+  spider_silk:
+    name: "&dNić pajęcza"
+    description: "&7Tkacz poszukuje nici. Podobno pająki mają jej pod dostatkiem."
+    item: STRING
+    amount: 12
+    reward-stars: 5
+    reward-xp: 190
+  ender_trade:
+    name: "&5Towar z dalekich stron"
+    description: "&7Alchemik zapłaci dobrze za perły Endermana."
+    item: ENDER_PEARL
+    amount: 4
+    reward-stars: 8
+    reward-xp: 300
+  bones_for_hounds:
+    name: "&fKości dla ogarów"
+    description: "&7Stajenny szkoli psy tropiące. Przydadzą mu się kości."
+    item: BONE
+    amount: 12
+    reward-stars: 5
+    reward-xp: 180
+  creeper_powder:
+    name: "&aProch na pokaz"
+    description: "&7Pirotechnik szykuje pokaz. Potrzebuje garści prochu."
+    item: GUNPOWDER
+    amount: 10
+    reward-stars: 6
+    reward-xp: 220
+  copper_delivery:
+    name: "&6Miedziany interes"
+    description: "&7Rzemieślnik zamawia miedź do swoich ozdób."
+    item: COPPER_INGOT
+    amount: 20
+    reward-stars: 5
+    reward-xp: 200
+  wheat_for_bakery:
+    name: "&eMąka na poranek"
+    description: "&7Piekarzowi kończą się zapasy. Przynieś mu zboże."
+    item: WHEAT
+    amount: 32
+    reward-stars: 4
+    reward-xp: 150
+  gold_for_the_master:
+    name: "&6Złoto dla zleceniodawcy"
+    description: "&7To pilne zamówienie. Nie pytaj, do czego mi potrzebne."
+    item: GOLD_INGOT
+    amount: 8
+    reward-stars: 8
+    reward-xp: 320
