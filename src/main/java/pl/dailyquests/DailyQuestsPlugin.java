@@ -32,6 +32,7 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
     private final Set<UUID> rerollMode = ConcurrentHashMap.newKeySet();
     private static final String TITLE = ChatColor.DARK_GRAY + "Codzienne zadania";
     private CrateSystem crateSystem;
+    private QuestNpcSystem npcSystem;
 
     private static final class Task {
         String id, name, description, type, target, rewardItem, dimension, difficulty;
@@ -67,6 +68,8 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
         } catch (SQLException e) { getLogger().severe("Nie mozna otworzyc SQLite: " + e.getMessage()); getServer().getPluginManager().disablePlugin(this); return; }
         Objects.requireNonNull(getCommand("zadania")).setExecutor(this);
         crateSystem = new CrateSystem(this);
+        npcSystem = new QuestNpcSystem(this, crateSystem);
+        getServer().getPluginManager().registerEvents(npcSystem, this);
         getServer().getPluginManager().registerEvents(this, this);
         getServer().getPluginManager().registerEvents(crateSystem, this);
         for (Player p : Bukkit.getOnlinePlayers()) ensureTasks(p);
@@ -115,6 +118,8 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
             getLogger().warning("Nie udało się zapisać puli zadań: " + ex.getMessage());
         }
     }
+
+    Connection database() { return db; }
 
     private String today() { return LocalDate.now(zone).toString(); }
     private ConfigurationSection pool() { return getConfigSection(); }
@@ -208,6 +213,7 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
         sender.sendMessage(ChatColor.YELLOW + "/dq skrzynka" + ChatColor.GRAY + " — otwiera skrzynkę za 20 gwiazdek");
         sender.sendMessage(ChatColor.YELLOW + "/dq gwiazdki" + ChatColor.GRAY + " — sprawdza saldo gwiazdek");
         sender.sendMessage(ChatColor.YELLOW + "/dq top" + ChatColor.GRAY + " — ranking graczy");
+        sender.sendMessage(ChatColor.YELLOW + "Kliknij Mistrza Zleceń na spawnie, aby przyjąć jeden kontrakt dziennie.");
         if (sender.hasPermission("dailyquests.admin")) {
             sender.sendMessage(ChatColor.DARK_AQUA + "Komendy administratora:");
             sender.sendMessage(ChatColor.YELLOW + "/dq gwiazdki dodaj <gracz> <ilość>" + ChatColor.GRAY + " — dodaje gwiazdki");
@@ -218,12 +224,38 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
             sender.sendMessage(ChatColor.YELLOW + "/dq nether [on|off]" + ChatColor.GRAY + " — włącza/wyłącza zadania z Netheru");
             sender.sendMessage(ChatColor.YELLOW + "/dq end [on|off]" + ChatColor.GRAY + " — włącza/wyłącza zadania z Endu");
             sender.sendMessage(ChatColor.YELLOW + "/dq reload" + ChatColor.GRAY + " — przeładowuje konfigurację");
+            sender.sendMessage(ChatColor.YELLOW + "/dq npc postaw" + ChatColor.GRAY + " — stawia Mistrza Zleceń");
+            sender.sendMessage(ChatColor.YELLOW + "/dq npc usun" + ChatColor.GRAY + " — usuwa Mistrza Zleceń");
+            sender.sendMessage(ChatColor.YELLOW + "/dq npc tp" + ChatColor.GRAY + " — teleportuje do NPC");
         } else {
             sender.sendMessage(ChatColor.GRAY + "Komendy administratora są dostępne tylko dla osób z uprawnieniem dailyquests.admin.");
         }
     }
 
     @Override public boolean onCommand(CommandSender sender,Command command,String label,String[] args) {
+        if(args.length>0 && args[0].equalsIgnoreCase("npc")) {
+            if(!sender.hasPermission("dailyquests.admin")) { sender.sendMessage(ChatColor.RED+"Brak uprawnień."); return true; }
+            if(args.length<2) {
+                sender.sendMessage(ChatColor.YELLOW+"Użycie: /dq npc <postaw|usun|tp>");
+                return true;
+            }
+            switch(args[1].toLowerCase(Locale.ROOT)) {
+                case "postaw" -> {
+                    if(sender instanceof Player p) npcSystem.spawnAt(p.getLocation(), sender::sendMessage);
+                    else sender.sendMessage("Tej komendy użyj w grze.");
+                }
+                case "usun" -> {
+                    npcSystem.removeNpc();
+                    sender.sendMessage(ChatColor.GREEN+"Usunięto Mistrza Zleceń.");
+                }
+                case "tp" -> {
+                    if(sender instanceof Player p) npcSystem.teleportToNpc(p);
+                    else sender.sendMessage("Tej komendy użyj w grze.");
+                }
+                default -> sender.sendMessage(ChatColor.YELLOW+"Użycie: /dq npc <postaw|usun|tp>");
+            }
+            return true;
+        }
         if(args.length>0 && args[0].equalsIgnoreCase("help")) { showHelp(sender); return true; }
         if(args.length>0 && args[0].equalsIgnoreCase("top")){showLeaderboard(sender);return true;}
         if(args.length>0 && args[0].equalsIgnoreCase("weekly")){showWeekly(sender);return true;}
