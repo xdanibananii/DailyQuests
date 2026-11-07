@@ -125,7 +125,7 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
             try (ResultSet rs=q.executeQuery()) {
                 List<Task> found=new ArrayList<>();
                 while(rs.next()) { Task t=loadTask(rs.getString(1)); if(t!=null){t.progress=rs.getInt(2);t.claimed=rs.getInt(3)==1;found.add(t);} }
-                if(found.size()==5){cache.put(p.getUniqueId(),found);return found;}
+                if(found.size()==5 && found.stream().allMatch(this::isTaskEnabled)){cache.put(p.getUniqueId(),found);return found;}
             }
         } catch(SQLException e){getLogger().warning(e.getMessage());}
         ConfigurationSection sec=pool();
@@ -133,7 +133,7 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
         Set<String> recent=new HashSet<>();
         try(PreparedStatement h=db.prepareStatement("SELECT task_id FROM task_history WHERE uuid=? AND assigned_day>=date(?, '-3 days')")){h.setString(1,p.getUniqueId().toString());h.setString(2,day);try(ResultSet r=h.executeQuery()){while(r.next())recent.add(r.getString(1));}}catch(SQLException ignored){}
         List<String> ids=new ArrayList<>(sec.getKeys(false));
-        ids.removeIf(id -> { ConfigurationSection c=sec.getConfigurationSection(id); String d=c==null?"OVERWORLD":c.getString("dimension","OVERWORLD").toUpperCase(Locale.ROOT); return (d.equals("NETHER")&&!getConfig().getBoolean("dimensions.nether-enabled",false)) || (d.equals("END")&&!getConfig().getBoolean("dimensions.end-enabled",false)); });
+        ids.removeIf(id -> { ConfigurationSection c=sec.getConfigurationSection(id); String d=c==null?"OVERWORLD":c.getString("dimension","OVERWORLD"); return !isDimensionEnabled(d); });
         Collections.shuffle(ids);
         List<Task> chosen=new ArrayList<>();
         for(String id:ids){if(recent.contains(id))continue;Task t=loadTask(id);if(t!=null){chosen.add(t);if(chosen.size()==5)break;}}
@@ -161,7 +161,7 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
         }catch(SQLException e){getLogger().warning("Blad zapisu zadania: "+e.getMessage());}
     }
     private void update(Player p,Task t,int delta) {
-        if(delta<=0)return;
+        if(delta<=0 || !isTaskEnabled(t))return;
         List<Task> list=ensureTasks(p);
         for(int i=0;i<list.size();i++) if(list.get(i).id.equals(t.id)){
             Task actual=list.get(i); if(actual.claimed)return;
@@ -195,7 +195,25 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
         sender.sendMessage(ChatColor.GREEN+"Przerolowano zadania dla wszystkich graczy. Usunieto tez dzisiejszy postep graczy offline.");
     }
 
+    private void showHelp(CommandSender sender) {
+        sender.sendMessage(ChatColor.GOLD + "━━ DAILYQUESTS — POMOC ━━");
+        sender.sendMessage(ChatColor.YELLOW + "/zadania" + ChatColor.GRAY + " — otwiera codzienne zadania");
+        sender.sendMessage(ChatColor.YELLOW + "/dq help" + ChatColor.GRAY + " — wyświetla tę pomoc");
+        sender.sendMessage(ChatColor.YELLOW + "/dq weekly" + ChatColor.GRAY + " — wyzwanie tygodnia");
+        sender.sendMessage(ChatColor.YELLOW + "/dq top" + ChatColor.GRAY + " — ranking graczy");
+        if (sender.hasPermission("dailyquests.admin")) {
+            sender.sendMessage(ChatColor.DARK_AQUA + "Komendy administratora:");
+            sender.sendMessage(ChatColor.YELLOW + "/dq roll" + ChatColor.GRAY + " — losuje ponownie zadania wszystkim graczom");
+            sender.sendMessage(ChatColor.YELLOW + "/dq nether [on|off]" + ChatColor.GRAY + " — włącza/wyłącza zadania z Netheru");
+            sender.sendMessage(ChatColor.YELLOW + "/dq end [on|off]" + ChatColor.GRAY + " — włącza/wyłącza zadania z Endu");
+            sender.sendMessage(ChatColor.YELLOW + "/dq reload" + ChatColor.GRAY + " — przeładowuje konfigurację");
+        } else {
+            sender.sendMessage(ChatColor.GRAY + "Komendy administratora są dostępne tylko dla osób z uprawnieniem dailyquests.admin.");
+        }
+    }
+
     @Override public boolean onCommand(CommandSender sender,Command command,String label,String[] args) {
+        if(args.length>0 && args[0].equalsIgnoreCase("help")) { showHelp(sender); return true; }
         if(args.length>0 && args[0].equalsIgnoreCase("top")){showLeaderboard(sender);return true;}
         if(args.length>0 && args[0].equalsIgnoreCase("weekly")){showWeekly(sender);return true;}
         if(args.length>0 && args[0].equalsIgnoreCase("roll")) {
@@ -220,9 +238,22 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
         if(!(sender instanceof Player p)){sender.sendMessage("Ta komenda jest dla graczy.");return true;}
         open(p);return true;
     }
+    private boolean isDimensionEnabled(String dimension) {
+        String normalized = dimension == null ? "OVERWORLD" : dimension.toUpperCase(Locale.ROOT);
+        if (normalized.equals("NETHER")) return getConfig().getBoolean("dimensions.nether-enabled", false);
+        if (normalized.equals("END") || normalized.equals("THE_END")) return getConfig().getBoolean("dimensions.end-enabled", false);
+        return true;
+    }
+
+    private boolean isTaskEnabled(Task task) {
+        return task != null && isDimensionEnabled(task.dimension);
+    }
+
     private boolean dimensionMatches(Task t, World world) {
+        if (!isTaskEnabled(t)) return false;
         String actual=world.getEnvironment().name();
-        return t.dimension.equals("OVERWORLD") ? actual.equals("NORMAL") : t.dimension.equals(actual);
+        String required=t.dimension.equals("END") ? "THE_END" : t.dimension;
+        return required.equals("OVERWORLD") ? actual.equals("NORMAL") : required.equals(actual);
     }
 
     private String weekKey(){java.time.temporal.WeekFields wf=java.time.temporal.WeekFields.ISO;LocalDate d=LocalDate.now(zone);return d.get(wf.weekBasedYear())+"-W"+String.format(Locale.ROOT,"%02d",d.get(wf.weekOfWeekBasedYear()));}
