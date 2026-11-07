@@ -29,6 +29,7 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
     private final Map<UUID, List<Task>> cache = new ConcurrentHashMap<>();
     private final Map<UUID, Location> lastWalk = new ConcurrentHashMap<>();
     private final Random random = new Random();
+    private final Set<UUID> rerollMode = ConcurrentHashMap.newKeySet();
     private static final String TITLE = ChatColor.DARK_GRAY + "Codzienne zadania";
     private CrateSystem crateSystem;
 
@@ -352,6 +353,11 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
                     ChatColor.DARK_GRAY+"━━━━━━━━━━━━━━━━━━━━",
                     ChatColor.YELLOW+"Reset: "+ChatColor.WHITE+today(),
                     ChatColor.GRAY+"Kliknij ukończone zadanie, aby odebrać nagrodę.")));
+        inv.setItem(40,make(rerollMode.contains(p.getUniqueId())?Material.REDSTONE_BLOCK:Material.EXPERIENCE_BOTTLE,
+            rerollMode.contains(p.getUniqueId())?ChatColor.RED+"Anuluj przerzut":ChatColor.LIGHT_PURPLE+"Przerzuć jedno zadanie",
+            List.of(ChatColor.GRAY+"Koszt: "+ChatColor.YELLOW+"5 poziomów XP",
+                    ChatColor.GRAY+"Kliknij, aby "+(rerollMode.contains(p.getUniqueId())?"wyłączyć":"włączyć")+" tryb przerzutu.",
+                    ChatColor.DARK_GRAY+"Następnie kliknij wybrane zadanie.")));
         inv.setItem(49,make(Material.CLOCK,ChatColor.AQUA+"Postęp dnia",
             List.of(ChatColor.GRAY+"Ukończone: "+ChatColor.GREEN+tasks.stream().filter(t->t.progress>=t.amount).count()+ChatColor.GRAY+"/5",
                     ChatColor.GRAY+"Odebrane: "+ChatColor.YELLOW+tasks.stream().filter(t->t.claimed).count()+ChatColor.GRAY+"/5",
@@ -408,7 +414,7 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
     private Material material(String name){try{return Material.valueOf(name);}catch(Exception e){return null;}}
 
     @EventHandler public void onJoin(PlayerJoinEvent e){ensureTasks(e.getPlayer());lastWalk.put(e.getPlayer().getUniqueId(),e.getPlayer().getLocation());}
-    @EventHandler public void onQuit(PlayerQuitEvent e){lastWalk.remove(e.getPlayer().getUniqueId());cache.remove(e.getPlayer().getUniqueId());}
+    @EventHandler public void onQuit(PlayerQuitEvent e){lastWalk.remove(e.getPlayer().getUniqueId());cache.remove(e.getPlayer().getUniqueId());rerollMode.remove(e.getPlayer().getUniqueId());}
     @EventHandler public void onBreak(BlockBreakEvent e){
         if(e.isCancelled())return;
         String type=e.getBlock().getType().name();
@@ -481,9 +487,56 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
     @EventHandler public void onInventoryClick(InventoryClickEvent e){
         if(!TITLE.equals(e.getView().getTitle()))return;
         e.setCancelled(true);if(!(e.getWhoClicked() instanceof Player p))return;
-        int slot=e.getRawSlot();if(slot<20||slot>24)return;
+        int slot=e.getRawSlot();
+        if(slot==40) {
+            if(!rerollMode.add(p.getUniqueId())) rerollMode.remove(p.getUniqueId());
+            p.sendMessage(rerollMode.contains(p.getUniqueId())
+                    ?ChatColor.LIGHT_PURPLE+"Tryb przerzutu aktywny. Kliknij zadanie, które chcesz wylosować ponownie."
+                    :ChatColor.GRAY+"Wyłączono tryb przerzutu.");
+            open(p);
+            return;
+        }
+        if(slot<20||slot>24)return;
         List<Task> tasks=ensureTasks(p);int index=slot-20;if(index>=tasks.size())return;
         Task t=tasks.get(index);
+        if(rerollMode.remove(p.getUniqueId())) {
+            if(t.claimed) {
+                p.sendMessage(ChatColor.RED+"Nie możesz przerzucić zadania, którego nagrodę już odebrałeś.");
+                open(p);
+                return;
+            }
+            if(p.getLevel()<5) {
+                p.sendMessage(ChatColor.RED+"Potrzebujesz 5 poziomów doświadczenia, aby przerzucić zadanie.");
+                open(p);
+                return;
+            }
+            Set<String> assigned=new HashSet<>();
+            for(Task existing:tasks) if(!existing.id.equals(t.id)) assigned.add(existing.id);
+            ConfigurationSection available=pool();
+            List<Task> candidates=new ArrayList<>();
+            if(available!=null) for(String id:available.getKeys(false)) {
+                if(assigned.contains(id)) continue;
+                Task candidate=loadTask(id);
+                if(candidate!=null && isTaskEnabled(candidate)) candidates.add(candidate);
+            }
+            if(candidates.isEmpty()) {
+                p.sendMessage(ChatColor.RED+"Brak innych dostępnych zadań do wylosowania.");
+                open(p);
+                return;
+            }
+            p.setLevel(p.getLevel()-5);
+            Task next=candidates.get(random.nextInt(candidates.size()));
+            tasks.set(index,next);
+            cache.put(p.getUniqueId(),tasks);
+            save(p.getUniqueId(),index,next);
+            try(PreparedStatement h=db.prepareStatement("INSERT OR REPLACE INTO task_history(uuid,task_id,assigned_day) VALUES(?,?,?)")) {
+                h.setString(1,p.getUniqueId().toString());h.setString(2,next.id);h.setString(3,today());h.executeUpdate();
+            } catch(SQLException ex) { getLogger().warning("Nie udało się zapisać historii przerzutu: "+ex.getMessage()); }
+            p.playSound(p.getLocation(),Sound.ENTITY_EXPERIENCE_ORB_PICKUP,0.8f,1.4f);
+            p.sendMessage(ChatColor.GREEN+"Wylosowano nowe zadanie za 5 poziomów XP: "+ChatColor.YELLOW+ChatColor.stripColor(next.name));
+            open(p);
+            return;
+        }
         if(t.claimed){p.sendMessage(ChatColor.GRAY+"Ta nagroda zostala juz odebrana.");return;}
         if(t.progress<t.amount){p.sendMessage(ChatColor.RED+"To zadanie nie jest jeszcze ukonczone.");return;}
         t.claimed=true;save(p.getUniqueId(),index,t);
