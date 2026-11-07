@@ -85,6 +85,39 @@ public final class CrateSystem implements Listener {
         }
     }
 
+    public boolean modifyStars(UUID uuid, String operation, int amount) {
+        if (db == null || amount < 0) return false;
+        try {
+            if ("dodaj".equals(operation)) {
+                try (PreparedStatement st = db.prepareStatement(
+                        "INSERT INTO dq_wallet(uuid,stars) VALUES(?,?) ON CONFLICT(uuid) DO UPDATE SET stars=MIN(2147483647, stars+excluded.stars)")) {
+                    st.setString(1, uuid.toString());
+                    st.setInt(2, amount);
+                    return st.executeUpdate() > 0;
+                }
+            }
+            if ("usun".equals(operation)) {
+                try (PreparedStatement st = db.prepareStatement(
+                        "INSERT INTO dq_wallet(uuid,stars) VALUES(?,0) ON CONFLICT(uuid) DO UPDATE SET stars=MAX(0,stars-?)")) {
+                    st.setString(1, uuid.toString());
+                    st.setInt(2, amount);
+                    return st.executeUpdate() > 0;
+                }
+            }
+            if ("ustaw".equals(operation)) {
+                try (PreparedStatement st = db.prepareStatement(
+                        "INSERT INTO dq_wallet(uuid,stars) VALUES(?,?) ON CONFLICT(uuid) DO UPDATE SET stars=excluded.stars")) {
+                    st.setString(1, uuid.toString());
+                    st.setInt(2, amount);
+                    return st.executeUpdate() > 0;
+                }
+            }
+        } catch (SQLException ex) {
+            plugin.getLogger().warning("Błąd modyfikacji gwiazdek: " + ex.getMessage());
+        }
+        return false;
+    }
+
     public void showBalance(Player player) {
         player.sendMessage(ChatColor.GOLD + "★ Twoje saldo: " + ChatColor.YELLOW + getStars(player.getUniqueId()) + " gwiazdek");
         player.sendMessage(ChatColor.GRAY + "Ukończ wszystkie 5 zadań dziennych, aby otrzymać kolejne 5.");
