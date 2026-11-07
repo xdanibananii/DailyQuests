@@ -265,7 +265,7 @@ tasks:
     target: ANY
     amount: 1500
     reward-xp: 400
-    reward-item: FIRE_RESISTANCE_POTION
+    reward-item: POTION
     reward-item-amount: 2
   nether_ancient_debris:
     name: "&5Ostatnia ruda"
@@ -330,13 +330,13 @@ tasks:
     reward-item: ENDER_PEARL
     reward-item-amount: 16
   end_dragon_breath:
-    name: "&dOstatni oddech"
-    description: "&7Zbierz 8 smoczych oddechów"
-    type: FISH
+    name: "&dOstatni boss"
+    description: "&7Pokonaj smoka Endu"
+    type: KILL
     dimension: THE_END
-    target: ANY
-    amount: 8
-    reward-xp: 700
+    target: ENDER_DRAGON
+    amount: 1
+    reward-xp: 900
     reward-item: DRAGON_BREATH
     reward-item-amount: 2
   end_crystal:
