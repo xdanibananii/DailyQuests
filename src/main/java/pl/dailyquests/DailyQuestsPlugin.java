@@ -106,8 +106,16 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
         List<Task> list=ensureTasks(p);
         for(int i=0;i<list.size();i++) if(list.get(i).id.equals(t.id)){
             Task actual=list.get(i); if(actual.claimed)return;
-            actual.progress=Math.min(actual.amount,actual.progress+delta);save(p.getUniqueId(),i,actual);
-            if(actual.progress>=actual.amount)p.playSound(p.getLocation(),Sound.ENTITY_PLAYER_LEVELUP,0.6f,1.4f);
+            int before=actual.progress;
+            actual.progress=Math.min(actual.amount,actual.progress+delta);
+            save(p.getUniqueId(),i,actual);
+            if(before<actual.amount && actual.progress>=actual.amount){
+                p.playSound(p.getLocation(),Sound.UI_TOAST_CHALLENGE_COMPLETE,0.8f,1.0f);
+                p.sendTitle(ChatColor.GOLD+"Zadanie ukończone!",ChatColor.YELLOW+ChatColor.stripColor(actual.name)+"  "+ChatColor.GREEN+"Odbierz nagrodę w /zadania",8,55,15);
+                p.sendMessage(ChatColor.GOLD+"★ "+ChatColor.GREEN+"Ukończono zadanie: "+ChatColor.WHITE+ChatColor.stripColor(actual.name)+ChatColor.GRAY+" — nagroda czeka w "+ChatColor.YELLOW+"/zadania");
+            } else {
+                p.playSound(p.getLocation(),Sound.UI_BUTTON_CLICK,0.25f,1.6f);
+            }
             break;
         }
     }
@@ -123,21 +131,64 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
 
     private void open(Player p) {
         List<Task> tasks=ensureTasks(p);
-        Inventory inv=Bukkit.createInventory(null,45,TITLE);
-        ItemStack filler=new ItemStack(Material.GRAY_STAINED_GLASS_PANE);ItemMeta fm=filler.getItemMeta();fm.setDisplayName(" ");filler.setItemMeta(fm);
-        for(int i=0;i<45;i++)inv.setItem(i,filler);
-        inv.setItem(4,make(Material.BOOK,ChatColor.GOLD+"Twoje codzienne zadania",List.of(ChatColor.GRAY+"Reset: "+today(),ChatColor.GRAY+"Kliknij ukonczone zadanie, aby odebrac nagrode.")));
-        for(int i=0;i<tasks.size();i++){
-            Task t=tasks.get(i);Material icon=material(t.target);if(icon==null)icon=Material.WRITABLE_BOOK;
-            List<String> lore=new ArrayList<>();lore.add(t.description);lore.add("");
-            lore.add(ChatColor.GRAY+"Postep: "+ChatColor.YELLOW+t.progress+"/"+t.amount);
-            lore.add(ChatColor.GRAY+"Nagroda: "+ChatColor.GREEN+t.xp+" XP");
-            if(!t.rewardItem.isBlank())lore.add(ChatColor.GRAY+"Przedmiot: "+ChatColor.GREEN+t.itemAmount+"x "+t.rewardItem);
+        Inventory inv=Bukkit.createInventory(null,54,TITLE);
+        ItemStack dark=make(Material.BLACK_STAINED_GLASS_PANE," ",List.of());
+        ItemStack accent=make(Material.CYAN_STAINED_GLASS_PANE," ",List.of());
+        for(int i=0;i<54;i++) inv.setItem(i,dark);
+        for(int i=0;i<9;i++){inv.setItem(i,accent);inv.setItem(45+i,accent);}
+        for(int row=1;row<=4;row++){inv.setItem(row*9,accent);inv.setItem(row*9+8,accent);}
+        inv.setItem(4,make(Material.NETHER_STAR,ChatColor.GOLD+"✦  CODZIENNE WYZWANIA  ✦",
+            List.of(ChatColor.GRAY+"Wykonuj zadania, zdobywaj nagrody i XP.",
+                    ChatColor.DARK_GRAY+"━━━━━━━━━━━━━━━━━━━━",
+                    ChatColor.YELLOW+"Reset: "+ChatColor.WHITE+today(),
+                    ChatColor.GRAY+"Kliknij ukończone zadanie, aby odebrać nagrodę.")));
+        inv.setItem(49,make(Material.CLOCK,ChatColor.AQUA+"Postęp dnia",
+            List.of(ChatColor.GRAY+"Ukończone: "+ChatColor.GREEN+tasks.stream().filter(t->t.progress>=t.amount).count()+ChatColor.GRAY+"/5",
+                    ChatColor.GRAY+"Odebrane: "+ChatColor.YELLOW+tasks.stream().filter(t->t.claimed).count()+ChatColor.GRAY+"/5",
+                    ChatColor.DARK_GRAY+"Bonus za komplet: "+ChatColor.GOLD+"250 XP")));
+        int[] slots={20,21,22,23,24};
+        for(int i=0;i<tasks.size()&&i<5;i++){
+            Task t=tasks.get(i);
+            Material icon=taskIcon(t);
+            String status=t.claimed?ChatColor.GREEN+"✔ ODEBRANO":t.progress>=t.amount?ChatColor.GOLD+"★ GOTOWE — ODBIERZ!":ChatColor.YELLOW+"◷ W TRAKCIE";
+            List<String> lore=new ArrayList<>();
+            lore.add(ChatColor.GRAY+t.description);
             lore.add("");
-            lore.add(t.claimed?ChatColor.GREEN+"Nagroda odebrana":t.progress>=t.amount?ChatColor.YELLOW+"Kliknij, aby odebrac!":ChatColor.RED+"W trakcie");
-            inv.setItem(19+i,make(t.claimed?Material.LIME_STAINED_GLASS_PANE:(t.progress>=t.amount?Material.GOLD_BLOCK:icon),t.name,lore));
+            lore.add(ChatColor.DARK_GRAY+"POSTĘP");
+            lore.add(progressBar(t.progress,t.amount));
+            lore.add(ChatColor.WHITE+t.progress+ChatColor.GRAY+" / "+ChatColor.WHITE+t.amount);
+            lore.add("");
+            lore.add(ChatColor.DARK_GRAY+"NAGRODA");
+            lore.add(ChatColor.GREEN+"✦ "+t.xp+" XP");
+            if(!t.rewardItem.isBlank()) lore.add(ChatColor.AQUA+"✦ "+t.itemAmount+"x "+pretty(t.rewardItem));
+            lore.add("");
+            lore.add(status);
+            inv.setItem(slots[i],make(t.claimed?Material.LIME_STAINED_GLASS_PANE:(t.progress>=t.amount?Material.GOLD_BLOCK:icon),ChatColor.WHITE+t.name,lore));
         }
         p.openInventory(inv);
+    }
+    private String progressBar(int progress,int amount){
+        int filled=Math.min(10,(int)Math.floor(10.0*progress/Math.max(1,amount)));
+        return ChatColor.GREEN+"▰".repeat(filled)+ChatColor.DARK_GRAY+"▰".repeat(10-filled);
+    }
+    private String pretty(String material){
+        String[] words=material.toLowerCase(Locale.ROOT).split("_");
+        StringJoiner result=new StringJoiner(" ");
+        for(String word:words) result.add(Character.toUpperCase(word.charAt(0))+word.substring(1));
+        return result.toString();
+    }
+    private Material taskIcon(Task t){
+        if(t.type.equals("KILL")) return switch(t.target){
+            case "ZOMBIE" -> Material.ROTTEN_FLESH;
+            case "SKELETON" -> Material.BONE;
+            case "SPIDER" -> Material.SPIDER_EYE;
+            case "CREEPER" -> Material.GUNPOWDER;
+            default -> Material.IRON_SWORD;
+        };
+        if(t.type.equals("WALK")) return Material.LEATHER_BOOTS;
+        if(t.type.equals("FISH")) return Material.FISHING_ROD;
+        Material icon=material(t.target);
+        return icon==null?Material.WRITABLE_BOOK:icon;
     }
     private ItemStack make(Material mat,String name,List<String> lore){
         ItemStack item=new ItemStack(mat);ItemMeta meta=item.getItemMeta();meta.setDisplayName(name);meta.setLore(lore);item.setItemMeta(meta);return item;
@@ -211,8 +262,8 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
     @EventHandler public void onInventoryClick(InventoryClickEvent e){
         if(!TITLE.equals(e.getView().getTitle()))return;
         e.setCancelled(true);if(!(e.getWhoClicked() instanceof Player p))return;
-        int slot=e.getRawSlot();if(slot<19||slot>23)return;
-        List<Task> tasks=ensureTasks(p);int index=slot-19;if(index>=tasks.size())return;
+        int slot=e.getRawSlot();if(slot<20||slot>24)return;
+        List<Task> tasks=ensureTasks(p);int index=slot-20;if(index>=tasks.size())return;
         Task t=tasks.get(index);
         if(t.claimed){p.sendMessage(ChatColor.GRAY+"Ta nagroda zostala juz odebrana.");return;}
         if(t.progress<t.amount){p.sendMessage(ChatColor.RED+"To zadanie nie jest jeszcze ukonczone.");return;}
