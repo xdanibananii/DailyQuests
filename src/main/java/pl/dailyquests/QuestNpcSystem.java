@@ -26,7 +26,7 @@ import java.time.ZoneId;
 import java.util.*;
 
 public final class QuestNpcSystem implements Listener {
-    private static final String TITLE = ChatColor.DARK_GREEN + "Mistrz Zleceń";
+    private static final String TITLE = ChatColor.DARK_GRAY + "✦ " + ChatColor.DARK_GREEN + "KSIĘGA KONTRAKTÓW" + ChatColor.DARK_GRAY + " ✦";
     private final DailyQuestsPlugin plugin;
     private final CrateSystem crates;
     private final Connection db;
@@ -172,7 +172,7 @@ public final class QuestNpcSystem implements Listener {
         yaml.set("pitch", location.getPitch());
         yaml.set("uuid", villager.getUniqueId().toString());
         saveNpc(yaml);
-        reply.send(ChatColor.GREEN + "Postawiono Mistrza Zlecen na twojej pozycji.");
+        reply.send(ChatColor.GREEN + "Mistrz Zleceń zajął już swoje miejsce.");
     }
 
     private void configure(Villager villager) {
@@ -183,7 +183,7 @@ public final class QuestNpcSystem implements Listener {
         villager.setRemoveWhenFarAway(false);
         villager.setCollidable(false);
         villager.setProfession(Villager.Profession.CARTOGRAPHER);
-        villager.setCustomName(ChatColor.GOLD + "✦ " + ChatColor.YELLOW + "Mistrz Zleceń");
+        villager.setCustomName(ChatColor.GOLD + "✦ " + ChatColor.YELLOW + "Mistrz Zleceń" + ChatColor.GOLD + " ✦");
         villager.setCustomNameVisible(true);
         villager.getPersistentDataContainer().set(npcKey, PersistentDataType.BYTE, (byte) 1);
     }
@@ -224,57 +224,133 @@ public final class QuestNpcSystem implements Listener {
         player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_TRADE, 0.8f, 0.9f);
         Contract c = getContract(player);
         if (c == null) {
-            player.sendMessage(ChatColor.RED + "Mistrz Zlecen: Dziś nie mam dla ciebie żadnej pracy. Wróć jutro.");
+            say(player, "Na dziś nie mam już wolnego zlecenia. Zajrzyj jutro — interesy nie uciekną.");
             return;
         }
-        player.sendMessage(ChatColor.GOLD + "Mistrz Zleceń " + ChatColor.DARK_GRAY + "» " + ChatColor.YELLOW
-                + (c.claimed ? "Dobra robota, podróżniku. Jutro znajdę dla ciebie coś nowego."
-                : "Witaj, wędrowcze. Mam dla ciebie sprawę do załatwienia..."));
-        if (!c.claimed) {
-            player.sendMessage(ChatColor.GRAY + "Mistrz Zleceń: " + c.description);
-            player.sendMessage(ChatColor.GRAY + "Przynieś mi " + ChatColor.YELLOW + c.amount + "x "
-                    + pretty(Material.valueOf(c.material)) + ChatColor.GRAY + ", a nie pożałujesz.");
+        if (c.claimed) {
+            say(player, "Widzę, że dzisiejszą sprawę mamy już załatwioną. Dobra robota. Jutro powinienem mieć coś nowego.");
+        } else {
+            say(player, "Dobrze, że jesteś. Mam dla ciebie robotę — konkretną, uczciwie płatną i bez zbędnych pytań.");
+            say(player, c.description);
+            say(player, "Jeśli podejmujesz się zlecenia, przynieś " + c.amount + " szt. " 
+                    + pretty(Material.valueOf(c.material)) + ". Resztę zostaw mnie.");
         }
         open(player, c);
     }
 
+    private void say(Player player, String message) {
+        player.sendMessage(ChatColor.GOLD + "Mistrz Zleceń" + ChatColor.DARK_GRAY + " » "
+                + ChatColor.YELLOW + message);
+    }
+
     private void open(Player player, Contract c) {
-        Inventory inv = Bukkit.createInventory(null, 45, TITLE);
-        ItemStack pane = item(Material.GREEN_STAINED_GLASS_PANE, " ", List.of());
-        for (int i = 0; i < 45; i++) inv.setItem(i, pane);
-        inv.setItem(4, item(Material.WRITABLE_BOOK, ChatColor.GOLD + "✦ KONTRAKTY MISTRZA ✦",
-                List.of(ChatColor.GRAY + "„Drogi bywają długie, ale sakiewka",
-                        ChatColor.GRAY + "nie napełni się sama. Pomożesz mi?”",
-                        "", ChatColor.DARK_GRAY + "Jeden kontrakt dziennie.")));
-        Material material = Material.valueOf(c.material);
-        int owned = count(player, material);
-        inv.setItem(20, item(material, ChatColor.YELLOW + c.name,
-                List.of(ChatColor.GRAY + c.description, "",
-                        ChatColor.WHITE + "Przynieś: " + ChatColor.YELLOW + c.amount + "x " + pretty(material),
-                        ChatColor.GRAY + "Masz przy sobie: " + ChatColor.AQUA + owned + "/" + c.amount,
-                        "", ChatColor.GOLD + "Nagroda:",
-                        ChatColor.YELLOW.toString() + c.stars + " ★",
-                        ChatColor.GREEN.toString() + c.xp + " XP",
-                        "", c.claimed ? ChatColor.GREEN + "✔ KONTRAKT ODDANY" : ChatColor.YELLOW + "W TRAKCIE")));
-        inv.setItem(31, item(c.claimed ? Material.LIME_DYE : Material.EMERALD,
-                c.claimed ? ChatColor.GREEN + "Kontrakt wykonany" : ChatColor.GREEN + "ODDAJ ZLECENIE",
-                List.of(c.claimed ? ChatColor.GRAY + "Wróć jutro po nowe zlecenie."
-                        : ChatColor.GRAY + "Kliknij, gdy masz wszystkie przedmioty.",
-                        ChatColor.DARK_GRAY + "Wymagane: " + c.amount + "x " + pretty(material))));
+        Inventory inv = Bukkit.createInventory(null, 54, TITLE);
+        ItemStack dark = item(Material.BLACK_STAINED_GLASS_PANE, " ", List.of());
+        ItemStack green = item(Material.GREEN_STAINED_GLASS_PANE, " ", List.of());
+        for (int i = 0; i < 54; i++) inv.setItem(i, dark);
+        for (int i = 0; i < 9; i++) {
+            inv.setItem(i, green);
+            inv.setItem(45 + i, green);
+        }
+        for (int row = 1; row < 5; row++) {
+            inv.setItem(row * 9, green);
+            inv.setItem(row * 9 + 8, green);
+        }
+
+        inv.setItem(4, item(Material.WRITABLE_BOOK, ChatColor.GOLD + "✦ KSIĘGA KONTRAKTÓW ✦",
+                List.of(ChatColor.GRAY + "Zlecenia są proste: wykonujesz pracę,",
+                        ChatColor.GRAY + "odbierasz zapłatę. Bez targowania.",
+                        "", ChatColor.DARK_GREEN + "MISTRZ ZLECEŃ",
+                        ChatColor.DARK_GRAY + "Jedno zlecenie na dzień.")));
+
+        Material required = Material.valueOf(c.material);
+        int owned = count(player, required);
+        inv.setItem(20, item(required, ChatColor.YELLOW + "WYMAGANE TOWARY",
+                List.of(ChatColor.GRAY + "Dostarcz mi:",
+                        ChatColor.WHITE + c.amount + " × " + polishName(required),
+                        "", ChatColor.GRAY + "W twoim ekwipunku: "
+                                + (owned >= c.amount ? ChatColor.GREEN : ChatColor.RED)
+                                + Math.min(owned, c.amount) + ChatColor.GRAY + " / " + c.amount,
+                        "", ChatColor.DARK_GRAY + "Przedmioty zostaną pobrane",
+                        ChatColor.DARK_GRAY + "dopiero po zatwierdzeniu zlecenia.")));
+
+        inv.setItem(22, item(Material.FILLED_MAP, ChatColor.GOLD + c.name,
+                List.of(ChatColor.GRAY + "ZLECENIE DNIA",
+                        "",
+                        ChatColor.WHITE + c.description,
+                        "",
+                        c.claimed ? ChatColor.GREEN + "✔ To zlecenie zostało już rozliczone."
+                                : ChatColor.YELLOW + "Czeka na twoją dostawę.")));
+
+        inv.setItem(24, item(Material.CHEST, ChatColor.GOLD + "WYNAGRODZENIE",
+                List.of(ChatColor.GRAY + "Za wykonanie zlecenia otrzymasz:",
+                        "",
+                        ChatColor.YELLOW + "★ " + c.stars + " gwiazdek",
+                        ChatColor.GREEN + "+" + c.xp + " doświadczenia",
+                        "",
+                        ChatColor.DARK_GRAY + "Zapłata po oddaniu kompletu.")));
+
+        int progress = Math.min(10, (int) Math.floor(10.0 * owned / Math.max(1, c.amount)));
+        List<String> progressLore = new ArrayList<>();
+        progressLore.add(ChatColor.GRAY + "Postęp dostawy: " + owned + " / " + c.amount);
+        progressLore.add("");
+        StringBuilder bar = new StringBuilder(ChatColor.DARK_GREEN.toString());
+        for (int i = 0; i < 10; i++) bar.append(i < progress ? "■" : "□");
+        progressLore.add(bar.toString());
+        progressLore.add("");
+        progressLore.add(c.claimed ? ChatColor.GREEN + "Zlecenie zakończone."
+                : owned >= c.amount ? ChatColor.GREEN + "Masz wszystko. Możesz zdać zlecenie."
+                : ChatColor.RED + "Brakuje ci jeszcze " + (c.amount - owned) + " szt.");
+        inv.setItem(31, item(Material.BOOK, ChatColor.AQUA + "STATUS ZLECENIA", progressLore));
+
+        if (c.claimed) {
+            inv.setItem(40, item(Material.LIME_DYE, ChatColor.GREEN + "ZLECENIE ROZLICZONE",
+                    List.of(ChatColor.GRAY + "Dziękuję za solidną robotę.",
+                            ChatColor.GRAY + "Wróć jutro po kolejne.")));
+        } else if (owned >= c.amount) {
+            inv.setItem(40, item(Material.LIME_CONCRETE, ChatColor.GREEN + "ODDAJ TOWAR",
+                    List.of(ChatColor.GRAY + "Masz wymagane przedmioty.",
+                            ChatColor.YELLOW + "Kliknij, aby zakończyć zlecenie.",
+                            "", ChatColor.DARK_GREEN + "Odbierz swoje wynagrodzenie.")));
+        } else {
+            inv.setItem(40, item(Material.GRAY_DYE, ChatColor.RED + "NIE MASZ JESZCZE KOMPLETU",
+                    List.of(ChatColor.GRAY + "Wróć, gdy zbierzesz wszystkie",
+                            ChatColor.GRAY + "wymagane przedmioty.",
+                            "", ChatColor.DARK_GRAY + "Brakuje: " + (c.amount - owned))));
+        }
+        inv.setItem(49, item(Material.BARRIER, ChatColor.RED + "ZAMKNIJ KSIĘGĘ",
+                List.of(ChatColor.GRAY + "Wróć, kiedy będziesz gotów.")));
         player.openInventory(inv);
+    }
+
+    private String polishName(Material material) {
+        return switch (material) {
+            case LEATHER -> "skór";
+            case ROTTEN_FLESH -> "szt. zgniłego mięsa";
+            case IRON_INGOT -> "szt. sztabek żelaza";
+            case COD -> "szt. surowego dorsza";
+            case OAK_LOG -> "szt. dębowych bali";
+            case STRING -> "szt. nici";
+            case ENDER_PEARL -> "szt. pereł Endermana";
+            case BONE -> "szt. kości";
+            case GUNPOWDER -> "szt. prochu";
+            case COPPER_INGOT -> "szt. sztabek miedzi";
+            case WHEAT -> "szt. pszenicy";
+            case GOLD_INGOT -> "szt. sztabek złota";
+            default -> pretty(material);
+        };
     }
 
     @EventHandler public void onContractClick(InventoryClickEvent event) {
         if (!TITLE.equals(event.getView().getTitle())) return;
         event.setCancelled(true);
-        if (!(event.getWhoClicked() instanceof Player player) || event.getRawSlot() != 31) return;
+        if (!(event.getWhoClicked() instanceof Player player) || event.getRawSlot() != 40) return;
         Contract c = getContract(player);
         if (c == null || c.claimed) { open(player, c == null ? emptyContract() : c); return; }
         Material required = Material.valueOf(c.material);
         int have = count(player, required);
         if (have < c.amount) {
-            player.sendMessage(ChatColor.RED + "Mistrz Zlecen: Brakuje ci jeszcze " + (c.amount - have)
-                    + "x " + pretty(required) + ". Nie wracaj z pustymi rękami!");
+            say(player, "Do kompletu brakuje ci jeszcze " + (c.amount - have) + " szt. " + polishName(required) + ". Wróć, gdy będziesz mieć całą dostawę.");
             player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 0.8f, 0.7f);
             open(player, c);
             return;
@@ -297,15 +373,14 @@ public final class QuestNpcSystem implements Listener {
         }
         if (c.stars > 0) crates.awardStars(player, c.stars);
         if (c.xp > 0) player.giveExp(c.xp);
-        player.sendMessage(ChatColor.GOLD + "Mistrz Zlecen " + ChatColor.DARK_GRAY + "» "
-                + ChatColor.GREEN + "Umowa stoi! Wiedziałem, że można na tobie polegać.");
+        say(player, "Dostawa się zgadza. Dobra robota — oto twoja zapłata. Jeśli będziesz szukać kolejnego zajęcia, wiesz, gdzie mnie znaleźć.");
         player.playSound(player.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1f, 1f);
         open(player, getContract(player));
     }
 
     private Contract emptyContract() {
         Contract c = new Contract();
-        c.name = "Brak kontraktu"; c.description = "Wroc jutro."; c.material = Material.PAPER.name();
+        c.name = "Brak zlecenia"; c.description = "Wróć jutro."; c.material = Material.PAPER.name();
         c.amount = 1; c.claimed = true;
         return c;
     }

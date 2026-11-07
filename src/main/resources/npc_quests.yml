@@ -1,87 +1,87 @@
-# Dodatkowe kontrakty Mistrza Zlecen.
-# item = material wymagany do oddania; amount = wymagana liczba przedmiotow.
-# Nagrody: reward-stars oraz reward-xp.
+# Kontrakty Mistrza Zleceń.
+# item = wymagany przedmiot; amount = wymagana liczba.
+# Nagrody: reward-stars (gwiazdki) oraz reward-xp (doświadczenie).
 contracts:
   cowhide_delivery:
     name: "&6Skóry dla garbarza"
-    description: "&7Garbarz z południa pilnie potrzebuje świeżych skór."
+    description: "&7Garbarz z południowej części osady ma zaległe zamówienia. Bez skór nie ruszy z robotą."
     item: LEATHER
     amount: 10
     reward-stars: 5
     reward-xp: 180
   undead_supplies:
     name: "&2Zapasy po zmroku"
-    description: "&7Nieumarli zostawiają po sobie przydatne resztki. Przynieś mi trochę."
+    description: "&7Strażnicy skarżą się na nieumarłych kręcących się przy trakcie. Zgarnij to, co po nich zostaje."
     item: ROTTEN_FLESH
     amount: 16
     reward-stars: 4
     reward-xp: 150
   iron_for_repairs:
     name: "&fŻelazo na naprawy"
-    description: "&7Strażnicy potrzebują materiału do naprawy uzbrojenia."
+    description: "&7Strażnikom kończą się zapasy na naprawę uzbrojenia. Przyda im się solidna dostawa żelaza."
     item: IRON_INGOT
     amount: 16
     reward-stars: 6
     reward-xp: 220
   fisher_order:
     name: "&bDostawa znad rzeki"
-    description: "&7Karczmarz obiecał rybną ucztę. Nie każ mu czekać."
+    description: "&7Karczmarz szykuje wieczorną ucztę i znów obiecał więcej, niż ma w spiżarni. Pomóż mu dotrzymać słowa."
     item: COD
     amount: 12
     reward-stars: 5
     reward-xp: 180
   lumber_contract:
     name: "&6Drewno na budowę"
-    description: "&7Cieśla rozbudowuje trakt. Potrzebuje solidnych dębowych bali."
+    description: "&7Cieśla naprawia most przy starym trakcie. Zamówił dębowe bale — i to na wczoraj."
     item: OAK_LOG
     amount: 24
     reward-stars: 6
     reward-xp: 220
   spider_silk:
     name: "&dNić pajęcza"
-    description: "&7Tkacz poszukuje nici. Podobno pająki mają jej pod dostatkiem."
+    description: "&7Miejscowy tkacz dostał pilne zamówienie. Brakuje mu nici, a pająki niechętnie współpracują."
     item: STRING
     amount: 12
     reward-stars: 5
     reward-xp: 190
   ender_trade:
     name: "&5Towar z dalekich stron"
-    description: "&7Alchemik zapłaci dobrze za perły Endermana."
+    description: "&7Alchemik prowadzi niebezpieczne eksperymenty i potrzebuje pereł Endermana. Dobrze za nie zapłaci."
     item: ENDER_PEARL
     amount: 4
     reward-stars: 8
     reward-xp: 300
   bones_for_hounds:
     name: "&fKości dla ogarów"
-    description: "&7Stajenny szkoli psy tropiące. Przydadzą mu się kości."
+    description: "&7Stajenny szkoli nowe ogary. Kości przydadzą się jako nagroda za dobrze wykonane ćwiczenia."
     item: BONE
     amount: 12
     reward-stars: 5
     reward-xp: 180
   creeper_powder:
     name: "&aProch na pokaz"
-    description: "&7Pirotechnik szykuje pokaz. Potrzebuje garści prochu."
+    description: "&7Pirotechnik przygotowuje pokaz na rynku. Brakuje mu prochu, a termin zbliża się nieubłaganie."
     item: GUNPOWDER
     amount: 10
     reward-stars: 6
     reward-xp: 220
   copper_delivery:
     name: "&6Miedziany interes"
-    description: "&7Rzemieślnik zamawia miedź do swoich ozdób."
+    description: "&7Rzemieślnik pracuje nad nowymi ozdobami do ratusza. Poprosił o dostawę miedzi."
     item: COPPER_INGOT
     amount: 20
     reward-stars: 5
     reward-xp: 200
   wheat_for_bakery:
     name: "&eMąka na poranek"
-    description: "&7Piekarzowi kończą się zapasy. Przynieś mu zboże."
+    description: "&7Piekarzowi kończy się pszenica. Jeśli rano mieszkańcy mają dostać świeże pieczywo, trzeba uzupełnić zapasy."
     item: WHEAT
     amount: 32
     reward-stars: 4
     reward-xp: 150
   gold_for_the_master:
     name: "&6Złoto dla zleceniodawcy"
-    description: "&7To pilne zamówienie. Nie pytaj, do czego mi potrzebne."
+    description: "&7Potrzebuję złota do pewnej transakcji. Szczegółów nie zdradzę, ale zapłata będzie uczciwa."
     item: GOLD_INGOT
     amount: 8
     reward-stars: 8
