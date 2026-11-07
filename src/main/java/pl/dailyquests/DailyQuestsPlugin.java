@@ -30,7 +30,7 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
     private static final String TITLE = ChatColor.DARK_GRAY + "Codzienne zadania";
 
     private static final class Task {
-        String id, name, description, type, target, rewardItem;
+        String id, name, description, type, target, rewardItem, dimension;
         int amount, xp, itemAmount, progress;
         boolean claimed;
     }
@@ -45,6 +45,7 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
             db = DriverManager.getConnection("jdbc:sqlite:" + new File(getDataFolder(), "dailyquests.db").getAbsolutePath());
             try (Statement s = db.createStatement()) {
                 s.executeUpdate("CREATE TABLE IF NOT EXISTS player_tasks (uuid TEXT NOT NULL, day TEXT NOT NULL, slot INTEGER NOT NULL, task_id TEXT NOT NULL, progress INTEGER NOT NULL DEFAULT 0, claimed INTEGER NOT NULL DEFAULT 0, PRIMARY KEY(uuid,day,slot))");
+                if (getConfig().getBoolean("reset-data-on-next-start", false)) { s.executeUpdate("DELETE FROM player_tasks"); getConfig().set("reset-data-on-next-start", false); saveConfig(); getLogger().info("Wyczyszczono dane testowe graczy."); }
             }
         } catch (SQLException e) { getLogger().severe("Nie mozna otworzyc SQLite: " + e.getMessage()); getServer().getPluginManager().disablePlugin(this); return; }
         Objects.requireNonNull(getCommand("zadania")).setExecutor(this);
@@ -76,7 +77,9 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
         } catch(SQLException e){getLogger().warning(e.getMessage());}
         ConfigurationSection sec=pool();
         if(sec==null || sec.getKeys(false).isEmpty()) return new ArrayList<>();
-        List<String> ids=new ArrayList<>(sec.getKeys(false)); Collections.shuffle(ids);
+        List<String> ids=new ArrayList<>(sec.getKeys(false));
+        ids.removeIf(id -> { ConfigurationSection c=sec.getConfigurationSection(id); String d=c==null?"OVERWORLD":c.getString("dimension","OVERWORLD").toUpperCase(Locale.ROOT); return (d.equals("NETHER")&&!getConfig().getBoolean("dimensions.nether-enabled",false)) || (d.equals("END")&&!getConfig().getBoolean("dimensions.end-enabled",false)); });
+        Collections.shuffle(ids);
         List<Task> chosen=new ArrayList<>();
         for(String id:ids){Task t=loadTask(id);if(t!=null){chosen.add(t);if(chosen.size()==5)break;}}
         try(PreparedStatement del=db.prepareStatement("DELETE FROM player_tasks WHERE uuid=?")) {
@@ -90,7 +93,7 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
         ConfigurationSection s=pool(); if(s==null || !s.isConfigurationSection(id)) return null;
         ConfigurationSection c=s.getConfigurationSection(id); Task t=new Task();
         t.id=id;t.name=color(c.getString("name",id));t.description=color(c.getString("description",""));
-        t.type=c.getString("type","").toUpperCase(Locale.ROOT);t.target=c.getString("target","ANY").toUpperCase(Locale.ROOT);
+        t.type=c.getString("type","").toUpperCase(Locale.ROOT);t.target=c.getString("target","ANY").toUpperCase(Locale.ROOT);t.dimension=c.getString("dimension","OVERWORLD").toUpperCase(Locale.ROOT);
         t.amount=Math.max(1,c.getInt("amount",1));t.xp=Math.max(0,c.getInt("reward-xp",0));
         t.rewardItem=c.getString("reward-item","").toUpperCase(Locale.ROOT);t.itemAmount=Math.max(1,c.getInt("reward-item-amount",1));return t;
     }
@@ -111,7 +114,6 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
             save(p.getUniqueId(),i,actual);
             if(before<actual.amount && actual.progress>=actual.amount){
                 p.playSound(p.getLocation(),Sound.UI_TOAST_CHALLENGE_COMPLETE,0.8f,1.0f);
-                p.sendTitle(ChatColor.GOLD+"Zadanie ukończone!",ChatColor.YELLOW+ChatColor.stripColor(actual.name)+"  "+ChatColor.GREEN+"Odbierz nagrodę w /zadania",8,55,15);
                 p.sendMessage(ChatColor.GOLD+"★ "+ChatColor.GREEN+"Ukończono zadanie: "+ChatColor.WHITE+ChatColor.stripColor(actual.name)+ChatColor.GRAY+" — nagroda czeka w "+ChatColor.YELLOW+"/zadania");
             } else {
                 p.playSound(p.getLocation(),Sound.UI_BUTTON_CLICK,0.25f,1.6f);
@@ -121,12 +123,26 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
     }
 
     @Override public boolean onCommand(CommandSender sender,Command command,String label,String[] args) {
+        if(args.length>0 && (args[0].equalsIgnoreCase("nether") || args[0].equalsIgnoreCase("end"))) {
+            if(!sender.hasPermission("dailyquests.admin")){sender.sendMessage(ChatColor.RED+"Brak uprawnien.");return true;}
+            String dimension=args[0].toLowerCase(Locale.ROOT), path="dimensions."+dimension+"-enabled";
+            boolean enabled=!(args.length>1 && args[1].equalsIgnoreCase("off"));
+            getConfig().set(path,enabled);saveConfig();cache.clear();
+            try(Statement st=db.createStatement()){st.executeUpdate("DELETE FROM player_tasks WHERE day='"+today()+"'");}catch(SQLException ex){getLogger().warning(ex.getMessage());}
+            for(Player online:Bukkit.getOnlinePlayers()) ensureTasks(online);
+            sender.sendMessage(ChatColor.GREEN+"DailyQuests: zadania z wymiaru "+dimension.toUpperCase(Locale.ROOT)+(enabled?" aktywowane.":" wylaczone.")+" Zadania dzienne zostaly wylosowane ponownie.");
+            return true;
+        }
         if(args.length>0 && args[0].equalsIgnoreCase("reload")){
             if(!sender.hasPermission("dailyquests.admin")){sender.sendMessage(ChatColor.RED+"Brak uprawnien.");return true;}
             reloadConfig();cache.clear();sender.sendMessage(ChatColor.GREEN+"DailyQuests: przeladowano config.");return true;
         }
         if(!(sender instanceof Player p)){sender.sendMessage("Ta komenda jest dla graczy.");return true;}
         open(p);return true;
+    }
+    private boolean dimensionMatches(Task t, World world) {
+        String actual=world.getEnvironment().name();
+        return t.dimension.equals("OVERWORLD") ? actual.equals("NORMAL") : t.dimension.equals(actual);
     }
 
     private void open(Player p) {
@@ -200,12 +216,12 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
     @EventHandler public void onBreak(BlockBreakEvent e){
         if(e.isCancelled())return;
         String type=e.getBlock().getType().name();
-        for(Task t:ensureTasks(e.getPlayer()))if(t.type.equals("BREAK")&&(t.target.equals("ANY")||t.target.equals(type)))update(e.getPlayer(),t,1);
+        for(Task t:ensureTasks(e.getPlayer()))if(t.type.equals("BREAK")&&dimensionMatches(t,e.getBlock().getWorld())&&(t.target.equals("ANY")||t.target.equals(type)))update(e.getPlayer(),t,1);
     }
     @EventHandler public void onKill(EntityDeathEvent e){
         Player p=e.getEntity().getKiller();if(p==null)return;
         String type=e.getEntityType().name();
-        for(Task t:ensureTasks(p))if(t.type.equals("KILL")&&(t.target.equals("ANY")||t.target.equals(type)))update(p,t,1);
+        for(Task t:ensureTasks(p))if(t.type.equals("KILL")&&dimensionMatches(t,e.getEntity().getWorld())&&(t.target.equals("ANY")||t.target.equals(type)))update(p,t,1);
     }
     private int getCraftedAmount(CraftItemEvent e) {
         ItemStack result = e.getRecipe().getResult();
@@ -248,7 +264,7 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
 
     @EventHandler public void onFish(PlayerFishEvent e){
         if(e.getState()!=PlayerFishEvent.State.CAUGHT_FISH)return;
-        for(Task t:ensureTasks(e.getPlayer()))if(t.type.equals("FISH"))update(e.getPlayer(),t,1);
+        for(Task t:ensureTasks(e.getPlayer()))if(t.type.equals("FISH")&&dimensionMatches(t,e.getPlayer().getWorld()))update(e.getPlayer(),t,1);
     }
     @EventHandler public void onMove(PlayerMoveEvent e){
         if(e.getTo()==null)return;
@@ -257,7 +273,7 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
         Location prev=lastWalk.put(e.getPlayer().getUniqueId(),b.clone());
         if(prev==null||prev.getWorld()!=b.getWorld())return;
         int d=(int)Math.floor(Math.sqrt(Math.pow(b.getX()-prev.getX(),2)+Math.pow(b.getZ()-prev.getZ(),2)));
-        if(d>0)for(Task t:ensureTasks(e.getPlayer()))if(t.type.equals("WALK"))update(e.getPlayer(),t,d);
+        if(d>0)for(Task t:ensureTasks(e.getPlayer()))if(t.type.equals("WALK")&&dimensionMatches(t,b.getWorld()))update(e.getPlayer(),t,d);
     }
     @EventHandler public void onInventoryClick(InventoryClickEvent e){
         if(!TITLE.equals(e.getView().getTitle()))return;
