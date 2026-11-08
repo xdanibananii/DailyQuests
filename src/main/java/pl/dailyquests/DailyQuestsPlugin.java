@@ -226,8 +226,8 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
         sender.sendMessage(ChatColor.GRAY + "Losowanie nagród za gwiazdki znajdziesz u Strażnika Skarbca.");
         if (sender.hasPermission("dailyquests.admin")) {
             sender.sendMessage(ChatColor.DARK_AQUA + "━━ KOMENDY ADMINISTRATORA ━━");
-            sender.sendMessage(ChatColor.YELLOW + "/dq npc quest [postaw|usun|tp]" + ChatColor.GRAY + " — zarządzanie Michaiłem");
-            sender.sendMessage(ChatColor.YELLOW + "/dq npc skarbiec [postaw|usun|tp]" + ChatColor.GRAY + " — zarządzanie Strażnikiem Skarbca");
+            sender.sendMessage(ChatColor.YELLOW + "/dq npc quest [postaw|usun|tp|rename <nazwa>]" + ChatColor.GRAY + " — zarządzanie Michaiłem");
+            sender.sendMessage(ChatColor.YELLOW + "/dq npc skarbiec [postaw|usun|tp|rename <nazwa>]" + ChatColor.GRAY + " — zarządzanie Strażnikiem Skarbca");
             sender.sendMessage(ChatColor.YELLOW + "/dq gwiazdki <dodaj|usun|ustaw> <gracz> <ilość>" + ChatColor.GRAY + " — zarządzanie saldem");
             sender.sendMessage(ChatColor.YELLOW + "/dq gwiazdki sprawdz <gracz>" + ChatColor.GRAY + " — sprawdza saldo gracza");
             sender.sendMessage(ChatColor.YELLOW + "/dq roll" + ChatColor.GRAY + " — losuje ponownie zadania wszystkim graczom");
@@ -247,7 +247,7 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
             suggestions.addAll(List.of("quest", "skarbiec"));
         } else if (args.length == 3 && args[0].equalsIgnoreCase("npc") && admin
                 && (args[1].equalsIgnoreCase("quest") || args[1].equalsIgnoreCase("skarbiec"))) {
-            suggestions.addAll(List.of("postaw", "usun", "tp"));
+            suggestions.addAll(List.of("postaw", "usun", "tp", "rename"));
         } else if (args.length == 2 && args[0].equalsIgnoreCase("gwiazdki") && admin) {
             suggestions.addAll(List.of("dodaj", "usun", "ustaw", "sprawdz"));
         } else if (args.length == 3 && args[0].equalsIgnoreCase("gwiazdki") && admin
@@ -272,11 +272,17 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
         if(args.length>0 && args[0].equalsIgnoreCase("npc")) {
             if(!sender.hasPermission("dailyquests.admin")) { sender.sendMessage(ChatColor.RED+"Brak uprawnień."); return true; }
             if(args.length<2 || (!args[1].equalsIgnoreCase("quest") && !args[1].equalsIgnoreCase("skarbiec"))) {
-                sender.sendMessage(ChatColor.YELLOW+"Użycie: /dq npc <quest|skarbiec> [postaw|usun|tp]"); return true;
+                sender.sendMessage(ChatColor.YELLOW+"Użycie: /dq npc <quest|skarbiec> [postaw|usun|tp|rename <nazwa>]"); return true;
             }
             boolean questNpc=args[1].equalsIgnoreCase("quest");
             String action=args.length>=3?args[2].toLowerCase(Locale.ROOT):"postaw";
-            if(action.equals("postaw")) {
+            if(action.equals("rename")) {
+                if(args.length<4) { sender.sendMessage(ChatColor.YELLOW+"Użycie: /dq npc "+(questNpc?"quest":"skarbiec")+" rename <nazwa>"); return true; }
+                String npcName=String.join(" ",Arrays.copyOfRange(args,3,args.length));
+                if(npcName.isBlank()) { sender.sendMessage(ChatColor.RED+"Nazwa nie może być pusta."); return true; }
+                if(questNpc) npcSystem.renameNpc(npcName,sender::sendMessage);
+                else crateNpcSystem.renameNpc(npcName,sender::sendMessage);
+            } else if(action.equals("postaw")) {
                 if(!(sender instanceof Player p)) { sender.sendMessage("Tej komendy użyj w grze."); return true; }
                 if(questNpc) npcSystem.spawnAt(p.getLocation(), sender::sendMessage);
                 else { crateNpcSystem.spawnAt(p.getLocation()); sender.sendMessage(ChatColor.GREEN+"Postawiono Strażnika Skarbca."); }
@@ -286,7 +292,7 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
             } else if(action.equals("tp")) {
                 if(!(sender instanceof Player p)) { sender.sendMessage("Tej komendy użyj w grze."); return true; }
                 if(questNpc) npcSystem.teleportToNpc(p); else crateNpcSystem.teleport(p);
-            } else sender.sendMessage(ChatColor.YELLOW+"Użycie: /dq npc <quest|skarbiec> [postaw|usun|tp]");
+            } else sender.sendMessage(ChatColor.YELLOW+"Użycie: /dq npc <quest|skarbiec> [postaw|usun|tp|rename <nazwa>]");
             return true;
         }
         if(args.length>0 && args[0].equalsIgnoreCase("help")) { showHelp(sender); return true; }
