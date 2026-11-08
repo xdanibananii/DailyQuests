@@ -238,44 +238,29 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
 
     @Override public boolean onCommand(CommandSender sender,Command command,String label,String[] args) {
         if(label.equalsIgnoreCase("dailyquest") && args.length==0) { showHelp(sender); return true; }
-        if(args.length>0 && args[0].equalsIgnoreCase("skrzynianpc")) {
-            if(!sender.hasPermission("dailyquests.admin")) { sender.sendMessage(ChatColor.RED+"Brak uprawnień."); return true; }
-            if(args.length<2) { sender.sendMessage(ChatColor.YELLOW+"Użycie: /dq skrzynianpc <postaw|usun|tp>"); return true; }
-            switch(args[1].toLowerCase(Locale.ROOT)) {
-                case "postaw" -> { if(sender instanceof Player p) { crateNpcSystem.spawnAt(p.getLocation()); sender.sendMessage(ChatColor.GREEN+"Postawiono Strażnika Skarbca."); } else sender.sendMessage("Tej komendy użyj w grze."); }
-                case "usun" -> { crateNpcSystem.remove(); sender.sendMessage(ChatColor.GREEN+"Usunięto Strażnika Skarbca."); }
-                case "tp" -> { if(sender instanceof Player p) crateNpcSystem.teleport(p); else sender.sendMessage("Tej komendy użyj w grze."); }
-                default -> sender.sendMessage(ChatColor.YELLOW+"Użycie: /dq skrzynianpc <postaw|usun|tp>");
-            }
-            return true;
-        }
         if(args.length>0 && args[0].equalsIgnoreCase("npc")) {
             if(!sender.hasPermission("dailyquests.admin")) { sender.sendMessage(ChatColor.RED+"Brak uprawnień."); return true; }
-            if(args.length<2) {
-                sender.sendMessage(ChatColor.YELLOW+"Użycie: /dq npc <postaw|usun|tp>");
-                return true;
+            if(args.length<2 || (!args[1].equalsIgnoreCase("questy") && !args[1].equalsIgnoreCase("skarbiec"))) {
+                sender.sendMessage(ChatColor.YELLOW+"Użycie: /dq npc <questy|skarbiec> [postaw|usun|tp]"); return true;
             }
-            switch(args[1].toLowerCase(Locale.ROOT)) {
-                case "postaw" -> {
-                    if(sender instanceof Player p) npcSystem.spawnAt(p.getLocation(), sender::sendMessage);
-                    else sender.sendMessage("Tej komendy użyj w grze.");
-                }
-                case "usun" -> {
-                    npcSystem.removeNpc();
-                    sender.sendMessage(ChatColor.GREEN+"Usunięto Michaiła Łomonosowa.");
-                }
-                case "tp" -> {
-                    if(sender instanceof Player p) npcSystem.teleportToNpc(p);
-                    else sender.sendMessage("Tej komendy użyj w grze.");
-                }
-                default -> sender.sendMessage(ChatColor.YELLOW+"Użycie: /dq npc <postaw|usun|tp>");
-            }
+            boolean questNpc=args[1].equalsIgnoreCase("questy");
+            String action=args.length>=3?args[2].toLowerCase(Locale.ROOT):"postaw";
+            if(action.equals("postaw")) {
+                if(!(sender instanceof Player p)) { sender.sendMessage("Tej komendy użyj w grze."); return true; }
+                if(questNpc) npcSystem.spawnAt(p.getLocation(), sender::sendMessage);
+                else { crateNpcSystem.spawnAt(p.getLocation()); sender.sendMessage(ChatColor.GREEN+"Postawiono Strażnika Skarbca."); }
+            } else if(action.equals("usun")) {
+                if(questNpc) { npcSystem.removeNpc(); sender.sendMessage(ChatColor.GREEN+"Usunięto Michaiła Łomonosowa."); }
+                else { crateNpcSystem.remove(); sender.sendMessage(ChatColor.GREEN+"Usunięto Strażnika Skarbca."); }
+            } else if(action.equals("tp")) {
+                if(!(sender instanceof Player p)) { sender.sendMessage("Tej komendy użyj w grze."); return true; }
+                if(questNpc) npcSystem.teleportToNpc(p); else crateNpcSystem.teleport(p);
+            } else sender.sendMessage(ChatColor.YELLOW+"Użycie: /dq npc <questy|skarbiec> [postaw|usun|tp]");
             return true;
         }
         if(args.length>0 && args[0].equalsIgnoreCase("help")) { showHelp(sender); return true; }
         if(args.length>0 && args[0].equalsIgnoreCase("top")){showLeaderboard(sender);return true;}
         if(args.length>0 && args[0].equalsIgnoreCase("weekly")){showWeekly(sender);return true;}
-        if(args.length>0 && args[0].equalsIgnoreCase("skrzynka")){if(sender instanceof Player p)crateSystem.open(p);else sender.sendMessage("Ta komenda jest dla graczy.");return true;}
         if(args.length>0 && args[0].equalsIgnoreCase("gwiazdki")) {
             if(args.length==1) {
                 if(sender instanceof Player p)crateSystem.showBalance(p);
@@ -337,8 +322,9 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
             if(!sender.hasPermission("dailyquests.admin")){sender.sendMessage(ChatColor.RED+"Brak uprawnien.");return true;}
             reloadConfig();reloadTaskPool();cache.clear();sender.sendMessage(ChatColor.GREEN+"DailyQuests: przeladowano konfigurację i pulę zadań.");return true;
         }
-        if(!(sender instanceof Player p)){sender.sendMessage("Ta komenda jest dla graczy.");return true;}
-        open(p);return true;
+        if(args.length==0 || args[0].equalsIgnoreCase("help")) { showHelp(sender); return true; }
+        showHelp(sender);
+        return true;
     }
     private boolean isDimensionEnabled(String dimension) {
         String normalized = dimension == null ? "OVERWORLD" : dimension.toUpperCase(Locale.ROOT);
