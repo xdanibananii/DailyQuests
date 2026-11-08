@@ -504,7 +504,11 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
 
     @EventHandler public void onFish(PlayerFishEvent e){
         if(e.getState()!=PlayerFishEvent.State.CAUGHT_FISH)return;
-        for(Task t:ensureTasks(e.getPlayer()))if(t.type.equals("FISH")&&dimensionMatches(t,e.getPlayer().getWorld()))update(e.getPlayer(),t,1);
+        if (!(e.getCaught() instanceof org.bukkit.entity.Item caught)) return;
+        String caughtType = caught.getItemStack().getType().name();
+        for(Task t:ensureTasks(e.getPlayer()))
+            if(t.type.equals("FISH") && dimensionMatches(t,e.getPlayer().getWorld())
+                    && (t.target.equals("ANY") || t.target.equals(caughtType))) update(e.getPlayer(),t,1);
     }
     private void updateWeekly(Player p,int amount){String week=weekKey();try(PreparedStatement q=db.prepareStatement("INSERT INTO weekly_tasks(uuid,week,progress,claimed) VALUES(?,?,?,0) ON CONFLICT(uuid,week) DO UPDATE SET progress=MIN(500,progress+excluded.progress)")){q.setString(1,p.getUniqueId().toString());q.setString(2,week);q.setInt(3,amount);q.executeUpdate();}catch(SQLException e){getLogger().warning(e.getMessage());}}
     @EventHandler public void onConsume(PlayerItemConsumeEvent e){for(Task t:ensureTasks(e.getPlayer()))if(t.type.equals("EAT")&&(t.target.equals("ANY")||t.target.equals(e.getItem().getType().name())))update(e.getPlayer(),t,1);}
