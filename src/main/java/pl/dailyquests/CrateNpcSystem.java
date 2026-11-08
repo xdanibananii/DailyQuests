@@ -17,14 +17,14 @@ public final class CrateNpcSystem implements Listener {
  private final Map<UUID, Long> lastWarning = new HashMap<>();
  private final Random random = new Random();
  private static final String[] AMBIENT_LINES = {
-  "Podejdź, podejdź! Dwadzieścia gwiazdek i kto wie — może trafisz prawdziwy skarb!",
+  "Podejdź, podejdź! Już od 10 gwiazdek możesz spróbować szczęścia!",
   "Słyszałem, że ktoś ostatnio wyciągnął LEGENDARY... Może dziś szczęście wybierze ciebie?",
   "Nie chomikuj gwiazdek, młody! Niech pracują na wielką wygraną!",
-  "Masz wolne dwadzieścia gwiazdek? Mam tu skrzynkę, która aż prosi się o otwarcie!",
+  "Masz 10 gwiazdek? Możesz zacząć od tańszej skrzyni albo uzbierać na premium!",
   "Jedno losowanie dzieli cię od pięknej historii. Albo przynajmniej od ciekawej przygody!",
   "Podobno szczęście sprzyja odważnym. Ja nic nie sugeruję... ale skrzynka jest tuż obok.",
   "No dalej, bohaterze! Sprawdź, czy dziś wylosujesz coś COMMON, czy może prawdziwy rarytas!",
-  "Gwiazdkami można płacić, ale emocji nie da się kupić... chyba że za dwadzieścia gwiazdek!",
+  "Gwiazdkami można płacić, ale emocji nie da się kupić... chyba że za 10 albo 20 gwiazdek!",
   "Co tak stoisz? Skrzynia sama się nie otworzy, a ja nie będę tu stał do emerytury!",
   "Widzę w twoich oczach głód bogactwa. Spokojnie, mam na to bardzo drogie lekarstwo!",
   "Nie gap się na mnie, tylko na skrzynię. To ona ma dziś szansę cię uszczęśliwić!",
@@ -34,7 +34,7 @@ public final class CrateNpcSystem implements Listener {
  private static final String[] GREETINGS = {
   "Witaj, szczęściarzu! Twoje gwiazdki mogą dziś zamienić się w prawdziwy skarb.",
   "Oho, nowa twarz przy skarbcu! Masz ochotę sprawdzić, co dziś kryje skrzynia?",
-  "Podejdź bliżej! Za 20 gwiazdek możesz spróbować szczęścia. Kto wie, co wypadnie?",
+  "Podejdź bliżej! Skrzynie czekają już od 10 gwiazdek. Kto wie, co wypadnie?",
   "Witaj, młody hazardzisto! Pokażmy losowi, kto tu dziś rządzi!",
   "Mam przeczucie, że dziś komuś dopisze szczęście... Może właśnie tobie?",
   "No proszę, ktoś odważny! Oby zawartość sakiewki była równie imponująca jak pewność siebie.",
@@ -109,7 +109,7 @@ public final class CrateNpcSystem implements Listener {
   if(!e.getRightClicked().getPersistentDataContainer().has(key,PersistentDataType.BYTE)) return; e.setCancelled(true); Player p=e.getPlayer(); p.playSound(p.getLocation(),Sound.BLOCK_CHEST_OPEN,0.8f,1.1f);
   String greeting=GREETINGS[random.nextInt(GREETINGS.length)];
   p.sendMessage(ChatColor.LIGHT_PURPLE+"Strażnik Skarbca"+ChatColor.DARK_GRAY+" » "+ChatColor.YELLOW+greeting);
-  p.sendMessage(ChatColor.GRAY+"» "+ChatColor.YELLOW+"Jedno losowanie kosztuje 20 ★. "+ChatColor.GRAY+"Sprawdź szanse w skrzynce!");
+  p.sendMessage(ChatColor.GRAY+"» "+ChatColor.YELLOW+"Skrzynia zwykła: 10 ★ | Premium: 20 ★. "+ChatColor.GRAY+"Sprawdź szanse w skrzynce!");
   crates.open(p);
  }
  @EventHandler public void onDamage(EntityDamageEvent e) {
