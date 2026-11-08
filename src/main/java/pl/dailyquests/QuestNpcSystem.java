@@ -38,7 +38,7 @@ public final class QuestNpcSystem implements Listener {
     private final File questsFile;
     private final Random random = new Random();
     private final Map<UUID, Contract> contracts = new HashMap<>();
-    private final Map<UUID, Long> nextAmbientSpeech = new HashMap<>();
+    private final Set<UUID> playersInNpcRange = new HashSet<>();
     private static final String[] AMBIENT_LINES = {
             "Ach, wędrowcze... każda wielka przygoda zaczyna się od małego zlecenia.",
             "Pamiętaj, młody człowieku: cierpliwość jest cenniejsza niż diamenty.",
@@ -304,21 +304,21 @@ public final class QuestNpcSystem implements Listener {
                 }
             }
 
-            // Osobny losowy dialog i cooldown dla każdego gracza w zasięgu.
-            long now = System.currentTimeMillis();
-            Set<UUID> nearby = new HashSet<>();
+            // Dialog uruchamia się przy każdym ponownym wejściu w promień 5 bloków.
+            // Gdy gracz wyjdzie poza zasięg, usuwamy go ze zbioru; kolejne podejście
+            // wywoła następną, losową kwestię. Bez jednorazowego cooldownu.
+            Set<UUID> nearbyNow = new HashSet<>();
             for (Player player : savedWorld.getPlayers()) {
-                if (player.getLocation().distanceSquared(villager.getLocation()) > 25.0) continue;
                 UUID playerId = player.getUniqueId();
-                nearby.add(playerId);
-                long next = nextAmbientSpeech.getOrDefault(playerId, 0L);
-                if (now < next) continue;
+                if (player.getLocation().distanceSquared(villager.getLocation()) > 25.0) continue;
 
-                String line = AMBIENT_LINES[random.nextInt(AMBIENT_LINES.length)];
-                say(player, line);
-                nextAmbientSpeech.put(playerId, now + 18_000L + random.nextInt(14_001));
+                nearbyNow.add(playerId);
+                if (playersInNpcRange.add(playerId)) {
+                    String line = AMBIENT_LINES[random.nextInt(AMBIENT_LINES.length)];
+                    say(player, line);
+                }
             }
-            nextAmbientSpeech.keySet().removeIf(id -> !nearby.contains(id));
+            playersInNpcRange.retainAll(nearbyNow);
         }, 20L, 10L);
     }
 
