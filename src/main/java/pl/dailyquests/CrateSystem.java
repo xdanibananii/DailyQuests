@@ -125,17 +125,15 @@ public final class CrateSystem implements Listener {
                 Object materialValue = row.get("material");
                 Object amountValue = row.get("amount");
                 Object weightValue = row.get("weight");
-                if (materialValue == null || amountValue == null || weightValue == null) return false;
-
-                Material material = Material.matchMaterial(String.valueOf(materialValue).toUpperCase(Locale.ROOT));
+                if (materialValue == null || amountValue == null || weightValue == null) continue;
+                Material material = Material.matchMaterial(String.valueOf(materialValue).trim());
                 int amount = Integer.parseInt(String.valueOf(amountValue));
                 int weight = Integer.parseInt(String.valueOf(weightValue));
-                if (material == null || !material.isItem() || amount <= 0 || weight <= 0) return false;
-
+                if (material == null || !material.isItem() || amount <= 0 || weight <= 0) continue;
                 validRewards++;
                 totalWeight += weight;
-            } catch (RuntimeException ex) {
-                return false;
+            } catch (RuntimeException ignored) {
+                // Pojedynczy błędny wpis nie unieważnia całej puli.
             }
         }
         return validRewards > 0 && totalWeight > 0;
@@ -353,12 +351,20 @@ public final class CrateSystem implements Listener {
         File file = new File(plugin.getDataFolder(), "rewards.yml");
         YamlConfiguration yaml = YamlConfiguration.loadConfiguration(file);
         List<Reward> result = new ArrayList<>();
+        int rowNumber = 0;
         for (Map<?, ?> row : yaml.getMapList("rewards")) {
+            rowNumber++;
             try {
                 Reward reward = new Reward();
-                reward.material = Material.valueOf(String.valueOf(row.get("material")).toUpperCase(Locale.ROOT));
-                reward.amount = Math.max(1, Integer.parseInt(String.valueOf(value(row, "amount", 1))));
-                reward.weight = Math.max(0, Integer.parseInt(String.valueOf(value(row, "weight", 1))));
+                Object materialValue = row.get("material");
+                if (materialValue == null) throw new IllegalArgumentException("brak material");
+                reward.material = Material.matchMaterial(String.valueOf(materialValue).trim());
+                if (reward.material == null || !reward.material.isItem())
+                    throw new IllegalArgumentException("nieznany lub niedozwolony material: " + materialValue);
+                reward.amount = Integer.parseInt(String.valueOf(value(row, "amount", 1)));
+                reward.weight = Integer.parseInt(String.valueOf(value(row, "weight", 1)));
+                if (reward.amount <= 0) throw new IllegalArgumentException("amount musi być większe od zera");
+                if (reward.weight <= 0) throw new IllegalArgumentException("weight musi być większe od zera");
                 reward.tier = String.valueOf(value(row, "tier", "COMMON")).toUpperCase(Locale.ROOT);
                 reward.name = color(String.valueOf(value(row, "name", pretty(reward.material.name()))));
                 Object loreValue = row.get("lore");
@@ -368,13 +374,13 @@ public final class CrateSystem implements Listener {
                 Object enchValue = row.get("enchants");
                 if (enchValue instanceof Map<?,?> enchants) for (Map.Entry<?,?> entry : enchants.entrySet())
                     reward.enchants.put(String.valueOf(entry.getKey()), Integer.parseInt(String.valueOf(entry.getValue())));
-                if (reward.weight > 0) result.add(reward);
+                result.add(reward);
             } catch (Exception ex) {
-                plugin.getLogger().warning("Pominięto nieprawidłową nagrodę w rewards.yml: " + ex.getMessage());
+                plugin.getLogger().warning("Pominięto rewards.yml, wpis #" + rowNumber + ": " + ex.getMessage());
             }
         }
-        if (result.isEmpty()) plugin.getLogger().severe("Pula rewards.yml nie zawiera poprawnej nagrody z wagą większą od zera. Sprawdź material, amount i weight.");
-        else plugin.getLogger().info("Wczytano "+result.size()+" pozycji nagród do skrzynki.");
+        if (result.isEmpty()) plugin.getLogger().severe("Nie wczytano żadnej poprawnej nagrody z rewards.yml. Sprawdź wpisy rewards (material, amount, weight); gwiazdki nie zostaną pobrane.");
+        else plugin.getLogger().info("Wczytano "+result.size()+" poprawnych pozycji nagród do skrzynki.");
         return result;
     }
 
@@ -391,8 +397,8 @@ public final class CrateSystem implements Listener {
     }
 
     private Reward choose(List<Reward> rewards) {
-        int total = rewards.stream().mapToInt(r -> r.weight).sum();
-        int roll = random.nextInt(Math.max(1, total));
+        long total = rewards.stream().mapToLong(r -> r.weight).sum();
+        long roll = random.nextLong(Math.max(1L, total));
         for (Reward reward : rewards) {
             roll -= reward.weight;
             if (roll < 0) return reward;
