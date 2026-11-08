@@ -468,6 +468,11 @@ public final class QuestNpcSystem implements Listener {
                             ChatColor.GRAY + "wymagane przedmioty.",
                             "", ChatColor.DARK_GRAY + "Brakuje: " + (c.amount - owned))));
         }
+        inv.setItem(42, item(Material.EXPERIENCE_BOTTLE, ChatColor.LIGHT_PURPLE + "PRZELOSUJ KONTRAKT",
+                List.of(ChatColor.GRAY + "Nie pasuje ci dzisiejsze zlecenie?",
+                        ChatColor.GRAY + "Poproś Michaiła o nowe.",
+                        "", ChatColor.YELLOW + "Koszt: 10 poziomów Minecraft",
+                        ChatColor.DARK_GRAY + "Możliwe tylko przed oddaniem kontraktu.")));
         inv.setItem(49, item(Material.BARRIER, ChatColor.RED + "ZAMKNIJ KSIĘGĘ",
                 List.of(ChatColor.GRAY + "Wróć, kiedy będziesz gotów.")));
         player.openInventory(inv);
@@ -476,7 +481,12 @@ public final class QuestNpcSystem implements Listener {
     @EventHandler public void onContractClick(InventoryClickEvent event) {
         if (!TITLE.equals(event.getView().getTitle())) return;
         event.setCancelled(true);
-        if (!(event.getWhoClicked() instanceof Player player) || event.getRawSlot() != 40) return;
+        if (!(event.getWhoClicked() instanceof Player player)) return;
+        if (event.getRawSlot() == 42) {
+            rerollContract(player);
+            return;
+        }
+        if (event.getRawSlot() != 40) return;
         Contract c = getContract(player);
         if (c == null || c.claimed) { open(player, c == null ? emptyContract() : c); return; }
         Material required = Material.valueOf(c.material);
@@ -511,6 +521,58 @@ public final class QuestNpcSystem implements Listener {
         say(player, "Dostawa się zgadza. Dobra robota — oto twoja zapłata. Jeśli będziesz szukać kolejnego zajęcia, wiesz, gdzie mnie znaleźć.");
         player.playSound(player.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1f, 1f);
         open(player, getContract(player));
+    }
+
+
+    private void rerollContract(Player player) {
+        Contract current = getContract(player);
+        if (current == null || current.claimed) {
+            say(player, "Tego kontraktu nie można już zmienić. Najpierw dokończ go albo wróć jutro.");
+            if (current != null) open(player, current);
+            return;
+        }
+        ConfigurationSection pool = quests().getConfigurationSection("contracts");
+        if (pool == null) return;
+        List<String> candidates = new ArrayList<>(pool.getKeys(false));
+        candidates.remove(current.id);
+        Collections.shuffle(candidates);
+        String replacement = null;
+        for (String id : candidates) {
+            if (readContract(id) != null) { replacement = id; break; }
+        }
+        if (replacement == null) {
+            say(player, "Nie mam teraz żadnego innego zlecenia. Zajrzyj później.");
+            open(player, current);
+            return;
+        }
+        if (player.getLevel() < 10) {
+            say(player, "Do ponownego losowania potrzebujesz 10 pełnych poziomów doświadczenia.");
+            open(player, current);
+            return;
+        }
+        try (PreparedStatement update = db.prepareStatement(
+                "UPDATE npc_contracts SET quest_id=?, claimed=0 WHERE uuid=? AND day=? AND claimed=0")) {
+            update.setString(1, replacement);
+            update.setString(2, player.getUniqueId().toString());
+            update.setString(3, today());
+            if (update.executeUpdate() != 1) {
+                say(player, "Nie udało się zmienić kontraktu. Nic nie pobrałem.");
+                open(player, getContract(player));
+                return;
+            }
+            player.setLevel(player.getLevel() - 10);
+            Contract next = getContract(player);
+            player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.9f, 1.2f);
+            say(player, "Ho, ho! Mam dla ciebie coś innego. Nowy kontrakt kosztował 10 poziomów doświadczenia.");
+            if (next != null) {
+                say(player, next.description);
+                open(player, next);
+            }
+        } catch (SQLException ex) {
+            plugin.getLogger().warning("Nie udało się przerzucić kontraktu NPC: " + ex.getMessage());
+            say(player, "Coś poszło nie tak. Spróbuj ponownie za chwilę.");
+            open(player, current);
+        }
     }
 
     private Contract emptyContract() {
