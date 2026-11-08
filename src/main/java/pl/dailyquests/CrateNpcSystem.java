@@ -87,19 +87,33 @@ public final class CrateNpcSystem implements Listener {
    playersInRange.retainAll(nearbyNow);
   },20L,10L);
  }
- private void configure(Villager v) {
+ private void configure(Villager v, String name) {
   v.setAI(false); v.setInvulnerable(true); v.setPersistent(true); v.setRemoveWhenFarAway(false); v.setCollidable(false); v.setCanPickupItems(false); v.setProfession(Villager.Profession.CLERIC);
-  v.setCustomName(ChatColor.GOLD+"✦ "+ChatColor.LIGHT_PURPLE+"Strażnik Skarbca"+ChatColor.GOLD+" ✦"); v.setCustomNameVisible(true); v.getPersistentDataContainer().set(key,PersistentDataType.BYTE,(byte)1);
+  v.setCustomName(ChatColor.GOLD+"✦ "+ChatColor.LIGHT_PURPLE+ChatColor.translateAlternateColorCodes('&',name)+ChatColor.GOLD+" ✦"); v.setCustomNameVisible(true); v.getPersistentDataContainer().set(key,PersistentDataType.BYTE,(byte)1);
  }
  private void restore() {
   if(!file.exists()) return; YamlConfiguration y=YamlConfiguration.loadConfiguration(file); World w=Bukkit.getWorld(y.getString("world","")); if(w==null||!y.contains("x")) return;
   Entity e=null; try { String id=y.getString("uuid",""); if(!id.isBlank()) e=Bukkit.getEntity(UUID.fromString(id)); } catch(IllegalArgumentException ignored) {}
-  if(e instanceof Villager v) { configure(v); return; }
-  Location l=loc(y,w); w.getChunkAt(l).load(); Villager v=(Villager)w.spawnEntity(l,EntityType.VILLAGER); configure(v); y.set("uuid",v.getUniqueId().toString()); save(y);
+  if(e instanceof Villager v) { configure(v,y.getString("name","Strażnik Skarbca")); return; }
+  Location l=loc(y,w); w.getChunkAt(l).load(); Villager v=(Villager)w.spawnEntity(l,EntityType.VILLAGER); configure(v,y.getString("name","Strażnik Skarbca")); y.set("uuid",v.getUniqueId().toString()); save(y);
  }
  void spawnAt(Location l) {
-  if(l.getWorld()==null) return; remove(); Villager v=(Villager)l.getWorld().spawnEntity(l,EntityType.VILLAGER); configure(v); YamlConfiguration y=new YamlConfiguration();
+  if(l.getWorld()==null) return; remove(); Villager v=(Villager)l.getWorld().spawnEntity(l,EntityType.VILLAGER); YamlConfiguration y=new YamlConfiguration(); y.set("name","Strażnik Skarbca"); configure(v,"Strażnik Skarbca");
   y.set("world",l.getWorld().getName()); y.set("x",l.getX()); y.set("y",l.getY()); y.set("z",l.getZ()); y.set("yaw",l.getYaw()); y.set("pitch",l.getPitch()); y.set("uuid",v.getUniqueId().toString()); save(y);
+ }
+ void renameNpc(String name, java.util.function.Consumer<String> reply) {
+  if(!file.exists()) { reply.accept(ChatColor.RED+"Strażnik Skarbca nie został jeszcze postawiony."); return; }
+  YamlConfiguration y=YamlConfiguration.loadConfiguration(file);
+  Entity entity=null;
+  try { String id=y.getString("uuid",""); if(!id.isBlank()) entity=Bukkit.getEntity(UUID.fromString(id)); }
+  catch(IllegalArgumentException ignored) {}
+  if(!(entity instanceof Villager villager) || !villager.isValid()) {
+   reply.accept(ChatColor.RED+"Nie znaleziono Strażnika Skarbca. Spróbuj ponownie po jego odtworzeniu."); return;
+  }
+  y.set("name",name); save(y);
+  villager.setCustomName(ChatColor.GOLD+"✦ "+ChatColor.LIGHT_PURPLE+ChatColor.translateAlternateColorCodes('&',name)+ChatColor.GOLD+" ✦");
+  villager.setCustomNameVisible(true);
+  reply.accept(ChatColor.GREEN+"Zmieniono nazwę NPC na: "+ChatColor.translateAlternateColorCodes('&',name));
  }
  void remove() { for(World w:Bukkit.getWorlds()) for(Entity e:w.getEntities()) if(e.getPersistentDataContainer().has(key,PersistentDataType.BYTE)) e.remove(); if(file.exists()) file.delete(); }
  void teleport(Player p) { YamlConfiguration y=YamlConfiguration.loadConfiguration(file); World w=Bukkit.getWorld(y.getString("world","")); if(w==null||!y.contains("x")) { p.sendMessage(ChatColor.RED+"Strażnik Skarbca nie został jeszcze postawiony."); return; } Location l=loc(y,w); w.getChunkAt(l).load(); p.teleport(l); }
