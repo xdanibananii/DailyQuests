@@ -16,6 +16,8 @@ import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.sql.*;
 import java.util.*;
 
@@ -55,43 +57,65 @@ public final class CrateSystem implements Listener {
     }
 
     private void balanceExistingRewards() {
-        File marker = new File(plugin.getDataFolder(), "rewards-balance-v2.done");
-        if (marker.exists()) return;
         File file = new File(plugin.getDataFolder(), "rewards.yml");
-        YamlConfiguration yaml = YamlConfiguration.loadConfiguration(file);
-        List<Map<?, ?>> rows = yaml.getMapList("rewards");
-        for (int i = 0; i < rows.size(); i++) {
-            String base = "rewards." + i + ".";
-            String tier = yaml.getString(base + "tier", "COMMON").toUpperCase(Locale.ROOT);
-            int weight = switch (tier) {
-                case "UNCOMMON" -> 60;
-                case "RARE" -> 20;
-                case "EPIC" -> 5;
-                case "LEGENDARY" -> 1;
-                default -> 130;
-            };
-            yaml.set(base + "weight", weight);
+        File marker = new File(plugin.getDataFolder(), "rewards-validation-v3.done");
 
-            String material = yaml.getString(base + "material", "").toUpperCase(Locale.ROOT);
-            int amount = yaml.getInt(base + "amount", 1);
-            if (material.equals("DIAMOND") && tier.equals("UNCOMMON")) yaml.set(base + "amount", Math.min(amount, 3));
-            if (material.equals("DIAMOND") && tier.equals("RARE")) yaml.set(base + "amount", Math.min(amount, 6));
-            if (material.equals("EXPERIENCE_BOTTLE")) yaml.set(base + "amount", Math.min(amount, 24));
-            if (material.equals("GOLDEN_CARROT")) yaml.set(base + "amount", Math.min(amount, 16));
-            if (material.equals("TOTEM_OF_UNDYING") && tier.equals("UNCOMMON")) {
-                yaml.set(base + "material", "IRON_BLOCK");
-                yaml.set(base + "amount", 4);
-                yaml.set(base + "name", "&aBloki żelaza");
-                yaml.set(base + "lore", List.of("&7Przydatny budulec"));
+        YamlConfiguration yaml = YamlConfiguration.loadConfiguration(file);
+        if (!hasValidRewardPool(yaml)) {
+            File backup = new File(plugin.getDataFolder(), "rewards.yml.corrupt.bak");
+            if (backup.exists()) backup = new File(plugin.getDataFolder(),
+                    "rewards.yml.corrupt-" + System.currentTimeMillis() + ".bak");
+
+            try {
+                if (file.exists()) Files.copy(file.toPath(), backup.toPath(), StandardCopyOption.COPY_ATTRIBUTES);
+                plugin.saveResource("rewards.yml", true);
+                yaml = YamlConfiguration.loadConfiguration(file);
+                if (!hasValidRewardPool(yaml)) {
+                    plugin.getLogger().severe("Domyślny rewards.yml również jest nieprawidłowy. System skrzynek pozostaje wyłączony.");
+                    return;
+                }
+                plugin.getLogger().warning("Wykryto uszkodzony rewards.yml. Zapisano kopię jako "
+                        + backup.getName() + " i przywrócono domyślną pulę nagród.");
+            } catch (java.io.IOException | IllegalArgumentException ex) {
+                plugin.getLogger().severe("Nie udało się zabezpieczyć lub przywrócić rewards.yml: " + ex.getMessage());
+                return;
             }
-            if (material.equals("ELYTRA")) { yaml.set(base + "tier", "LEGENDARY"); yaml.set(base + "weight", 1); }
         }
-        try {
-            yaml.save(file);
-            if (marker.createNewFile()) plugin.getLogger().info("Zastosowano balans nagród skrzynek (v2).");
-        } catch (java.io.IOException ex) {
-            plugin.getLogger().warning("Nie udało się zbalansować rewards.yml: " + ex.getMessage());
+
+        if (!marker.exists()) {
+            try {
+                if (marker.createNewFile()) plugin.getLogger().info("Zweryfikowano pulę nagród skrzynki (v3).");
+            } catch (java.io.IOException ex) {
+                plugin.getLogger().warning("Nie udało się zapisać znacznika walidacji nagród: " + ex.getMessage());
+            }
         }
+    }
+
+    private boolean hasValidRewardPool(YamlConfiguration yaml) {
+        List<Map<?, ?>> rows = yaml.getMapList("rewards");
+        if (rows.isEmpty()) return false;
+
+        int validRewards = 0;
+        long totalWeight = 0;
+        for (Map<?, ?> row : rows) {
+            try {
+                Object materialValue = row.get("material");
+                Object amountValue = row.get("amount");
+                Object weightValue = row.get("weight");
+                if (materialValue == null || amountValue == null || weightValue == null) return false;
+
+                Material material = Material.matchMaterial(String.valueOf(materialValue).toUpperCase(Locale.ROOT));
+                int amount = Integer.parseInt(String.valueOf(amountValue));
+                int weight = Integer.parseInt(String.valueOf(weightValue));
+                if (material == null || !material.isItem() || amount <= 0 || weight <= 0) return false;
+
+                validRewards++;
+                totalWeight += weight;
+            } catch (RuntimeException ex) {
+                return false;
+            }
+        }
+        return validRewards > 0 && totalWeight > 0;
     }
 
     public void close() {
