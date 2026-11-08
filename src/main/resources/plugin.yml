@@ -1,9 +1,9 @@
 name: DailyQuests
-version: 1.0.0
+version: 1.0.1
 main: pl.dailyquests.DailyQuestsPlugin
 api-version: '26.3'
 author: DailyQuests
-description: Indywidualne codzienne zadania dla graczy.
+description: Indywidualne zadania i kontrakty z Michaiłem Łomonosowem.
 commands:
   zadania:
     description: Otwiera zadania, ranking i wyzwanie tygodnia.

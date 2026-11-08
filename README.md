@@ -1,6 +1,6 @@
 # DailyQuests
 
-**DailyQuests 1.0.0** to samodzielny plugin do Paper, który dodaje indywidualne codzienne zadania, kontrakty u Mistrza Zleceń, system gwiazdek i skrzynek z nagrodami.
+**DailyQuests 1.0.1** to samodzielny plugin do Paper, który dodaje indywidualne codzienne zadania, kontrakty u Michaiła Łomonosowa, system gwiazdek i skrzynek z nagrodami.
 
 Plugin opiera się na **Paper API** i SQLite. Nie wymaga Citizens ani żadnego innego dodatkowego pluginu.
 
@@ -16,7 +16,7 @@ Plugin opiera się na **Paper API** i SQLite. Nie wymaga Citizens ani żadnego i
 ## Instalacja
 
 1. Zatrzymaj serwer.
-2. Pobierz `DailyQuests-1.0.0.jar` z artefaktów GitHub Actions.
+2. Pobierz `DailyQuests-1.0.1.jar` z artefaktów GitHub Actions.
 3. Umieść plik JAR w katalogu `plugins`.
 4. Uruchom serwer.
 5. Plugin utworzy katalog `plugins/DailyQuests/` z plikami konfiguracyjnymi i bazą danych.
@@ -25,7 +25,7 @@ Po aktualizacji zalecana jest kopia zapasowa całego katalogu `plugins/DailyQues
 
 ## Funkcje
 
-- 5 indywidualnych zadań dziennych dla każdego gracza.
+- 5 indywidualnych zadań dziennych dla każdego gracza, losowanych z rozbudowanej puli ponad 120 zadań.
 - Zadania z różnych aktywności: kopanie, walka, crafting, łowienie, chodzenie, pływanie, jedzenie, zaklinanie, rozmnażanie zwierząt, handel i kowadło.
 - Postęp zadań zapisywany w SQLite.
 - Nagrody XP i przedmioty, odbierane ręcznie w GUI.
@@ -33,7 +33,7 @@ Po aktualizacji zalecana jest kopia zapasowa całego katalogu `plugins/DailyQues
 - Historia zadań ograniczająca szybkie powtórki.
 - Wyzwanie tygodniowe, serie ukończeń i ranking.
 - Gwiazdki i skrzynka z animowaną ruletką nagród.
-- Mistrz Zleceń – Villager z indywidualnym kontraktem dziennym dla gracza.
+- Michaił Łomonosow – Villager z indywidualnym kontraktem dziennym dla gracza.
 - Konfiguracja puli zadań, kontraktów i nagród w plikach YAML.
 - Opcjonalne zadania z Netheru i Endu.
 
@@ -46,7 +46,7 @@ Po aktualizacji zalecana jest kopia zapasowa całego katalogu `plugins/DailyQues
 | `/dq top` | Wyświetla ranking graczy. |
 | `/dq skrzynka` | Otwiera skrzynkę za 20 gwiazdek. |
 | `/dq gwiazdki` | Sprawdza własne saldo gwiazdek. |
-| Kliknięcie Mistrza Zleceń | Otwiera dialog i dzienny kontrakt NPC. |
+| Kliknięcie Michaiła Łomonosowa | Otwiera dialog i dzienny kontrakt NPC. |
 
 W panelu zadań można odebrać ukończone nagrody. Przerzut jednego zadania jest dostępny z poziomu GUI i kosztuje **5 poziomów doświadczenia**.
 
@@ -61,8 +61,8 @@ Wszystkie poniższe komendy wymagają uprawnienia `dailyquests.admin` (domyślni
 | `/dq nether on` / `/dq nether off` | Włącza lub wyłącza zadania z Netheru i losuje zadania ponownie. |
 | `/dq end on` / `/dq end off` | Włącza lub wyłącza zadania z Endu i losuje zadania ponownie. |
 | `/dq reload` | Przeładowuje główną konfigurację i pulę zadań. |
-| `/dq npc postaw` | Stawia Mistrza Zleceń w miejscu administratora. |
-| `/dq npc usun` | Usuwa Mistrza Zleceń. |
+| `/dq npc postaw` | Stawia Michaiła Łomonosowa w miejscu administratora. |
+| `/dq npc usun` | Usuwa Michaiła Łomonosowa. |
 | `/dq npc tp` | Teleportuje administratora do NPC. |
 | `/dq gwiazdki dodaj <gracz> <ilość>` | Dodaje graczowi gwiazdki. |
 | `/dq gwiazdki usun <gracz> <ilość>` | Odejmuje graczowi gwiazdki. |
@@ -113,7 +113,7 @@ Po zmianach w `tasks.yml` użyj `/dq reload`. Zachowuj unikalne identyfikatory z
 
 ### `npc_quests.yml`
 
-Pula kontraktów Mistrza Zleceń. Każdy kontrakt określa:
+Pula kontraktów Michaiła Łomonosowa. Każdy kontrakt określa:
 
 - `name` i `description` – nazwę i opis.
 - `item` – wymagany materiał.
@@ -130,7 +130,7 @@ Lista nagród skrzynki. Każda pozycja posiada m.in. `tier`, `weight`, `material
 ## Dane i kopie zapasowe
 
 - `dailyquests.db` – baza SQLite: zadania, postęp, statystyki, saldo gwiazdek i kontrakty.
-- `quest_npc.yml` – zapis lokalizacji i identyfikatora Mistrza Zleceń.
+- `quest_npc.yml` – zapis lokalizacji i identyfikatora Michaiła Łomonosowa.
 - `tasks.yml`, `npc_quests.yml`, `rewards.yml` – konfiguracje zawartości.
 
 Przed aktualizacją lub ręczną edycją plików wykonaj kopię całego katalogu `plugins/DailyQuests/`. Nie edytuj bazy SQLite przy uruchomionym serwerze.
@@ -143,5 +143,5 @@ Przed aktualizacją lub ręczną edycją plików wykonaj kopię całego katalogu
 
 ## Wydanie
 
-**DailyQuests 1.0.0** – oficjalna linia wydania 1.0. Aktualizacje poprawkowe w ramach tej linii zachowują numer wersji pluginu.
+**DailyQuests 1.0.1** – oficjalna linia wydania 1.0. Aktualizacje poprawkowe w ramach tej linii zachowują numer wersji pluginu.
 

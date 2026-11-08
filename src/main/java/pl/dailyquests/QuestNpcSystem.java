@@ -20,6 +20,8 @@ import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.NamespacedKey;
 
 import java.io.File;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.sql.*;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -84,6 +86,36 @@ public final class QuestNpcSystem implements Listener {
     private void loadDefaultPool() {
         if (!questsFile.exists()) {
             plugin.saveResource("npc_quests.yml", false);
+        }
+        YamlConfiguration current = YamlConfiguration.loadConfiguration(questsFile);
+        YamlConfiguration defaults;
+        try (InputStreamReader reader = new InputStreamReader(
+                Objects.requireNonNull(plugin.getResource("npc_quests.yml")), StandardCharsets.UTF_8)) {
+            defaults = YamlConfiguration.loadConfiguration(reader);
+        } catch (Exception ex) {
+            plugin.getLogger().warning("Nie udało się wczytać domyślnych kontraktów: " + ex.getMessage());
+            return;
+        }
+        ConfigurationSection defaultContracts = defaults.getConfigurationSection("contracts");
+        if (defaultContracts == null) return;
+        ConfigurationSection existing = current.getConfigurationSection("contracts");
+        if (existing == null) existing = current.createSection("contracts");
+        int added = 0;
+        for (String id : defaultContracts.getKeys(false)) {
+            if (existing.contains(id)) continue;
+            ConfigurationSection contract = defaultContracts.getConfigurationSection(id);
+            if (contract != null) {
+                existing.set(id, contract.getValues(true));
+                added++;
+            }
+        }
+        if (added > 0) {
+            try {
+                current.save(questsFile);
+                plugin.getLogger().info("Dodano " + added + " nowych kontraktów Michaiła Łomonosowa; własne wpisy zachowano.");
+            } catch (java.io.IOException ex) {
+                plugin.getLogger().warning("Nie udało się zapisać nowych kontraktów: " + ex.getMessage());
+            }
         }
     }
 
@@ -172,7 +204,7 @@ public final class QuestNpcSystem implements Listener {
         yaml.set("pitch", location.getPitch());
         yaml.set("uuid", villager.getUniqueId().toString());
         saveNpc(yaml);
-        reply.send(ChatColor.GREEN + "Mistrz Zleceń zajął już swoje miejsce.");
+        reply.send(ChatColor.GREEN + "Michaił Łomonosow zajął już swoje miejsce.");
     }
 
     private void configure(Villager villager) {

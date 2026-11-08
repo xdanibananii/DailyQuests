@@ -86,3 +86,334 @@ contracts:
     amount: 8
     reward-stars: 8
     reward-xp: 320
+
+  # Nowe kontrakty sezonowe 1.0.1
+  stone_for_foundation:
+    name: "&6Kamień na fundamenty"
+    description: "&7Murarze szykują nową bramę. Potrzebują solidnej dostawy kamienia, zanim ruszą z budową."
+    item: STONE
+    amount: 64
+    reward-stars: 5
+    reward-xp: 180
+  oak_for_carpenter:
+    name: "&6Dębina dla cieśli"
+    description: "&7Cieśla dostał pilne zamówienie na meble. Bez dębowych desek warsztat stanie."
+    item: OAK_PLANKS
+    amount: 48
+    reward-stars: 5
+    reward-xp: 190
+  spruce_for_roof:
+    name: "&6Drewno na dach"
+    description: "&7W osadzie przecieka dach karczmy. Cieśla prosi o zapas świerkowych desek."
+    item: SPRUCE_PLANKS
+    amount: 48
+    reward-stars: 5
+    reward-xp: 190
+  glass_for_windows:
+    name: "&6Szkło do okien"
+    description: "&7Szklarz kończy remont ratusza. Brakuje mu szkła na ostatnie okna."
+    item: GLASS
+    amount: 32
+    reward-stars: 5
+    reward-xp: 200
+  bricks_for_mason:
+    name: "&6Cegły dla murarza"
+    description: "&7Murarz pracuje nad kominkiem w gospodzie. Przyda mu się porządna dostawa cegieł."
+    item: BRICK
+    amount: 32
+    reward-stars: 6
+    reward-xp: 220
+  wool_for_weaver:
+    name: "&6Wełna dla tkacza"
+    description: "&7Tkacz dostał zamówienie na nowe dywany. Przynieś mu wełnę, a odwdzięczy się zapłatą."
+    item: WHITE_WOOL
+    amount: 32
+    reward-stars: 5
+    reward-xp: 190
+  leather_for_saddler:
+    name: "&6Skóra dla rymarza"
+    description: "&7Rymarz naprawia siodła i uprzęże. Potrzebuje dużej partii dobrej skóry."
+    item: LEATHER
+    amount: 24
+    reward-stars: 6
+    reward-xp: 220
+  feathers_for_fletcher:
+    name: "&6Pióra dla łuczarza"
+    description: "&7Łuczarz przygotowuje zapas strzał dla straży. Brakuje mu piór."
+    item: FEATHER
+    amount: 32
+    reward-stars: 5
+    reward-xp: 180
+  arrows_for_guard:
+    name: "&6Strzały dla straży"
+    description: "&7Strażnicy szykują się na nocny patrol. Uzupełnij ich kołczany."
+    item: ARROW
+    amount: 64
+    reward-stars: 5
+    reward-xp: 200
+  coal_for_smith:
+    name: "&6Węgiel dla kowala"
+    description: "&7Kowal zużywa ostatnie zapasy opału. Bez węgla jego palenisko zgaśnie."
+    item: COAL
+    amount: 48
+    reward-stars: 5
+    reward-xp: 190
+  gold_for_jeweler:
+    name: "&6Złoto dla jubilera"
+    description: "&7Jubiler dostał zlecenie na ozdobny medalion. Potrzebuje sztabek złota."
+    item: GOLD_INGOT
+    amount: 12
+    reward-stars: 7
+    reward-xp: 260
+  redstone_for_engineer:
+    name: "&6Redstone dla konstruktora"
+    description: "&7Mechanik buduje zegarową bramę. Bez redstone'u nie uruchomi mechanizmu."
+    item: REDSTONE
+    amount: 48
+    reward-stars: 6
+    reward-xp: 230
+  lapis_for_scholar:
+    name: "&6Lazuryt dla uczonego"
+    description: "&7Uczony prowadzi badania nad zaklinaniem. Przynieś mu zapas lazurytu."
+    item: LAPIS_LAZULI
+    amount: 32
+    reward-stars: 6
+    reward-xp: 230
+  amethyst_for_mage:
+    name: "&6Ametyst dla maga"
+    description: "&7Mag potrzebuje odłamków ametystu do eksperymentu. Nie pytaj, co zamierza stworzyć."
+    item: AMETHYST_SHARD
+    amount: 24
+    reward-stars: 7
+    reward-xp: 270
+  prismarine_for_fountain:
+    name: "&6Pryzmaryn do fontanny"
+    description: "&7Architekt chce ozdobić rynek wodną fontanną. Potrzebuje pryzmarynu."
+    item: PRISMARINE
+    amount: 32
+    reward-stars: 7
+    reward-xp: 260
+  ink_for_scribe:
+    name: "&6Atrament dla skryby"
+    description: "&7Skryba przepisał już wszystkie księgi, ale zabrakło mu atramentu."
+    item: INK_SAC
+    amount: 16
+    reward-stars: 5
+    reward-xp: 190
+  books_for_library:
+    name: "&6Księgi do biblioteki"
+    description: "&7Bibliotekarz rozbudowuje miejskie archiwum. Przyjmie każdą dobrze zachowaną książkę."
+    item: BOOK
+    amount: 16
+    reward-stars: 6
+    reward-xp: 220
+  paper_for_cartographer:
+    name: "&6Papier dla kartografa"
+    description: "&7Kartograf nanosi nowe szlaki na mapy. Przynieś mu papier na kolejne arkusze."
+    item: PAPER
+    amount: 48
+    reward-stars: 5
+    reward-xp: 180
+  compass_for_explorer:
+    name: "&6Kompas dla podróżnika"
+    description: "&7Wyprawa rusza o świcie. Dowódca potrzebuje kompasów, by nie zgubić drogi."
+    item: COMPASS
+    amount: 3
+    reward-stars: 7
+    reward-xp: 270
+  clock_for_watch:
+    name: "&6Zegary na wieżę"
+    description: "&7Zegarmistrz naprawia mechanizm miejskiej wieży. Brakuje mu kilku zegarów."
+    item: CLOCK
+    amount: 3
+    reward-stars: 7
+    reward-xp: 270
+  honey_for_healer:
+    name: "&6Miód dla zielarki"
+    description: "&7Zielarka przygotowuje lecznicze mikstury. Potrzebuje butelek słodkiego miodu."
+    item: HONEY_BOTTLE
+    amount: 8
+    reward-stars: 6
+    reward-xp: 220
+  apples_for_kitchen:
+    name: "&6Jabłka do kuchni"
+    description: "&7Kucharz planuje wielką ucztę. Dostarcz mu świeże jabłka z sadu."
+    item: APPLE
+    amount: 32
+    reward-stars: 4
+    reward-xp: 150
+  potatoes_for_inn:
+    name: "&6Ziemniaki do gospody"
+    description: "&7Karczmarz szykuje obiad dla podróżnych. Spiżarnia świeci pustkami."
+    item: POTATO
+    amount: 48
+    reward-stars: 4
+    reward-xp: 150
+  carrots_for_stable:
+    name: "&6Marchew dla stajni"
+    description: "&7Stajenny opiekuje się końmi po długiej wyprawie. Przyda mu się świeża marchew."
+    item: CARROT
+    amount: 48
+    reward-stars: 4
+    reward-xp: 160
+  pumpkin_for_festival:
+    name: "&6Dynia na festyn"
+    description: "&7Organizator festynu szuka dyń do jesiennych dekoracji. Przynieś mu cały kosz."
+    item: PUMPKIN
+    amount: 16
+    reward-stars: 5
+    reward-xp: 180
+  melon_for_trader:
+    name: "&6Arbuzy dla kupca"
+    description: "&7Kupiec z południa uwielbia arbuzy. Obiecał sowitą zapłatę za świeżą dostawę."
+    item: MELON_SLICE
+    amount: 48
+    reward-stars: 5
+    reward-xp: 180
+  sugar_for_baker:
+    name: "&6Cukier dla piekarza"
+    description: "&7Piekarz przygotowuje słodkie wypieki na targ. Kończy mu się cukier."
+    item: SUGAR
+    amount: 32
+    reward-stars: 5
+    reward-xp: 180
+  eggs_for_baker:
+    name: "&6Jajka na wypieki"
+    description: "&7Piekarz dostał zamówienie na ciasta. Potrzebuje świeżych jaj od miejscowych hodowców."
+    item: EGG
+    amount: 24
+    reward-stars: 4
+    reward-xp: 160
+  fish_for_cook:
+    name: "&6Ryby dla kucharza"
+    description: "&7Kucharz chce podać dziś świeżą rybę. Dostarcz mu zapas dorsza."
+    item: COD
+    amount: 24
+    reward-stars: 5
+    reward-xp: 190
+  salmon_for_inn:
+    name: "&6Łosoś dla karczmarza"
+    description: "&7Karczmarz obiecał gościom wyjątkową kolację. Pomóż mu zdobyć łososia."
+    item: SALMON
+    amount: 16
+    reward-stars: 6
+    reward-xp: 220
+  ink_for_dyer:
+    name: "&6Barwnik dla farbiarza"
+    description: "&7Farbiarz przygotowuje tkaniny na królewski jarmark. Brakuje mu czarnego barwnika."
+    item: BLACK_DYE
+    amount: 16
+    reward-stars: 5
+    reward-xp: 190
+  bone_meal_for_gardener:
+    name: "&6Nawóz dla ogrodnika"
+    description: "&7Ogrodnik chce przyspieszyć wzrost miejskich upraw. Potrzebuje mączki kostnej."
+    item: BONE_MEAL
+    amount: 48
+    reward-stars: 5
+    reward-xp: 190
+  slime_for_alchemist:
+    name: "&6Śluz dla alchemika"
+    description: "&7Alchemik testuje nową recepturę. Potrzebuje lepkiego surowca ze szlamów."
+    item: SLIME_BALL
+    amount: 16
+    reward-stars: 6
+    reward-xp: 230
+  blaze_rods_for_mage:
+    name: "&6Pręty płomienia"
+    description: "&7Mag bada energię Netheru. Przynieś mu pręty płomienia, ale zachowaj ostrożność."
+    item: BLAZE_ROD
+    amount: 8
+    reward-stars: 8
+    reward-xp: 300
+  ghast_tear_for_temple:
+    name: "&6Łzy ghasta"
+    description: "&7Kapłan przygotowuje rytuał w świątyni. Brakuje mu niezwykle rzadkiego składnika."
+    item: GHAST_TEAR
+    amount: 2
+    reward-stars: 9
+    reward-xp: 340
+  quartz_for_architect:
+    name: "&6Kwarc dla architekta"
+    description: "&7Architekt ozdabia salę tronową. Potrzebuje jasnego kwarcu z Netheru."
+    item: QUARTZ
+    amount: 48
+    reward-stars: 7
+    reward-xp: 260
+  glowstone_for_lamps:
+    name: "&6Jasnogłaz do lamp"
+    description: "&7Latarnie na głównym trakcie wymagają nowych kryształów. Dostarcz jasnogłaz."
+    item: GLOWSTONE_DUST
+    amount: 48
+    reward-stars: 6
+    reward-xp: 230
+  nether_bricks_for_fort:
+    name: "&6Cegły z Netheru"
+    description: "&7Budowniczowie wzmacniają wartownię. Zamówili ognioodporne cegły z Netheru."
+    item: NETHER_BRICK
+    amount: 48
+    reward-stars: 7
+    reward-xp: 270
+  ancient_debris_for_smith:
+    name: "&6Pradawne zgliszcza"
+    description: "&7Kowal marzy o wykuciu legendarnego stopu. Przynieś mu pradawne zgliszcza."
+    item: ANCIENT_DEBRIS
+    amount: 2
+    reward-stars: 10
+    reward-xp: 420
+  ender_pearls_for_portal:
+    name: "&6Perły do portalu"
+    description: "&7Badacze próbują ustabilizować portal. Potrzebują pereł Endermana."
+    item: ENDER_PEARL
+    amount: 12
+    reward-stars: 8
+    reward-xp: 300
+  chorus_for_cook:
+    name: "&6Owoce z krańca"
+    description: "&7Kucharz eksperymentuje z egzotycznymi składnikami. Przynieś mu owoce refrenusu."
+    item: CHORUS_FRUIT
+    amount: 32
+    reward-stars: 7
+    reward-xp: 260
+  shulker_shells_for_crafter:
+    name: "&6Muszle shulkera"
+    description: "&7Rzemieślnik chce stworzyć pojemnik na daleką wyprawę. Brakuje mu muszli shulkera."
+    item: SHULKER_SHELL
+    amount: 4
+    reward-stars: 10
+    reward-xp: 420
+  dragon_breath_for_mage:
+    name: "&6Oddech smoka"
+    description: "&7Mag potrzebuje próbki smoczego oddechu do badań. To nie jest zwykłe zlecenie."
+    item: DRAGON_BREATH
+    amount: 2
+    reward-stars: 10
+    reward-xp: 450
+  obsidian_for_portal:
+    name: "&6Obsydian na bramę"
+    description: "&7Portal w starej wieży wymaga odbudowy. Przynieś solidną porcję obsydianu."
+    item: OBSIDIAN
+    amount: 32
+    reward-stars: 7
+    reward-xp: 270
+  diamond_for_jeweler:
+    name: "&6Diamenty dla jubilera"
+    description: "&7Jubiler przygotowuje wyjątkowy pierścień. Tylko czyste diamenty wchodzą w grę."
+    item: DIAMOND
+    amount: 8
+    reward-stars: 9
+    reward-xp: 360
+  emerald_for_trade:
+    name: "&6Szmaragdy na wymianę"
+    description: "&7Kupiec szykuje się na wielki targ. Potrzebuje szmaragdów jako kapitału."
+    item: EMERALD
+    amount: 24
+    reward-stars: 7
+    reward-xp: 280
+  netherite_scrap_for_master:
+    name: "&6Netherit dla mistrza"
+    description: "&7Mam pewien ambitny plan. Potrzebuję skrawków netheritu, a zapłata będzie odpowiednia."
+    item: NETHERITE_SCRAP
+    amount: 4
+    reward-stars: 10
+    reward-xp: 450

@@ -44,7 +44,7 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
     @Override public void onEnable() {
         saveDefaultConfig();
         saveResource("tasks.yml", false);
-        File poolMarker = new File(getDataFolder(), "quest-pool-v3.done");
+        File poolMarker = new File(getDataFolder(), "quest-pool-v4.done");
         if (!poolMarker.exists()) {
             mergeDefaultTasks();
             try { poolMarker.createNewFile(); } catch (java.io.IOException ex) { getLogger().warning("Nie zapisano znacznika aktualizacji puli zadan: " + ex.getMessage()); }
@@ -219,7 +219,7 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
         sender.sendMessage(ChatColor.YELLOW + "/dq skrzynka" + ChatColor.GRAY + " — otwiera skrzynkę za 20 gwiazdek");
         sender.sendMessage(ChatColor.YELLOW + "/dq gwiazdki" + ChatColor.GRAY + " — sprawdza saldo gwiazdek");
         sender.sendMessage(ChatColor.YELLOW + "/dq top" + ChatColor.GRAY + " — ranking graczy");
-        sender.sendMessage(ChatColor.YELLOW + "Kliknij Mistrza Zleceń na spawnie, aby przyjąć jeden kontrakt dziennie.");
+        sender.sendMessage(ChatColor.YELLOW + "Kliknij Michaiła Łomonosowa na spawnie, aby przyjąć jeden kontrakt dziennie.");
         if (sender.hasPermission("dailyquests.admin")) {
             sender.sendMessage(ChatColor.DARK_AQUA + "Komendy administratora:");
             sender.sendMessage(ChatColor.YELLOW + "/dq gwiazdki dodaj <gracz> <ilość>" + ChatColor.GRAY + " — dodaje gwiazdki");
