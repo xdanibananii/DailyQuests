@@ -24,14 +24,24 @@ public final class CrateNpcSystem implements Listener {
   "Jedno losowanie dzieli cię od pięknej historii. Albo przynajmniej od ciekawej przygody!",
   "Podobno szczęście sprzyja odważnym. Ja nic nie sugeruję... ale skrzynka jest tuż obok.",
   "No dalej, bohaterze! Sprawdź, czy dziś wylosujesz coś COMMON, czy może prawdziwy rarytas!",
-  "Gwiazdkami można płacić, ale emocji nie da się kupić... chyba że za dwadzieścia gwiazdek!"
+  "Gwiazdkami można płacić, ale emocji nie da się kupić... chyba że za dwadzieścia gwiazdek!",
+  "Co tak stoisz? Skrzynia sama się nie otworzy, a ja nie będę tu stał do emerytury!",
+  "Widzę w twoich oczach głód bogactwa. Spokojnie, mam na to bardzo drogie lekarstwo!",
+  "Nie gap się na mnie, tylko na skrzynię. To ona ma dziś szansę cię uszczęśliwić!",
+  "Słyszałem, że oszczędzasz gwiazdki. Urocze. Prawie tak urocze jak twoja wiara w szczęście!",
+  "Przyszedłeś po skarb czy tylko podziwiać moją nienaganną służbową postawę?"
  };
  private static final String[] GREETINGS = {
   "Witaj, szczęściarzu! Twoje gwiazdki mogą dziś zamienić się w prawdziwy skarb.",
   "Oho, nowa twarz przy skarbcu! Masz ochotę sprawdzić, co dziś kryje skrzynia?",
   "Podejdź bliżej! Za 20 gwiazdek możesz spróbować szczęścia. Kto wie, co wypadnie?",
   "Witaj, młody hazardzisto! Pokażmy losowi, kto tu dziś rządzi!",
-  "Mam przeczucie, że dziś komuś dopisze szczęście... Może właśnie tobie?"
+  "Mam przeczucie, że dziś komuś dopisze szczęście... Może właśnie tobie?",
+  "No proszę, ktoś odważny! Oby zawartość sakiewki była równie imponująca jak pewność siebie.",
+  "Witaj! Wyglądasz na kogoś, kto lubi ryzyko. Albo po prostu nie umie oszczędzać.",
+  "Dla ciebie otworzyłbym nawet drugą skrzynię... ale regulamin pozwala tylko na tę jedną.",
+  "Nie obiecuję miłości, bogactwa ani wiecznej chwały. Ale mogę obiecać animację ruletki!",
+  "Z takim urokiem osobistym powinieneś mieć już LEGENDARY. Niestety, tu liczy się los!"
  };
  CrateNpcSystem(DailyQuestsPlugin plugin, CrateSystem crates) { this.plugin=plugin; this.crates=crates; key=new NamespacedKey(plugin,"crate_npc"); file=new File(plugin.getDataFolder(),"crate_npc.yml"); restore(); startAmbientTask(); }
  private void startAmbientTask() {
@@ -114,7 +124,14 @@ public final class CrateNpcSystem implements Listener {
      "Ostrożnie, przyjacielu! Ta zbroja jest na służbie, nie na próbę wytrzymałości.",
      "Ha! Myślisz, że pięścią otworzysz skarbiec? Do tego potrzeba gwiazdek!",
      "Spokojnie, młody! Jeśli masz tyle energii, wydaj ją na zdobywanie gwiazdek.",
-     "Jeszcze jeden taki cios, a każę ci płacić za naprawę mojego hełmu!"
+     "Jeszcze jeden taki cios, a każę ci płacić za naprawę mojego hełmu!",
+     "Oho, mocny w pięściach, a gwiazdek pewnie znowu brak!",
+     "To ma być cios? Moja babcia mocniej puka do drzwi!",
+     "Nie próbuj mnie poderwać pięściami. Mam bardzo wybredny gust!",
+     "Spokojnie, przystojniaku. Najpierw naucz się celować, potem negocjuj ze skarbcem.",
+     "Tak się nie zdobywa mojego numeru. Spróbuj może z dwudziestoma gwiazdkami!",
+     "Auć! I pomyśleć, że przed chwilą wydawałeś się całkiem sympatyczny.",
+     "Jeszcze raz mnie szturchniesz, a wpiszę cię na czarną listę skarbca!"
     };
     player.sendMessage(ChatColor.LIGHT_PURPLE+"Strażnik Skarbca"+ChatColor.DARK_GRAY+" » "+ChatColor.YELLOW+lines[random.nextInt(lines.length)]);
     player.playSound(player.getLocation(),Sound.BLOCK_NOTE_BLOCK_BASS,0.65f,0.85f);
