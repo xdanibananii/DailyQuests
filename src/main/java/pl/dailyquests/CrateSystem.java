@@ -241,7 +241,7 @@ public final class CrateSystem implements Listener {
     public void showBalance(Player player) {
         player.sendMessage(ChatColor.GOLD + "★ Twoje saldo: " + ChatColor.YELLOW + getStars(player.getUniqueId()) + " gwiazdek");
         player.sendMessage(ChatColor.GRAY + "Ukończ wszystkie 5 zadań dziennych, aby otrzymać kolejne 5.");
-        player.sendMessage(ChatColor.GRAY + "Skrzynka kosztuje " + ChatColor.YELLOW + COST + " ★" + ChatColor.GRAY + ". Komenda: " + ChatColor.YELLOW + "/dq skrzynka");
+        player.sendMessage(ChatColor.GRAY + "Skrzynka kosztuje " + ChatColor.YELLOW + "" + COST + " ★" + ChatColor.GRAY + ". Komenda: " + ChatColor.YELLOW + "/dq skrzynka");
     }
 
     public void open(Player player) {
