@@ -215,7 +215,7 @@ public final class QuestNpcSystem implements Listener {
         villager.setRemoveWhenFarAway(false);
         villager.setCollidable(false);
         villager.setProfession(Villager.Profession.CARTOGRAPHER);
-        villager.setCustomName(ChatColor.GOLD + "✦ " + ChatColor.YELLOW + "Mistrz Zleceń" + ChatColor.GOLD + " ✦");
+        villager.setCustomName(ChatColor.GOLD + "✦ " + ChatColor.YELLOW + "Michaił Łomonosow" + ChatColor.GOLD + " ✦");
         villager.setCustomNameVisible(true);
         villager.getPersistentDataContainer().set(npcKey, PersistentDataType.BYTE, (byte) 1);
     }
@@ -271,7 +271,7 @@ public final class QuestNpcSystem implements Listener {
     }
 
     private void say(Player player, String message) {
-        player.sendMessage(ChatColor.GOLD + "Mistrz Zleceń" + ChatColor.DARK_GRAY + " » "
+        player.sendMessage(ChatColor.GOLD + "Michaił Łomonosow" + ChatColor.DARK_GRAY + " » "
                 + ChatColor.YELLOW + message);
     }
 

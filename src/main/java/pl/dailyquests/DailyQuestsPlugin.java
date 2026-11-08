@@ -230,8 +230,8 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
             sender.sendMessage(ChatColor.YELLOW + "/dq nether [on|off]" + ChatColor.GRAY + " — włącza/wyłącza zadania z Netheru");
             sender.sendMessage(ChatColor.YELLOW + "/dq end [on|off]" + ChatColor.GRAY + " — włącza/wyłącza zadania z Endu");
             sender.sendMessage(ChatColor.YELLOW + "/dq reload" + ChatColor.GRAY + " — przeładowuje konfigurację");
-            sender.sendMessage(ChatColor.YELLOW + "/dq npc postaw" + ChatColor.GRAY + " — stawia Mistrza Zleceń");
-            sender.sendMessage(ChatColor.YELLOW + "/dq npc usun" + ChatColor.GRAY + " — usuwa Mistrza Zleceń");
+            sender.sendMessage(ChatColor.YELLOW + "/dq npc postaw" + ChatColor.GRAY + " — stawia Michaiła Łomonosowa");
+            sender.sendMessage(ChatColor.YELLOW + "/dq npc usun" + ChatColor.GRAY + " — usuwa Michaiła Łomonosowa");
             sender.sendMessage(ChatColor.YELLOW + "/dq npc tp" + ChatColor.GRAY + " — teleportuje do NPC");
         } else {
             sender.sendMessage(ChatColor.GRAY + "Komendy administratora są dostępne tylko dla osób z uprawnieniem dailyquests.admin.");
@@ -252,7 +252,7 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
                 }
                 case "usun" -> {
                     npcSystem.removeNpc();
-                    sender.sendMessage(ChatColor.GREEN+"Usunięto Mistrza Zleceń.");
+                    sender.sendMessage(ChatColor.GREEN+"Usunięto Michaiła Łomonosowa.");
                 }
                 case "tp" -> {
                     if(sender instanceof Player p) npcSystem.teleportToNpc(p);

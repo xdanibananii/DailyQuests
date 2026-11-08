@@ -1,4 +1,4 @@
-# Pula zadań. type: BREAK, KILL, CRAFT, FISH, WALK
+# Pula zadań. Typy: BREAK, KILL, CRAFT, FISH, WALK, SWIM, EAT, ENCHANT, BREED, TRADE, ANVIL.
 # target: materiał / typ encji / materiał wyniku craftingu / ANY dla dowolnego
 # reward-xp: punkty doświadczenia Minecrafta
 # reward-item: opcjonalny przedmiot, np. EMERALD
@@ -927,8 +927,8 @@ tasks:
     target: RAVAGER
     amount: 1
     reward-xp: 650
-    reward-item: TOTEM_OF_UNDYING
-    reward-item-amount: 1
+    reward-item: EMERALD
+    reward-item-amount: 12
   kill_evoker:
     name: "&cZaklinacz zła"
     description: "&7Pokonaj 1 przywoływacza"
@@ -1551,13 +1551,13 @@ tasks:
     reward-xp: 650
     reward-item: ENDER_PEARL
     reward-item-amount: 20
-  end_chorus_fruit:
-    name: "&eOwoce pustki"
-    description: "&7Zbierz 48 owoców refrenusu"
+  end_chorus_flowers:
+    name: "&eKwiaty pustki"
+    description: "&7Zbierz 48 kwiatów refrenusu"
     difficulty: MEDIUM
     type: BREAK
     dimension: THE_END
-    target: CHORUS_PLANT
+    target: CHORUS_FLOWER
     amount: 48
     reward-xp: 360
     reward-item: CHORUS_FRUIT
