@@ -34,6 +34,7 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
     private static final String TITLE = ChatColor.DARK_GRAY + "Codzienne zadania";
     private CrateSystem crateSystem;
     private QuestNpcSystem npcSystem;
+    private CrateNpcSystem crateNpcSystem;
 
     private static final class Task {
         String id, name, description, type, target, rewardItem, dimension, difficulty;
@@ -71,7 +72,9 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
         Objects.requireNonNull(getCommand("zadania")).setExecutor(this);
         crateSystem = new CrateSystem(this);
         npcSystem = new QuestNpcSystem(this, crateSystem);
+        crateNpcSystem = new CrateNpcSystem(this, crateSystem);
         getServer().getPluginManager().registerEvents(npcSystem, this);
+        getServer().getPluginManager().registerEvents(crateNpcSystem, this);
         getServer().getPluginManager().registerEvents(this, this);
         getServer().getPluginManager().registerEvents(crateSystem, this);
         for (Player p : Bukkit.getOnlinePlayers()) ensureTasks(p);
@@ -215,11 +218,12 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
         sender.sendMessage(ChatColor.GOLD + "━━ DAILYQUESTS — POMOC ━━");
         sender.sendMessage(ChatColor.YELLOW + "/zadania" + ChatColor.GRAY + " — otwiera codzienne zadania");
         sender.sendMessage(ChatColor.YELLOW + "/dq help" + ChatColor.GRAY + " — wyświetla tę pomoc");
-        sender.sendMessage(ChatColor.YELLOW + "/dq weekly" + ChatColor.GRAY + " — wyzwanie tygodnia");
+        sender.sendMessage(ChatColor.YELLOW + "/dq weekly" + ChatColor.GRAY + " — wyzwanie tygodnia (zmienia się co tydzień)");
         sender.sendMessage(ChatColor.YELLOW + "/dq skrzynka" + ChatColor.GRAY + " — otwiera skrzynkę za 20 gwiazdek");
         sender.sendMessage(ChatColor.YELLOW + "/dq gwiazdki" + ChatColor.GRAY + " — sprawdza saldo gwiazdek");
         sender.sendMessage(ChatColor.YELLOW + "/dq top" + ChatColor.GRAY + " — ranking graczy");
-        sender.sendMessage(ChatColor.YELLOW + "Kliknij Michaiła Łomonosowa na spawnie, aby przyjąć jeden kontrakt dziennie.");
+        sender.sendMessage(ChatColor.YELLOW + "Kliknij Michaiła Łomonosowa, aby przyjąć dzienny kontrakt.");
+        sender.sendMessage(ChatColor.YELLOW + "Kliknij Strażnika Skarbca, aby otworzyć skrzynkę za gwiazdki.");
         if (sender.hasPermission("dailyquests.admin")) {
             sender.sendMessage(ChatColor.DARK_AQUA + "Komendy administratora:");
             sender.sendMessage(ChatColor.YELLOW + "/dq gwiazdki dodaj <gracz> <ilość>" + ChatColor.GRAY + " — dodaje gwiazdki");
@@ -232,13 +236,26 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
             sender.sendMessage(ChatColor.YELLOW + "/dq reload" + ChatColor.GRAY + " — przeładowuje konfigurację");
             sender.sendMessage(ChatColor.YELLOW + "/dq npc postaw" + ChatColor.GRAY + " — stawia Michaiła Łomonosowa");
             sender.sendMessage(ChatColor.YELLOW + "/dq npc usun" + ChatColor.GRAY + " — usuwa Michaiła Łomonosowa");
-            sender.sendMessage(ChatColor.YELLOW + "/dq npc tp" + ChatColor.GRAY + " — teleportuje do NPC");
+            sender.sendMessage(ChatColor.YELLOW + "/dq npc tp" + ChatColor.GRAY + " — teleportuje do Michaiła");
+            sender.sendMessage(ChatColor.YELLOW + "/dq skrzynianpc postaw|usun|tp" + ChatColor.GRAY + " — zarządza Strażnikiem Skarbca");
         } else {
             sender.sendMessage(ChatColor.GRAY + "Komendy administratora są dostępne tylko dla osób z uprawnieniem dailyquests.admin.");
         }
     }
 
     @Override public boolean onCommand(CommandSender sender,Command command,String label,String[] args) {
+        if(label.equalsIgnoreCase("dailyquest") && args.length==0) { showHelp(sender); return true; }
+        if(args.length>0 && args[0].equalsIgnoreCase("skrzynianpc")) {
+            if(!sender.hasPermission("dailyquests.admin")) { sender.sendMessage(ChatColor.RED+"Brak uprawnień."); return true; }
+            if(args.length<2) { sender.sendMessage(ChatColor.YELLOW+"Użycie: /dq skrzynianpc <postaw|usun|tp>"); return true; }
+            switch(args[1].toLowerCase(Locale.ROOT)) {
+                case "postaw" -> { if(sender instanceof Player p) { crateNpcSystem.spawnAt(p.getLocation()); sender.sendMessage(ChatColor.GREEN+"Postawiono Strażnika Skarbca."); } else sender.sendMessage("Tej komendy użyj w grze."); }
+                case "usun" -> { crateNpcSystem.remove(); sender.sendMessage(ChatColor.GREEN+"Usunięto Strażnika Skarbca."); }
+                case "tp" -> { if(sender instanceof Player p) crateNpcSystem.teleport(p); else sender.sendMessage("Tej komendy użyj w grze."); }
+                default -> sender.sendMessage(ChatColor.YELLOW+"Użycie: /dq skrzynianpc <postaw|usun|tp>");
+            }
+            return true;
+        }
         if(args.length>0 && args[0].equalsIgnoreCase("npc")) {
             if(!sender.hasPermission("dailyquests.admin")) { sender.sendMessage(ChatColor.RED+"Brak uprawnień."); return true; }
             if(args.length<2) {

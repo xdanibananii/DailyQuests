@@ -230,7 +230,7 @@ public final class CrateSystem implements Listener {
         List<Reward> rewards = loadRewards();
         if (rewards.isEmpty()) {
             awardStars(player, COST);
-            player.sendMessage(ChatColor.RED + "Pula nagród jest pusta. Zwrócono gwiazdki.");
+            player.sendMessage(ChatColor.RED + "Pula nagród jest nieprawidłowa lub pusta. Gwiazdki zwrócono; administrator powinien sprawdzić rewards.yml.");
             open(player);
             return;
         }
@@ -326,6 +326,8 @@ public final class CrateSystem implements Listener {
                 plugin.getLogger().warning("Pominięto nieprawidłową nagrodę w rewards.yml: " + ex.getMessage());
             }
         }
+        if (result.isEmpty()) plugin.getLogger().severe("Pula rewards.yml nie zawiera poprawnej nagrody z wagą większą od zera. Sprawdź material, amount i weight.");
+        else plugin.getLogger().info("Wczytano "+result.size()+" pozycji nagród do skrzynki.");
         return result;
     }
 

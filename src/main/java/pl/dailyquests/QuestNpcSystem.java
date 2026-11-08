@@ -10,6 +10,7 @@ import org.bukkit.entity.Villager;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
@@ -39,6 +40,7 @@ public final class QuestNpcSystem implements Listener {
     private final Random random = new Random();
     private final Map<UUID, Contract> contracts = new HashMap<>();
     private final Set<UUID> playersInNpcRange = new HashSet<>();
+    private final Map<UUID, Long> lastWarning = new HashMap<>();
     private static final String[] AMBIENT_LINES = {
             "Ach, wędrowcze... każda wielka przygoda zaczyna się od małego zlecenia.",
             "Pamiętaj, młody człowieku: cierpliwość jest cenniejsza niż diamenty.",
@@ -525,7 +527,16 @@ public final class QuestNpcSystem implements Listener {
     }
 
     @EventHandler public void onNpcDamage(EntityDamageEvent event) {
-        if (event.getEntity().getPersistentDataContainer().has(npcKey, PersistentDataType.BYTE)) event.setCancelled(true);
+        if (!event.getEntity().getPersistentDataContainer().has(npcKey, PersistentDataType.BYTE)) return;
+        event.setCancelled(true);
+        if (event instanceof EntityDamageByEntityEvent hit && hit.getDamager() instanceof Player player) {
+            long now=System.currentTimeMillis();
+            if(now-lastWarning.getOrDefault(player.getUniqueId(),0L)>=2500L) {
+                lastWarning.put(player.getUniqueId(),now);
+                String[] lines={"Ejże, młodzieńcze! Rąk na starszych się nie podnosi. Okaż nieco szacunku.","Spokojnie, mój drogi. Mądrości nie wykuwa się pięścią.","Za moich czasów uczono, że starszyzna zasługuje na szacunek.","Ho, ho! Jeśli masz tyle energii, spożytkuj ją na porządne zadanie, nie na mnie."};
+                say(player,lines[random.nextInt(lines.length)]);
+            }
+        }
     }
 
     private int count(Player player, Material material) {
