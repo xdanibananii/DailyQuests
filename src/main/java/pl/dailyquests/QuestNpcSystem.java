@@ -37,6 +37,21 @@ public final class QuestNpcSystem implements Listener {
     private final File questsFile;
     private final Random random = new Random();
     private final Map<UUID, Contract> contracts = new HashMap<>();
+    private final Map<UUID, Long> nextAmbientSpeech = new HashMap<>();
+    private static final String[] AMBIENT_LINES = {
+            "Ach, wędrowcze... każda wielka przygoda zaczyna się od małego zlecenia.",
+            "Pamiętaj, młody człowieku: cierpliwość jest cenniejsza niż diamenty.",
+            "Mam przeczucie, że los szykuje dla ciebie interesujące zadanie.",
+            "Przez te wszystkie lata nauczyłem się jednego: zawsze warto mieć fach w ręku.",
+            "Szukasz zajęcia? Być może znajdzie się coś, co będzie wymagało twoich umiejętności.",
+            "Nie lekceważ drobnych przysług. Z nich rodzą się wielkie historie.",
+            "Świat pełen jest skarbów, ale prawdziwą wartość ma dobrze wykonana praca.",
+            "Ho, ho... mam kilka spraw do załatwienia. Zajrzyj do mnie, gdy będziesz gotów.",
+            "Wędrowałem po wielu krainach i powiadam ci: każda z nich potrzebuje pomocnych dłoni.",
+            "Jeśli szukasz uczciwej zapłaty, być może trafiłeś pod właściwy adres.",
+            "Dawniej sam przemierzałem te szlaki. Dziś wolę powierzać zadania młodszym.",
+            "Roztropny podróżnik nigdy nie odrzuca okazji do zdobycia doświadczenia."
+    };
 
     private static final class Contract {
         String id, name, description, material;
@@ -58,7 +73,7 @@ public final class QuestNpcSystem implements Listener {
         }
         loadDefaultPool();
         restoreNpc();
-        startWanderingTask();
+        startAmbientTask();
     }
 
 
@@ -222,7 +237,7 @@ public final class QuestNpcSystem implements Listener {
     }
 
     private void configure(Villager villager) {
-        villager.setAI(true);
+        villager.setAI(false);
         villager.setInvulnerable(true);
         villager.setSilent(false);
         villager.setPersistent(true);
@@ -236,10 +251,10 @@ public final class QuestNpcSystem implements Listener {
     }
 
     /**
-     * Pozwala NPC swobodnie spacerować, ale pilnuje kwadratowego obszaru 4x4
-     * wyznaczonego przez punkt, w którym administrator postawił Villagera.
+     * Michaił pozostaje w miejscu, ale obserwuje najbliższego gracza.
+     * Od czasu do czasu zagaduje najbliższego wędrowca w promieniu 5 bloków.
      */
-    private void startWanderingTask() {
+    private void startAmbientTask() {
         Bukkit.getScheduler().runTaskTimer(plugin, () -> {
             if (!npcFile.exists()) return;
             YamlConfiguration yaml = YamlConfiguration.loadConfiguration(npcFile);
@@ -254,20 +269,37 @@ public final class QuestNpcSystem implements Listener {
             }
             if (!(entity instanceof Villager villager) || !villager.isValid()) return;
 
-            World world = Bukkit.getWorld(yaml.getString("world", ""));
-            if (world == null || villager.getWorld() != world) return;
-
-            double centerX = yaml.getDouble("x");
-            double centerZ = yaml.getDouble("z");
-            Location center = new Location(world, centerX, yaml.getDouble("y"), centerZ,
-                    (float) yaml.getDouble("yaw"), 0.0f);
-
-            double dx = villager.getLocation().getX() - centerX;
-            double dz = villager.getLocation().getZ() - centerZ;
-            // Margines 1.8 bloku zostawia niewielki zapas przed granicą 4x4.
-            if (Math.abs(dx) > 1.8 || Math.abs(dz) > 1.8) {
-                villager.getPathfinder().moveTo(center, 0.8);
+            Player nearest = null;
+            double nearestDistance = 8.0 * 8.0;
+            for (Player player : villager.getWorld().getPlayers()) {
+                double distance = player.getLocation().distanceSquared(villager.getLocation());
+                if (distance < nearestDistance) {
+                    nearest = player;
+                    nearestDistance = distance;
+                }
             }
+
+            if (nearest == null) return;
+
+            // Obrót samej głowy/kierunku bez uruchamiania AI i przemieszczania Villagera.
+            Location npcLocation = villager.getLocation();
+            Location playerLocation = nearest.getLocation();
+            double dx = playerLocation.getX() - npcLocation.getX();
+            double dz = playerLocation.getZ() - npcLocation.getZ();
+            float yaw = (float) Math.toDegrees(Math.atan2(-dx, dz));
+            villager.setRotation(yaw, 0.0f);
+
+            if (nearestDistance > 5.0 * 5.0) return;
+
+            long now = System.currentTimeMillis();
+            UUID playerId = nearest.getUniqueId();
+            long next = nextAmbientSpeech.getOrDefault(playerId, 0L);
+            if (now < next) return;
+
+            String line = AMBIENT_LINES[random.nextInt(AMBIENT_LINES.length)];
+            say(nearest, line);
+            // Losowa przerwa 18–32 sekundy, żeby dialogi brzmiały naturalnie i nie spamowały.
+            nextAmbientSpeech.put(playerId, now + (18_000L + random.nextInt(14_001)));
         }, 20L, 10L);
     }
 
