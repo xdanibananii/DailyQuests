@@ -1,38 +1,38 @@
 # Wagi są względne. Możesz zmieniać nagrody bez przebudowy pluginu.
-# Orientacyjnie: COMMON 89.24%, UNCOMMON 10.04%, RARE 0.67%, EPIC 0.02%, LEGENDARY 0.03%.
+# Orientacyjnie: COMMON 81.97%, UNCOMMON 15.37%, RARE 2.30%, EPIC 0.20%, LEGENDARY 0.15%.
 rewards:
-  # COMMON — approx. 89.24%
-  - { tier: COMMON, weight: 1000, material: IRON_INGOT, amount: 12, name: "&7Pakiet żelaza", lore: ["&8Zwykła nagroda"] }
-  - { tier: COMMON, weight: 1000, material: GOLD_INGOT, amount: 8, name: "&7Pakiet złota", lore: ["&8Zwykła nagroda"] }
-  - { tier: COMMON, weight: 1000, material: EMERALD, amount: 4, name: "&7Garść szmaragdów", lore: ["&8Zwykła nagroda"] }
-  - { tier: COMMON, weight: 1000, material: FIREWORK_ROCKET, amount: 16, name: "&7Zestaw rakiet", lore: ["&8W sam raz do elytry"] }
-  - { tier: COMMON, weight: 1000, material: EXPERIENCE_BOTTLE, amount: 8, name: "&7Butelki doświadczenia", lore: ["&8Trochę darmowego XP"] }
-  - { tier: COMMON, weight: 1000, material: GOLDEN_APPLE, amount: 1, name: "&7Złote jabłka", lore: ["&8Na trudniejsze wyprawy"] }
-  - { tier: COMMON, weight: 1000, material: ENDER_PEARL, amount: 4, name: "&7Ender perły", lore: ["&8Szybka podróż"] }
-  - { tier: COMMON, weight: 1000, material: OBSIDIAN, amount: 8, name: "&7Obsydian", lore: ["&8Przyda się do portalu"] }
+  # COMMON — approx. 81.97%
+  - { tier: COMMON, weight: 800, material: IRON_INGOT, amount: 12, name: "&7Pakiet żelaza", lore: ["&8Zwykła nagroda"] }
+  - { tier: COMMON, weight: 800, material: GOLD_INGOT, amount: 8, name: "&7Pakiet złota", lore: ["&8Zwykła nagroda"] }
+  - { tier: COMMON, weight: 800, material: EMERALD, amount: 4, name: "&7Garść szmaragdów", lore: ["&8Zwykła nagroda"] }
+  - { tier: COMMON, weight: 800, material: FIREWORK_ROCKET, amount: 16, name: "&7Zestaw rakiet", lore: ["&8W sam raz do elytry"] }
+  - { tier: COMMON, weight: 800, material: EXPERIENCE_BOTTLE, amount: 8, name: "&7Butelki doświadczenia", lore: ["&8Trochę darmowego XP"] }
+  - { tier: COMMON, weight: 800, material: GOLDEN_APPLE, amount: 1, name: "&7Złote jabłka", lore: ["&8Na trudniejsze wyprawy"] }
+  - { tier: COMMON, weight: 800, material: ENDER_PEARL, amount: 4, name: "&7Ender perły", lore: ["&8Szybka podróż"] }
+  - { tier: COMMON, weight: 800, material: OBSIDIAN, amount: 8, name: "&7Obsydian", lore: ["&8Przyda się do portalu"] }
 
-  # UNCOMMON — approx. 10.04%
-  - { tier: UNCOMMON, weight: 150, material: DIAMOND, amount: 2, name: "&aMały diamentowy skarb", lore: ["&7Trzy błyszczące diamenty"] }
-  - { tier: UNCOMMON, weight: 150, material: SHULKER_SHELL, amount: 1, name: "&aMuszla shulkera", lore: ["&7Początek drogi do shulkera"] }
-  - { tier: UNCOMMON, weight: 150, material: IRON_BLOCK, amount: 2, name: "&aBloki żelaza", lore: ["&7Przydatny budulec"] }
-  - { tier: UNCOMMON, weight: 150, material: EXPERIENCE_BOTTLE, amount: 12, name: "&aSkrzynka doświadczenia", lore: ["&7Porcja XP"] }
-  - { tier: UNCOMMON, weight: 150, material: GOLDEN_CARROT, amount: 8, name: "&aKilka złotych marchewek", lore: ["&7Jedzenie dla wymagających"] }
-  - { tier: UNCOMMON, weight: 150, material: DIAMOND, amount: 2, name: "&aDiamentowy pakiet", lore: ["&7Trzy diamenty"] }
+  # UNCOMMON — approx. 15.37%
+  - { tier: UNCOMMON, weight: 200, material: DIAMOND, amount: 2, name: "&aMały diamentowy skarb", lore: ["&7Trzy błyszczące diamenty"] }
+  - { tier: UNCOMMON, weight: 200, material: SHULKER_SHELL, amount: 1, name: "&aMuszla shulkera", lore: ["&7Początek drogi do shulkera"] }
+  - { tier: UNCOMMON, weight: 200, material: IRON_BLOCK, amount: 2, name: "&aBloki żelaza", lore: ["&7Przydatny budulec"] }
+  - { tier: UNCOMMON, weight: 200, material: EXPERIENCE_BOTTLE, amount: 12, name: "&aSkrzynka doświadczenia", lore: ["&7Porcja XP"] }
+  - { tier: UNCOMMON, weight: 200, material: GOLDEN_CARROT, amount: 8, name: "&aKilka złotych marchewek", lore: ["&7Jedzenie dla wymagających"] }
+  - { tier: UNCOMMON, weight: 200, material: DIAMOND, amount: 2, name: "&aDiamentowy pakiet", lore: ["&7Trzy diamenty"] }
 
-  # RARE — approx. 0.67%
-  - { tier: RARE, weight: 10, material: DIAMOND, amount: 6, name: "&9Sakiewka diamentów", lore: ["&7Naprawdę dobry traf!"] }
-  - { tier: RARE, weight: 10, material: ENCHANTED_GOLDEN_APPLE, amount: 1, name: "&9Zaklęte złote jabłko", lore: ["&7Rzadki i potężny przedmiot"] }
-  - { tier: RARE, weight: 10, material: DIAMOND_PICKAXE, amount: 1, name: "&9Kilof górnika", lore: ["&7Wydajność IV", "&7Niez niezawodny kompan kopalni"], enchants: { efficiency: 4, unbreaking: 3, fortune: 2 } }
-  - { tier: RARE, weight: 10, material: DIAMOND_CHESTPLATE, amount: 1, name: "&9Napierśnik obrońcy", lore: ["&7Solidna ochrona"], enchants: { protection: 4, unbreaking: 3 } }
-  - { tier: RARE, weight: 10, material: TRIDENT, amount: 1, name: "&9Trójząb odkrywcy", lore: ["&7Broń godna podróżnika"], enchants: { impaling: 4, unbreaking: 3 } }
-  - { tier: RARE, weight: 10, material: DIAMOND_BLOCK, amount: 2, name: "&9Bloki diamentów", lore: ["&7Dwa bloki czystego bogactwa"] }
+  # RARE — approx. 2.30%
+  - { tier: RARE, weight: 30, material: DIAMOND, amount: 6, name: "&9Sakiewka diamentów", lore: ["&7Naprawdę dobry traf!"] }
+  - { tier: RARE, weight: 30, material: ENCHANTED_GOLDEN_APPLE, amount: 1, name: "&9Zaklęte złote jabłko", lore: ["&7Rzadki i potężny przedmiot"] }
+  - { tier: RARE, weight: 30, material: DIAMOND_PICKAXE, amount: 1, name: "&9Kilof górnika", lore: ["&7Wydajność IV", "&7Niez niezawodny kompan kopalni"], enchants: { efficiency: 4, unbreaking: 3, fortune: 2 } }
+  - { tier: RARE, weight: 30, material: DIAMOND_CHESTPLATE, amount: 1, name: "&9Napierśnik obrońcy", lore: ["&7Solidna ochrona"], enchants: { protection: 4, unbreaking: 3 } }
+  - { tier: RARE, weight: 30, material: TRIDENT, amount: 1, name: "&9Trójząb odkrywcy", lore: ["&7Broń godna podróżnika"], enchants: { impaling: 4, unbreaking: 3 } }
+  - { tier: RARE, weight: 30, material: DIAMOND_BLOCK, amount: 2, name: "&9Bloki diamentów", lore: ["&7Dwa bloki czystego bogactwa"] }
 
-  # EPIC — approx. 0.02%
-  - { tier: LEGENDARY, weight: 1, material: ELYTRA, amount: 1, name: "&cSkrzydła wolności", lore: ["&7Leć ponad światem!"] }
-  - { tier: EPIC, weight: 1, material: NETHERITE_INGOT, amount: 1, name: "&cSztabka netheritu", lore: ["&7Cenny materiał"] }
-  - { tier: EPIC, weight: 1, material: BEACON, amount: 1, name: "&cBeacon", lore: ["&7Niech rozświetli twoją bazę"] }
+  # EPIC — approx. 0.20%
+  - { tier: LEGENDARY, weight: 4, material: ELYTRA, amount: 1, name: "&cSkrzydła wolności", lore: ["&7Leć ponad światem!"] }
+  - { tier: EPIC, weight: 8, material: NETHERITE_INGOT, amount: 1, name: "&cSztabka netheritu", lore: ["&7Cenny materiał"] }
+  - { tier: EPIC, weight: 8, material: BEACON, amount: 1, name: "&cBeacon", lore: ["&7Niech rozświetli twoją bazę"] }
 
-  # LEGENDARY — approx. 0.03%
-  - { tier: LEGENDARY, weight: 1, material: SPAWNER, amount: 1, name: "&6Tajemniczy spawner", lore: ["&eLEGENDARY", "&7Przechowaj ten wyjątkowy drop"] }
-  - { tier: LEGENDARY, weight: 1, material: NETHERITE_SWORD, amount: 1, name: "&6Ostrze legendy", lore: ["&eLEGENDARY", "&7Broń godna mistrza"], enchants: { sharpness: 5, fire_aspect: 2, looting: 3, unbreaking: 3, mending: 1 } }
-  - { tier: LEGENDARY, weight: 1, material: NETHERITE_CHESTPLATE, amount: 1, name: "&6Pancerz legendy", lore: ["&eLEGENDARY", "&7Najwyższa klasa ochrony"], enchants: { protection: 4, unbreaking: 3, mending: 1 } }
+  # LEGENDARY — approx. 0.15%
+  - { tier: LEGENDARY, weight: 4, material: SPAWNER, amount: 1, name: "&6Tajemniczy spawner", lore: ["&eLEGENDARY", "&7Przechowaj ten wyjątkowy drop"] }
+  - { tier: LEGENDARY, weight: 4, material: NETHERITE_SWORD, amount: 1, name: "&6Ostrze legendy", lore: ["&eLEGENDARY", "&7Broń godna mistrza"], enchants: { sharpness: 5, fire_aspect: 2, looting: 3, unbreaking: 3, mending: 1 } }
+  - { tier: LEGENDARY, weight: 4, material: NETHERITE_CHESTPLATE, amount: 1, name: "&6Pancerz legendy", lore: ["&eLEGENDARY", "&7Najwyższa klasa ochrony"], enchants: { protection: 4, unbreaking: 3, mending: 1 } }
