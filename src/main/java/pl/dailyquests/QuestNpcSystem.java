@@ -238,6 +238,7 @@ public final class QuestNpcSystem implements Listener {
         yaml.set("yaw", location.getYaw());
         yaml.set("pitch", location.getPitch());
         yaml.set("uuid", villager.getUniqueId().toString());
+        yaml.set("name", npcName);
         saveNpc(yaml);
         reply.send(ChatColor.GREEN + "Michaił Łomonosow zajął już swoje miejsce.");
     }
