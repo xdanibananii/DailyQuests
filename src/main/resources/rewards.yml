@@ -2,22 +2,22 @@
 # Orientacyjnie: COMMON 89.24%, UNCOMMON 10.04%, RARE 0.67%, EPIC 0.02%, LEGENDARY 0.03%.
 rewards:
   # COMMON — approx. 89.24%
-  - { tier: COMMON, weight: 1000, material: IRON_INGOT, amount: 24, name: "&7Pakiet żelaza", lore: ["&8Zwykła nagroda"] }
-  - { tier: COMMON, weight: 1000, material: GOLD_INGOT, amount: 16, name: "&7Pakiet złota", lore: ["&8Zwykła nagroda"] }
-  - { tier: COMMON, weight: 1000, material: EMERALD, amount: 12, name: "&7Garść szmaragdów", lore: ["&8Zwykła nagroda"] }
-  - { tier: COMMON, weight: 1000, material: FIREWORK_ROCKET, amount: 32, name: "&7Zestaw rakiet", lore: ["&8W sam raz do elytry"] }
-  - { tier: COMMON, weight: 1000, material: EXPERIENCE_BOTTLE, amount: 16, name: "&7Butelki doświadczenia", lore: ["&8Trochę darmowego XP"] }
-  - { tier: COMMON, weight: 1000, material: GOLDEN_APPLE, amount: 2, name: "&7Złote jabłka", lore: ["&8Na trudniejsze wyprawy"] }
-  - { tier: COMMON, weight: 1000, material: ENDER_PEARL, amount: 12, name: "&7Ender perły", lore: ["&8Szybka podróż"] }
-  - { tier: COMMON, weight: 1000, material: OBSIDIAN, amount: 16, name: "&7Obsydian", lore: ["&8Przyda się do portalu"] }
+  - { tier: COMMON, weight: 1000, material: IRON_INGOT, amount: 12, name: "&7Pakiet żelaza", lore: ["&8Zwykła nagroda"] }
+  - { tier: COMMON, weight: 1000, material: GOLD_INGOT, amount: 8, name: "&7Pakiet złota", lore: ["&8Zwykła nagroda"] }
+  - { tier: COMMON, weight: 1000, material: EMERALD, amount: 4, name: "&7Garść szmaragdów", lore: ["&8Zwykła nagroda"] }
+  - { tier: COMMON, weight: 1000, material: FIREWORK_ROCKET, amount: 16, name: "&7Zestaw rakiet", lore: ["&8W sam raz do elytry"] }
+  - { tier: COMMON, weight: 1000, material: EXPERIENCE_BOTTLE, amount: 8, name: "&7Butelki doświadczenia", lore: ["&8Trochę darmowego XP"] }
+  - { tier: COMMON, weight: 1000, material: GOLDEN_APPLE, amount: 1, name: "&7Złote jabłka", lore: ["&8Na trudniejsze wyprawy"] }
+  - { tier: COMMON, weight: 1000, material: ENDER_PEARL, amount: 4, name: "&7Ender perły", lore: ["&8Szybka podróż"] }
+  - { tier: COMMON, weight: 1000, material: OBSIDIAN, amount: 8, name: "&7Obsydian", lore: ["&8Przyda się do portalu"] }
 
   # UNCOMMON — approx. 10.04%
-  - { tier: UNCOMMON, weight: 150, material: DIAMOND, amount: 3, name: "&aMały diamentowy skarb", lore: ["&7Trzy błyszczące diamenty"] }
+  - { tier: UNCOMMON, weight: 150, material: DIAMOND, amount: 2, name: "&aMały diamentowy skarb", lore: ["&7Trzy błyszczące diamenty"] }
   - { tier: UNCOMMON, weight: 150, material: SHULKER_SHELL, amount: 1, name: "&aMuszla shulkera", lore: ["&7Początek drogi do shulkera"] }
-  - { tier: UNCOMMON, weight: 150, material: IRON_BLOCK, amount: 4, name: "&aBloki żelaza", lore: ["&7Przydatny budulec"] }
-  - { tier: UNCOMMON, weight: 150, material: EXPERIENCE_BOTTLE, amount: 24, name: "&aSkrzynka doświadczenia", lore: ["&7Porcja XP"] }
-  - { tier: UNCOMMON, weight: 150, material: GOLDEN_CARROT, amount: 16, name: "&aKilka złotych marchewek", lore: ["&7Jedzenie dla wymagających"] }
-  - { tier: UNCOMMON, weight: 150, material: DIAMOND, amount: 3, name: "&aDiamentowy pakiet", lore: ["&7Trzy diamenty"] }
+  - { tier: UNCOMMON, weight: 150, material: IRON_BLOCK, amount: 2, name: "&aBloki żelaza", lore: ["&7Przydatny budulec"] }
+  - { tier: UNCOMMON, weight: 150, material: EXPERIENCE_BOTTLE, amount: 12, name: "&aSkrzynka doświadczenia", lore: ["&7Porcja XP"] }
+  - { tier: UNCOMMON, weight: 150, material: GOLDEN_CARROT, amount: 8, name: "&aKilka złotych marchewek", lore: ["&7Jedzenie dla wymagających"] }
+  - { tier: UNCOMMON, weight: 150, material: DIAMOND, amount: 2, name: "&aDiamentowy pakiet", lore: ["&7Trzy diamenty"] }
 
   # RARE — approx. 0.67%
   - { tier: RARE, weight: 10, material: DIAMOND, amount: 6, name: "&9Sakiewka diamentów", lore: ["&7Naprawdę dobry traf!"] }
