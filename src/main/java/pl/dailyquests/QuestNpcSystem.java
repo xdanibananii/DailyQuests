@@ -42,6 +42,8 @@ public final class QuestNpcSystem implements Listener {
     private final Random random = new Random();
     private final Map<UUID, Contract> contracts = new HashMap<>();
     private final Set<UUID> playersInNpcRange = new HashSet<>();
+    private final Map<UUID, Long> lastAmbientMessage = new HashMap<>();
+    private static final long AMBIENT_COOLDOWN_MS = 20_000L;
     private final Map<UUID, Long> lastWarning = new HashMap<>();
     private static final String[] AMBIENT_LINES = {
             "Ach, wędrowcze... każda wielka przygoda zaczyna się od małego zlecenia.",
@@ -320,9 +322,13 @@ public final class QuestNpcSystem implements Listener {
 
                 nearbyNow.add(playerId);
                 if (playersInNpcRange.add(playerId)) {
-                    String line = AMBIENT_LINES[random.nextInt(AMBIENT_LINES.length)];
-                    say(player, line);
-                    player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 0.55f, 1.35f);
+                    long now = System.currentTimeMillis();
+                    if (now - lastAmbientMessage.getOrDefault(playerId, 0L) >= AMBIENT_COOLDOWN_MS) {
+                        lastAmbientMessage.put(playerId, now);
+                        String line = AMBIENT_LINES[random.nextInt(AMBIENT_LINES.length)];
+                        say(player, line);
+                        player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 0.55f, 1.35f);
+                    }
                 }
             }
             playersInNpcRange.retainAll(nearbyNow);
@@ -365,6 +371,12 @@ public final class QuestNpcSystem implements Listener {
                 (float) yaml.getDouble("yaw"), (float) yaml.getDouble("pitch"));
         world.getChunkAt(loc).load();
         player.teleport(loc);
+    }
+
+    @EventHandler public void onQuit(org.bukkit.event.player.PlayerQuitEvent event) {
+        playersInNpcRange.remove(event.getPlayer().getUniqueId());
+        lastAmbientMessage.remove(event.getPlayer().getUniqueId());
+        lastWarning.remove(event.getPlayer().getUniqueId());
     }
 
     private void saveNpc(YamlConfiguration yaml) {
