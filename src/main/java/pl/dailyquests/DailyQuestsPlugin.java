@@ -438,7 +438,7 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
                 List.of(ChatColor.GRAY + challenge.description(), "",
                         ChatColor.DARK_GRAY + "POSTĘP",
                         progressBar(current, challenge.amount()),
-                        ChatColor.AQUA + current + ChatColor.GRAY + " / " + challenge.amount(),
+                        ChatColor.AQUA.toString() + current + ChatColor.GRAY + " / " + challenge.amount(),
                         claimed ? ChatColor.GREEN + "Nagroda odebrana"
                                 : current >= challenge.amount() ? ChatColor.GOLD + "Wyzwanie ukończone"
                                 : ChatColor.YELLOW + "W trakcie realizacji")));
