@@ -524,7 +524,7 @@ public final class QuestNpcSystem implements Listener {
         if (c.stars > 0) crates.awardStars(player, c.stars);
         if (c.xp > 0) player.giveExp(c.xp);
         say(player, "Dostawa się zgadza. Dobra robota — oto twoja zapłata. Jeśli będziesz szukać kolejnego zajęcia, wiesz, gdzie mnie znaleźć.");
-        player.playSound(player.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1f, 1f);
+        player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_HARP, 0.25f, 1.6f);
         open(player, getContract(player));
     }
 
