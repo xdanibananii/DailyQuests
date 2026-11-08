@@ -226,7 +226,7 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
         sender.sendMessage(ChatColor.GRAY + "Losowanie nagród za gwiazdki znajdziesz u Strażnika Skarbca.");
         if (sender.hasPermission("dailyquests.admin")) {
             sender.sendMessage(ChatColor.DARK_AQUA + "━━ KOMENDY ADMINISTRATORA ━━");
-            sender.sendMessage(ChatColor.YELLOW + "/dq npc questy [postaw|usun|tp]" + ChatColor.GRAY + " — zarządzanie Michaiłem");
+            sender.sendMessage(ChatColor.YELLOW + "/dq npc quest [postaw|usun|tp]" + ChatColor.GRAY + " — zarządzanie Michaiłem");
             sender.sendMessage(ChatColor.YELLOW + "/dq npc skarbiec [postaw|usun|tp]" + ChatColor.GRAY + " — zarządzanie Strażnikiem Skarbca");
             sender.sendMessage(ChatColor.YELLOW + "/dq gwiazdki <dodaj|usun|ustaw> <gracz> <ilość>" + ChatColor.GRAY + " — zarządzanie saldem");
             sender.sendMessage(ChatColor.YELLOW + "/dq gwiazdki sprawdz <gracz>" + ChatColor.GRAY + " — sprawdza saldo gracza");
@@ -244,7 +244,7 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
             suggestions.addAll(List.of("help", "top", "weekly", "gwiazdki"));
             if (admin) suggestions.addAll(List.of("npc", "roll", "nether", "end", "reload"));
         } else if (args.length == 2 && args[0].equalsIgnoreCase("npc") && admin) {
-            suggestions.addAll(List.of("questy", "skarbiec"));
+            suggestions.addAll(List.of("quest", "skarbiec"));
         } else if (args.length == 3 && args[0].equalsIgnoreCase("npc") && admin
                 && (args[1].equalsIgnoreCase("quest") || args[1].equalsIgnoreCase("skarbiec"))) {
             suggestions.addAll(List.of("postaw", "usun", "tp"));
