@@ -313,7 +313,24 @@ public final class CrateSystem implements Listener {
 
     private void beginOpening(Player player, int cost, boolean basic) {
         List<Reward> rewards = loadRewards();
-        if (basic) rewards = rewards.stream().filter(r -> r.tier.equals("COMMON") || r.tier.equals("UNCOMMON")).toList();
+        if (basic) {
+            List<Reward> basicRewards = new ArrayList<>();
+            for (Reward original : rewards) {
+                if (!original.tier.equals("COMMON") && !original.tier.equals("UNCOMMON")) continue;
+                // Tańsza skrzynia ma mniejsze ilości i nie zawiera muszli shulkera.
+                if (original.material == Material.SHULKER_SHELL) continue;
+                Reward reduced = new Reward();
+                reduced.material = original.material;
+                reduced.amount = Math.max(1, (original.amount + 1) / 2);
+                reduced.weight = original.weight;
+                reduced.tier = original.tier;
+                reduced.name = original.name;
+                reduced.lore = original.lore;
+                reduced.enchants = original.enchants;
+                basicRewards.add(reduced);
+            }
+            rewards = basicRewards;
+        }
         if (rewards.isEmpty()) {
             awardStars(player, cost);
             player.sendMessage(ChatColor.RED + "Pula nagród jest nieprawidłowa lub pusta. Gwiazdki zwrócono; administrator powinien sprawdzić rewards.yml.");
