@@ -483,7 +483,7 @@ public final class QuestNpcSystem implements Listener {
         int have = count(player, required);
         if (have < c.amount) {
             player.sendMessage(Component.text(ChatColor.GOLD + "Michaił Łomonosow" + ChatColor.DARK_GRAY + " » "
-                    + ChatColor.YELLOW + "Do kompletu brakuje ci jeszcze " + (c.amount - have) + " × ")
+                    + ChatColor.YELLOW.toString() + "Do kompletu brakuje ci jeszcze " + (c.amount - have) + " × ")
                     .append(Component.translatable(required.getTranslationKey()))
                     .append(Component.text(ChatColor.YELLOW + ". Wróć, gdy będziesz mieć całą dostawę.")));
             player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 0.8f, 0.7f);
