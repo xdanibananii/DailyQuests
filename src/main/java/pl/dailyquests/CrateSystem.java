@@ -254,18 +254,24 @@ public final class CrateSystem implements Listener {
         Inventory inv = Bukkit.createInventory(null, 27, TITLE);
         ItemStack dark = item(Material.PURPLE_STAINED_GLASS_PANE, " ", List.of());
         ItemStack gold = item(Material.YELLOW_STAINED_GLASS_PANE, " ", List.of());
+        ItemStack green = item(Material.LIME_STAINED_GLASS_PANE, " ", List.of());
+        ItemStack purple = item(Material.MAGENTA_STAINED_GLASS_PANE, " ", List.of());
         for (int slot = 0; slot < 27; slot++) inv.setItem(slot, dark);
         for (int slot : new int[]{0, 8, 18, 26}) inv.setItem(slot, gold);
+        for (int slot : new int[]{10, 12, 14, 16}) inv.setItem(slot, slot < 13 ? green : purple);
         inv.setItem(4, item(Material.NETHER_STAR, ChatColor.GOLD + "✦  SKARBIEC DAILYQUESTS  ✦",
-                List.of(ChatColor.GRAY + "Wybierz skrzynię, którą chcesz otworzyć.",
-                        ChatColor.DARK_GRAY + "Twoje saldo: " + getStars(player.getUniqueId()) + " ★")));
-        inv.setItem(11, item(Material.CHEST, ChatColor.GREEN + "SKRZYNIA ZWYKŁA",
+                List.of(ChatColor.GRAY + "Wybierz skrzynię i sprawdź jej szanse.",
+                        ChatColor.DARK_GRAY + "━━━━━━━━━━━━━━━━━━━━",
+                        ChatColor.YELLOW + "Twoje saldo: " + getStars(player.getUniqueId()) + " ★",
+                        ChatColor.DARK_GRAY + "Niech fortuna ci sprzyja!")));
+        inv.setItem(11, item(Material.CHEST, ChatColor.GREEN + "✦ SKRZYNIA ZWYKŁA ✦",
                 crateLore(true)));
-        inv.setItem(15, item(Material.ENDER_CHEST, ChatColor.LIGHT_PURPLE + "SKRZYNIA PREMIUM",
+        inv.setItem(15, item(Material.ENDER_CHEST, ChatColor.LIGHT_PURPLE + "✧ SKRZYNIA PREMIUM ✧",
                 crateLore(false)));
-        inv.setItem(22, item(Material.SUNFLOWER, ChatColor.YELLOW + "TWOJE GWIAZDKI",
+        inv.setItem(22, item(Material.SUNFLOWER, ChatColor.YELLOW + "✦ TWOJE GWIAZDKI ✦",
                 List.of(ChatColor.GOLD + "" + getStars(player.getUniqueId()) + " ★",
-                        ChatColor.GRAY + "Zdobywaj je za codzienne zadania.")));
+                        ChatColor.GRAY + "Zdobywaj je za codzienne zadania.",
+                        ChatColor.DARK_GRAY + "Każda gwiazdka przybliża cię do nagrody.")));
         player.openInventory(inv);
         player.playSound(player.getLocation(), Sound.BLOCK_CHEST_OPEN, 0.7f, 1.1f);
     }
@@ -371,17 +377,27 @@ public final class CrateSystem implements Listener {
         player.sendMessage(ChatColor.LIGHT_PURPLE + "★ " + (basic ? "Skrzynia zwykła" : "Skrzynia premium") + " ruszyła! Obserwuj środek...");
         player.playSound(player.getLocation(), Sound.BLOCK_CHEST_OPEN, 1f, 0.8f);
 
-        ItemStack frame = item(Material.GRAY_STAINED_GLASS_PANE, " ", List.of());
-        ItemStack marker = item(Material.YELLOW_STAINED_GLASS_PANE,
-                ChatColor.GOLD + "▼ WYGRANA ▼", List.of(ChatColor.YELLOW + "Nagroda zatrzyma się tutaj"));
+        ItemStack frame = item(Material.PURPLE_STAINED_GLASS_PANE, " ", List.of());
+        ItemStack trim = item(Material.YELLOW_STAINED_GLASS_PANE, " ", List.of());
+        ItemStack marker = item(Material.GOLD_BLOCK,
+                ChatColor.GOLD + "▼  WYGRANA  ▼", List.of(ChatColor.YELLOW + "Nagroda zatrzyma się tutaj"));
         for (int slot = 0; slot < 54; slot++) {
             int row = slot / 9;
             if (row != 2) inv.setItem(slot, frame);
         }
+        for (int slot = 0; slot < 9; slot++) {
+            inv.setItem(slot, trim);
+            inv.setItem(45 + slot, trim);
+        }
+        inv.setItem(4, item(Material.NETHER_STAR, ChatColor.GOLD + "✦  SKARBIEC DAILYQUESTS  ✦",
+                List.of(ChatColor.GRAY + "Losowanie nagrody...",
+                        ChatColor.DARK_GRAY + "Patrz na środkowe pole!")));
         inv.setItem(13, marker);
         inv.setItem(31, marker);
-        inv.setItem(4, item(Material.NETHER_STAR, ChatColor.GOLD + "★ LOSOWANIE ★",
-                List.of(ChatColor.GRAY + "Nagroda pod wskaźnikiem zostanie przyznana")));
+        inv.setItem(40, item(Material.AMETHYST_SHARD, ChatColor.LIGHT_PURPLE + "SZCZĘŚCIE SPRZYJA ODWAŻNYM",
+                List.of(ChatColor.GRAY + "Nagroda zostanie dodana do ekwipunku.")));
+        inv.setItem(49, item(Material.CHEST, ChatColor.GOLD + "OTWIERANIE SKRZYNI",
+                List.of(ChatColor.GRAY + "Chwila napięcia...", ChatColor.YELLOW + "Powodzenia!")));
 
         BukkitTask task = new BukkitRunnable() {
             int offset = 0;
