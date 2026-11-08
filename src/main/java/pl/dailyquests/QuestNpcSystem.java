@@ -17,6 +17,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.util.Vector;
 import org.bukkit.NamespacedKey;
 
 import java.io.File;
@@ -251,8 +252,8 @@ public final class QuestNpcSystem implements Listener {
     }
 
     /**
-     * Michaił pozostaje w miejscu, ale obserwuje najbliższego gracza.
-     * Od czasu do czasu zagaduje najbliższego wędrowca w promieniu 5 bloków.
+     * Michaił pozostaje dokładnie w miejscu, obraca się ku graczom
+     * i od czasu do czasu zagaduje każdego w promieniu pięciu bloków.
      */
     private void startAmbientTask() {
         Bukkit.getScheduler().runTaskTimer(plugin, () -> {
@@ -269,9 +270,22 @@ public final class QuestNpcSystem implements Listener {
             }
             if (!(entity instanceof Villager villager) || !villager.isValid()) return;
 
+            World savedWorld = Bukkit.getWorld(yaml.getString("world", ""));
+            if (savedWorld == null || villager.getWorld() != savedWorld) return;
+
+            Location anchor = new Location(savedWorld, yaml.getDouble("x"), yaml.getDouble("y"),
+                    yaml.getDouble("z"), (float) yaml.getDouble("yaw"), 0.0f);
+
+            // AI jest wyłączone, a dodatkowo kasujemy pęd i cofamy każde przesunięcie.
+            villager.setAI(false);
+            villager.setVelocity(new Vector(0, 0, 0));
+            if (villager.getLocation().distanceSquared(anchor) > 0.0025) {
+                villager.teleport(anchor);
+            }
+
             Player nearest = null;
-            double nearestDistance = 8.0 * 8.0;
-            for (Player player : villager.getWorld().getPlayers()) {
+            double nearestDistance = Double.MAX_VALUE;
+            for (Player player : savedWorld.getPlayers()) {
                 double distance = player.getLocation().distanceSquared(villager.getLocation());
                 if (distance < nearestDistance) {
                     nearest = player;
@@ -279,27 +293,32 @@ public final class QuestNpcSystem implements Listener {
                 }
             }
 
-            if (nearest == null) return;
+            if (nearest != null) {
+                Location npcLocation = villager.getLocation();
+                Location playerLocation = nearest.getLocation();
+                double dx = playerLocation.getX() - npcLocation.getX();
+                double dz = playerLocation.getZ() - npcLocation.getZ();
+                if (dx * dx + dz * dz > 0.0001) {
+                    float yaw = (float) Math.toDegrees(Math.atan2(-dx, dz));
+                    villager.setRotation(yaw, 0.0f);
+                }
+            }
 
-            // Obrót samej głowy/kierunku bez uruchamiania AI i przemieszczania Villagera.
-            Location npcLocation = villager.getLocation();
-            Location playerLocation = nearest.getLocation();
-            double dx = playerLocation.getX() - npcLocation.getX();
-            double dz = playerLocation.getZ() - npcLocation.getZ();
-            float yaw = (float) Math.toDegrees(Math.atan2(-dx, dz));
-            villager.setRotation(yaw, 0.0f);
-
-            if (nearestDistance > 5.0 * 5.0) return;
-
+            // Osobny losowy dialog i cooldown dla każdego gracza w zasięgu.
             long now = System.currentTimeMillis();
-            UUID playerId = nearest.getUniqueId();
-            long next = nextAmbientSpeech.getOrDefault(playerId, 0L);
-            if (now < next) return;
+            Set<UUID> nearby = new HashSet<>();
+            for (Player player : savedWorld.getPlayers()) {
+                if (player.getLocation().distanceSquared(villager.getLocation()) > 25.0) continue;
+                UUID playerId = player.getUniqueId();
+                nearby.add(playerId);
+                long next = nextAmbientSpeech.getOrDefault(playerId, 0L);
+                if (now < next) continue;
 
-            String line = AMBIENT_LINES[random.nextInt(AMBIENT_LINES.length)];
-            say(nearest, line);
-            // Losowa przerwa 18–32 sekundy, żeby dialogi brzmiały naturalnie i nie spamowały.
-            nextAmbientSpeech.put(playerId, now + (18_000L + random.nextInt(14_001)));
+                String line = AMBIENT_LINES[random.nextInt(AMBIENT_LINES.length)];
+                say(player, line);
+                nextAmbientSpeech.put(playerId, now + 18_000L + random.nextInt(14_001));
+            }
+            nextAmbientSpeech.keySet().removeIf(id -> !nearby.contains(id));
         }, 20L, 10L);
     }
 
