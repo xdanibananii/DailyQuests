@@ -42,8 +42,12 @@ public final class CrateSystem implements Listener {
     public CrateSystem(JavaPlugin plugin) {
         this.plugin = plugin;
         this.crateKey = new NamespacedKey(plugin, "dq_crate_button");
+        File rewardsFile = new File(plugin.getDataFolder(), "rewards.yml");
+        boolean hadValidRewards = rewardsFile.exists()
+                && hasValidRewardPool(YamlConfiguration.loadConfiguration(rewardsFile));
         plugin.saveResource("rewards.yml", false);
         balanceExistingRewards();
+        if (hadValidRewards) reduceExistingLowTierRewards();
         Connection connection = null;
         try {
             connection = DriverManager.getConnection("jdbc:sqlite:" + new File(plugin.getDataFolder(), "dailyquests.db").getAbsolutePath());
@@ -55,6 +59,34 @@ public final class CrateSystem implements Listener {
             plugin.getLogger().severe("Nie można uruchomić systemu skrzynek: " + ex.getMessage());
         }
         this.db = connection;
+    }
+
+
+    private void reduceExistingLowTierRewards() {
+        File marker = new File(plugin.getDataFolder(), "crate-low-tier-quantities-v1.done");
+        if (marker.exists()) return;
+        File file = new File(plugin.getDataFolder(), "rewards.yml");
+        YamlConfiguration yaml = YamlConfiguration.loadConfiguration(file);
+        List<Map<?, ?>> rows = yaml.getMapList("rewards");
+        int changed = 0;
+        for (int i = 0; i < rows.size(); i++) {
+            String base = "rewards." + i + ".";
+            String tier = yaml.getString(base + "tier", "COMMON").toUpperCase(Locale.ROOT);
+            if (!tier.equals("COMMON") && !tier.equals("UNCOMMON")) continue;
+            int amount = yaml.getInt(base + "amount", 1);
+            if (amount > 1) {
+                yaml.set(base + "amount", Math.max(1, (amount + 1) / 2));
+                changed++;
+            }
+        }
+        try {
+            if (changed > 0) yaml.save(file);
+            if (marker.createNewFile()) {
+                plugin.getLogger().info("Zmniejszono ilości nagród COMMON/UNCOMMON w istniejącym rewards.yml (" + changed + " pozycji).");
+            }
+        } catch (java.io.IOException ex) {
+            plugin.getLogger().warning("Nie udało się zaktualizować ilości nagród niskich poziomów: " + ex.getMessage());
+        }
     }
 
     private void balanceExistingRewards() {
