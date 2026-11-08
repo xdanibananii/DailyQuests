@@ -246,7 +246,7 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
         } else if (args.length == 2 && args[0].equalsIgnoreCase("npc") && admin) {
             suggestions.addAll(List.of("questy", "skarbiec"));
         } else if (args.length == 3 && args[0].equalsIgnoreCase("npc") && admin
-                && (args[1].equalsIgnoreCase("questy") || args[1].equalsIgnoreCase("skarbiec"))) {
+                && (args[1].equalsIgnoreCase("quest") || args[1].equalsIgnoreCase("skarbiec"))) {
             suggestions.addAll(List.of("postaw", "usun", "tp"));
         } else if (args.length == 2 && args[0].equalsIgnoreCase("gwiazdki") && admin) {
             suggestions.addAll(List.of("dodaj", "usun", "ustaw", "sprawdz"));
@@ -271,10 +271,10 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
         if(label.equalsIgnoreCase("dailyquest") && args.length==0) { showHelp(sender); return true; }
         if(args.length>0 && args[0].equalsIgnoreCase("npc")) {
             if(!sender.hasPermission("dailyquests.admin")) { sender.sendMessage(ChatColor.RED+"Brak uprawnień."); return true; }
-            if(args.length<2 || (!args[1].equalsIgnoreCase("questy") && !args[1].equalsIgnoreCase("skarbiec"))) {
-                sender.sendMessage(ChatColor.YELLOW+"Użycie: /dq npc <questy|skarbiec> [postaw|usun|tp]"); return true;
+            if(args.length<2 || (!args[1].equalsIgnoreCase("quest") && !args[1].equalsIgnoreCase("skarbiec"))) {
+                sender.sendMessage(ChatColor.YELLOW+"Użycie: /dq npc <quest|skarbiec> [postaw|usun|tp]"); return true;
             }
-            boolean questNpc=args[1].equalsIgnoreCase("questy");
+            boolean questNpc=args[1].equalsIgnoreCase("quest");
             String action=args.length>=3?args[2].toLowerCase(Locale.ROOT):"postaw";
             if(action.equals("postaw")) {
                 if(!(sender instanceof Player p)) { sender.sendMessage("Tej komendy użyj w grze."); return true; }
@@ -286,7 +286,7 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
             } else if(action.equals("tp")) {
                 if(!(sender instanceof Player p)) { sender.sendMessage("Tej komendy użyj w grze."); return true; }
                 if(questNpc) npcSystem.teleportToNpc(p); else crateNpcSystem.teleport(p);
-            } else sender.sendMessage(ChatColor.YELLOW+"Użycie: /dq npc <questy|skarbiec> [postaw|usun|tp]");
+            } else sender.sendMessage(ChatColor.YELLOW+"Użycie: /dq npc <quest|skarbiec> [postaw|usun|tp]");
             return true;
         }
         if(args.length>0 && args[0].equalsIgnoreCase("help")) { showHelp(sender); return true; }
