@@ -4,6 +4,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.*;
 import org.bukkit.event.*;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.NamespacedKey;
@@ -13,6 +14,7 @@ import java.util.*;
 public final class CrateNpcSystem implements Listener {
  private final DailyQuestsPlugin plugin; private final CrateSystem crates; private final NamespacedKey key; private final File file;
  private final Set<UUID> playersInRange = new HashSet<>();
+ private final Map<UUID, Long> lastWarning = new HashMap<>();
  private final Random random = new Random();
  private static final String[] AMBIENT_LINES = {
   "Podejdź, podejdź! Dwadzieścia gwiazdek i kto wie — może trafisz prawdziwy skarb!",
@@ -43,6 +45,23 @@ public final class CrateNpcSystem implements Listener {
    catch(IllegalArgumentException ex) { playersInRange.clear(); return; }
    Entity entity=Bukkit.getEntity(npcId);
    if(!(entity instanceof Villager villager) || !villager.isValid()) { playersInRange.clear(); return; }
+
+   Player nearest=null;
+   double nearestDistance=Double.MAX_VALUE;
+   for(Player player:world.getPlayers()) {
+    double distance=player.getLocation().distanceSquared(villager.getLocation());
+    if(distance<nearestDistance) { nearest=player; nearestDistance=distance; }
+   }
+   if(nearest!=null) {
+    Location npcLocation=villager.getLocation();
+    Location playerLocation=nearest.getLocation();
+    double dx=playerLocation.getX()-npcLocation.getX();
+    double dz=playerLocation.getZ()-npcLocation.getZ();
+    if(dx*dx+dz*dz>0.0001) {
+     float yaw=(float)Math.toDegrees(Math.atan2(-dx,dz));
+     villager.setRotation(yaw,0.0f);
+    }
+   }
 
    Set<UUID> nearbyNow=new HashSet<>();
    for(Player player:world.getPlayers()) {
@@ -83,5 +102,23 @@ public final class CrateNpcSystem implements Listener {
   p.sendMessage(ChatColor.GRAY+"» "+ChatColor.YELLOW+"Jedno losowanie kosztuje 20 ★. "+ChatColor.GRAY+"Sprawdź szanse w skrzynce!");
   crates.open(p);
  }
- @EventHandler public void onDamage(EntityDamageEvent e) { if(e.getEntity().getPersistentDataContainer().has(key,PersistentDataType.BYTE)) e.setCancelled(true); }
+ @EventHandler public void onDamage(EntityDamageEvent e) {
+  if(!e.getEntity().getPersistentDataContainer().has(key,PersistentDataType.BYTE)) return;
+  e.setCancelled(true);
+  if(e instanceof EntityDamageByEntityEvent hit && hit.getDamager() instanceof Player player) {
+   long now=System.currentTimeMillis();
+   if(now-lastWarning.getOrDefault(player.getUniqueId(),0L)>=2500L) {
+    lastWarning.put(player.getUniqueId(),now);
+    String[] lines={
+     "Ej! Łapy precz od skarbca! Pilnuję tu czegoś cenniejszego niż twoje diamenty.",
+     "Ostrożnie, przyjacielu! Ta zbroja jest na służbie, nie na próbę wytrzymałości.",
+     "Ha! Myślisz, że pięścią otworzysz skarbiec? Do tego potrzeba gwiazdek!",
+     "Spokojnie, młody! Jeśli masz tyle energii, wydaj ją na zdobywanie gwiazdek.",
+     "Jeszcze jeden taki cios, a każę ci płacić za naprawę mojego hełmu!"
+    };
+    player.sendMessage(ChatColor.LIGHT_PURPLE+"Strażnik Skarbca"+ChatColor.DARK_GRAY+" » "+ChatColor.YELLOW+lines[random.nextInt(lines.length)]);
+    player.playSound(player.getLocation(),Sound.BLOCK_NOTE_BLOCK_BASS,0.65f,0.85f);
+   }
+  }
+ }
 }
