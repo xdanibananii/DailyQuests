@@ -216,30 +216,23 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
 
     private void showHelp(CommandSender sender) {
         sender.sendMessage(ChatColor.GOLD + "━━ DAILYQUESTS — POMOC ━━");
+        sender.sendMessage(ChatColor.YELLOW + "/dailyquest" + ChatColor.GRAY + " — wyświetla tę listę komend");
         sender.sendMessage(ChatColor.YELLOW + "/zadania" + ChatColor.GRAY + " — otwiera codzienne zadania");
-        sender.sendMessage(ChatColor.YELLOW + "/dq help" + ChatColor.GRAY + " — wyświetla tę pomoc");
-        sender.sendMessage(ChatColor.YELLOW + "/dq weekly" + ChatColor.GRAY + " — wyzwanie tygodnia (zmienia się co tydzień)");
-        sender.sendMessage(ChatColor.YELLOW + "/dq skrzynka" + ChatColor.GRAY + " — otwiera skrzynkę za 20 gwiazdek");
-        sender.sendMessage(ChatColor.YELLOW + "/dq gwiazdki" + ChatColor.GRAY + " — sprawdza saldo gwiazdek");
-        sender.sendMessage(ChatColor.YELLOW + "/dq top" + ChatColor.GRAY + " — ranking graczy");
-        sender.sendMessage(ChatColor.YELLOW + "Kliknij Michaiła Łomonosowa, aby przyjąć dzienny kontrakt.");
-        sender.sendMessage(ChatColor.YELLOW + "Kliknij Strażnika Skarbca, aby otworzyć skrzynkę za gwiazdki.");
+        sender.sendMessage(ChatColor.YELLOW + "/dq weekly" + ChatColor.GRAY + " — pokazuje wyzwanie tygodnia i postęp");
+        sender.sendMessage(ChatColor.YELLOW + "/dq top" + ChatColor.GRAY + " — wyświetla ranking graczy");
+        sender.sendMessage(ChatColor.YELLOW + "/dq gwiazdki" + ChatColor.GRAY + " — sprawdza własne saldo gwiazdek");
+        sender.sendMessage(ChatColor.GRAY + "Kontrakty dzienne znajdziesz u Michaiła Łomonosowa.");
+        sender.sendMessage(ChatColor.GRAY + "Losowanie nagród za gwiazdki znajdziesz u Strażnika Skarbca.");
         if (sender.hasPermission("dailyquests.admin")) {
-            sender.sendMessage(ChatColor.DARK_AQUA + "Komendy administratora:");
-            sender.sendMessage(ChatColor.YELLOW + "/dq gwiazdki dodaj <gracz> <ilość>" + ChatColor.GRAY + " — dodaje gwiazdki");
-            sender.sendMessage(ChatColor.YELLOW + "/dq gwiazdki usun <gracz> <ilość>" + ChatColor.GRAY + " — usuwa gwiazdki");
-            sender.sendMessage(ChatColor.YELLOW + "/dq gwiazdki ustaw <gracz> <ilość>" + ChatColor.GRAY + " — ustawia saldo");
+            sender.sendMessage(ChatColor.DARK_AQUA + "━━ KOMENDY ADMINISTRATORA ━━");
+            sender.sendMessage(ChatColor.YELLOW + "/dq npc questy [postaw|usun|tp]" + ChatColor.GRAY + " — zarządzanie Michaiłem");
+            sender.sendMessage(ChatColor.YELLOW + "/dq npc skarbiec [postaw|usun|tp]" + ChatColor.GRAY + " — zarządzanie Strażnikiem Skarbca");
+            sender.sendMessage(ChatColor.YELLOW + "/dq gwiazdki <dodaj|usun|ustaw> <gracz> <ilość>" + ChatColor.GRAY + " — zarządzanie saldem");
             sender.sendMessage(ChatColor.YELLOW + "/dq gwiazdki sprawdz <gracz>" + ChatColor.GRAY + " — sprawdza saldo gracza");
             sender.sendMessage(ChatColor.YELLOW + "/dq roll" + ChatColor.GRAY + " — losuje ponownie zadania wszystkim graczom");
-            sender.sendMessage(ChatColor.YELLOW + "/dq nether [on|off]" + ChatColor.GRAY + " — włącza/wyłącza zadania z Netheru");
-            sender.sendMessage(ChatColor.YELLOW + "/dq end [on|off]" + ChatColor.GRAY + " — włącza/wyłącza zadania z Endu");
-            sender.sendMessage(ChatColor.YELLOW + "/dq reload" + ChatColor.GRAY + " — przeładowuje konfigurację");
-            sender.sendMessage(ChatColor.YELLOW + "/dq npc postaw" + ChatColor.GRAY + " — stawia Michaiła Łomonosowa");
-            sender.sendMessage(ChatColor.YELLOW + "/dq npc usun" + ChatColor.GRAY + " — usuwa Michaiła Łomonosowa");
-            sender.sendMessage(ChatColor.YELLOW + "/dq npc tp" + ChatColor.GRAY + " — teleportuje do Michaiła");
-            sender.sendMessage(ChatColor.YELLOW + "/dq skrzynianpc postaw|usun|tp" + ChatColor.GRAY + " — zarządza Strażnikiem Skarbca");
-        } else {
-            sender.sendMessage(ChatColor.GRAY + "Komendy administratora są dostępne tylko dla osób z uprawnieniem dailyquests.admin.");
+            sender.sendMessage(ChatColor.YELLOW + "/dq nether <on|off>" + ChatColor.GRAY + " — włącza lub wyłącza zadania z Netheru");
+            sender.sendMessage(ChatColor.YELLOW + "/dq end <on|off>" + ChatColor.GRAY + " — włącza lub wyłącza zadania z Endu");
+            sender.sendMessage(ChatColor.YELLOW + "/dq reload" + ChatColor.GRAY + " — przeładowuje konfigurację i pulę zadań");
         }
     }
 
