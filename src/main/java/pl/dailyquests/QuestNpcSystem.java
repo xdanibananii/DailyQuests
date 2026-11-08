@@ -95,11 +95,11 @@ public final class QuestNpcSystem implements Listener {
         try { if (!savedUuid.isBlank()) existing = Bukkit.getEntity(UUID.fromString(savedUuid)); }
         catch (IllegalArgumentException ignored) {}
         if (existing instanceof Villager villager) {
-            configure(villager);
+            configure(villager, yaml.getString("name", "Michaił Łomonosow"));
             return;
         }
         Villager villager = (Villager) world.spawnEntity(location, EntityType.VILLAGER);
-        configure(villager);
+        configure(villager, yaml.getString("name", "Michaił Łomonosow"));
         yaml.set("uuid", villager.getUniqueId().toString());
         saveNpc(yaml);
     }
@@ -228,8 +228,9 @@ public final class QuestNpcSystem implements Listener {
         if (location.getWorld() == null) return;
         removeNpc();
         Villager villager = (Villager) location.getWorld().spawnEntity(location, EntityType.VILLAGER);
-        configure(villager);
         YamlConfiguration yaml = YamlConfiguration.loadConfiguration(npcFile);
+        String npcName = yaml.getString("name", "Michaił Łomonosow");
+        configure(villager, npcName);
         yaml.set("world", location.getWorld().getName());
         yaml.set("x", location.getX());
         yaml.set("y", location.getY());
@@ -241,7 +242,7 @@ public final class QuestNpcSystem implements Listener {
         reply.send(ChatColor.GREEN + "Michaił Łomonosow zajął już swoje miejsce.");
     }
 
-    private void configure(Villager villager) {
+    private void configure(Villager villager, String name) {
         villager.setAI(false);
         villager.setInvulnerable(true);
         villager.setSilent(false);
@@ -250,7 +251,7 @@ public final class QuestNpcSystem implements Listener {
         villager.setCollidable(false);
         villager.setCanPickupItems(false);
         villager.setProfession(Villager.Profession.CARTOGRAPHER);
-        villager.setCustomName(ChatColor.GOLD + "✦ " + ChatColor.YELLOW + "Michaił Łomonosow" + ChatColor.GOLD + " ✦");
+        villager.setCustomName(ChatColor.GOLD + "✦ " + color(name) + ChatColor.GOLD + " ✦");
         villager.setCustomNameVisible(true);
         villager.getPersistentDataContainer().set(npcKey, PersistentDataType.BYTE, (byte) 1);
     }
@@ -325,6 +326,21 @@ public final class QuestNpcSystem implements Listener {
             }
             playersInNpcRange.retainAll(nearbyNow);
         }, 20L, 10L);
+    }
+
+    void renameNpc(String name, java.util.function.Consumer<String> reply) {
+        if (!npcFile.exists()) { reply.accept(ChatColor.RED + "Michaił nie został jeszcze postawiony."); return; }
+        YamlConfiguration yaml = YamlConfiguration.loadConfiguration(npcFile);
+        Entity entity = null;
+        try { String id = yaml.getString("uuid", ""); if (!id.isBlank()) entity = Bukkit.getEntity(UUID.fromString(id)); }
+        catch (IllegalArgumentException ignored) {}
+        if (!(entity instanceof Villager villager) || !villager.isValid()) {
+            reply.accept(ChatColor.RED + "Nie znaleziono Michaiła. Spróbuj ponownie po jego odtworzeniu."); return;
+        }
+        yaml.set("name", name); saveNpc(yaml);
+        villager.setCustomName(ChatColor.GOLD + "✦ " + color(name) + ChatColor.GOLD + " ✦");
+        villager.setCustomNameVisible(true);
+        reply.accept(ChatColor.GREEN + "Zmieniono nazwę NPC na: " + color(name));
     }
 
     void removeNpc() {
