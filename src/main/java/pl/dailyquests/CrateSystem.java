@@ -280,7 +280,7 @@ public final class CrateSystem implements Listener {
         chest.setItemMeta(meta);
         inv.setItem(22, chest);
         inv.setItem(45, item(Material.GOLD_INGOT, ChatColor.GOLD + "KOSZT LOSOWANIA",
-                List.of(ChatColor.YELLOW + COST + " ★", ChatColor.GRAY + "Jedno podejście do skarbca.")));
+                List.of(ChatColor.YELLOW + "" + COST + " ★", ChatColor.GRAY + "Jedno podejście do skarbca.")));
         inv.setItem(49, item(Material.SUNFLOWER, ChatColor.YELLOW + "TWOJE GWIAZDKI",
                 List.of(ChatColor.GOLD + "" + getStars(player.getUniqueId()) + " ★",
                         ChatColor.GRAY + "Zbieraj je za codzienne zadania.")));
