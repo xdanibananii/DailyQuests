@@ -82,6 +82,29 @@ public final class CrateSystem implements Listener {
             }
         }
 
+        File oddsMarker = new File(plugin.getDataFolder(), "crate-odds-v4.done");
+        if (!oddsMarker.exists()) {
+            for (int i = 0; i < yaml.getMapList("rewards").size(); i++) {
+                String base = "rewards." + i + ".";
+                String tier = yaml.getString(base + "tier", "COMMON").toUpperCase(Locale.ROOT);
+                int weight = switch (tier) {
+                    case "UNCOMMON" -> 150;
+                    case "RARE" -> 10;
+                    case "EPIC", "LEGENDARY" -> 1;
+                    default -> 1000;
+                };
+                yaml.set(base + "weight", weight);
+            }
+            try {
+                yaml.save(file);
+                if (oddsMarker.createNewFile()) {
+                    plugin.getLogger().info("Zastosowano bardzo rzadkie szanse dla nagród RARE, EPIC i LEGENDARY.");
+                }
+            } catch (java.io.IOException ex) {
+                plugin.getLogger().warning("Nie udało się zapisać nowych szans nagród: " + ex.getMessage());
+            }
+        }
+
         if (!marker.exists()) {
             try {
                 if (marker.createNewFile()) plugin.getLogger().info("Zweryfikowano pulę nagród skrzynki (v3).");
@@ -202,9 +225,9 @@ public final class CrateSystem implements Listener {
                         ChatColor.YELLOW + "Koszt: " + COST + " gwiazdek",
                         ChatColor.YELLOW + "Twoje saldo: " + getStars(player.getUniqueId()) + " ★",
                         "", ChatColor.DARK_GRAY + "Szanse na rzadkości:",
-                        ChatColor.GRAY + "COMMON 40%  " + ChatColor.GREEN + "UNCOMMON 30%",
-                        ChatColor.BLUE + "RARE 18%  " + ChatColor.RED + "EPIC 9%",
-                        ChatColor.GOLD + "LEGENDARY 3%")));
+                        ChatColor.GRAY + "COMMON " + chanceForTier("COMMON") + "%  " + ChatColor.GREEN + "UNCOMMON " + chanceForTier("UNCOMMON") + "%",
+                        ChatColor.BLUE + "RARE " + chanceForTier("RARE") + "%  " + ChatColor.RED + "EPIC " + chanceForTier("EPIC") + "%",
+                        ChatColor.GOLD + "LEGENDARY " + chanceForTier("LEGENDARY") + "%")));
         ItemStack chest = item(Material.CHEST, ChatColor.YELLOW + "OTWÓRZ SKRZYNKĘ",
                 List.of(ChatColor.GRAY + "Kliknij, aby wydać " + COST + " gwiazdek.",
                         ChatColor.GRAY + "Aktualne saldo: " + getStars(player.getUniqueId()) + " ★",
@@ -353,6 +376,18 @@ public final class CrateSystem implements Listener {
         if (result.isEmpty()) plugin.getLogger().severe("Pula rewards.yml nie zawiera poprawnej nagrody z wagą większą od zera. Sprawdź material, amount i weight.");
         else plugin.getLogger().info("Wczytano "+result.size()+" pozycji nagród do skrzynki.");
         return result;
+    }
+
+    private String chanceForTier(String tier) {
+        List<Reward> rewards = loadRewards();
+        long total = rewards.stream().mapToLong(r -> r.weight).sum();
+        if (total <= 0) return "0";
+        long tierWeight = rewards.stream().filter(r -> r.tier.equalsIgnoreCase(tier))
+                .mapToLong(r -> r.weight).sum();
+        double percent = tierWeight * 100.0 / total;
+        if (percent < 0.01) return String.format(Locale.US, "%.4f", percent);
+        if (percent < 1.0) return String.format(Locale.US, "%.2f", percent);
+        return String.format(Locale.US, "%.1f", percent);
     }
 
     private Reward choose(List<Reward> rewards) {
