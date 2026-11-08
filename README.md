@@ -25,12 +25,12 @@ Po aktualizacji zalecana jest kopia zapasowa całego katalogu `plugins/DailyQues
 
 ## Funkcje
 
-- 5 indywidualnych zadań dziennych dla każdego gracza, losowanych z puli 198 zadań (w tym zadania Netheru i Endu).
+- 5 indywidualnych zadań dziennych dla każdego gracza, losowanych z puli 199 zadań (w tym zadania Netheru i Endu).
 - Zadania z różnych aktywności: kopanie, walka, crafting, łowienie, chodzenie, pływanie, jedzenie, zaklinanie, rozmnażanie zwierząt, handel i kowadło.
 - Postęp zadań zapisywany w SQLite.
 - Nagrody XP i przedmioty, odbierane ręcznie w GUI.
 - Bonus za ukończenie wszystkich 5 zadań: **250 XP i 5 gwiazdek**.
-- Historia zadań ograniczająca szybkie powtórki.
+- Historia zadań zapobiegająca powtórkom przez 30 dni, gdy pula pozwala na pełną rotację.
 - Wyzwanie tygodniowe, serie ukończeń i ranking.
 - Gwiazdki i skrzynka z animowaną ruletką nagród.
 - Michaił Łomonosow – Villager z indywidualnym kontraktem dziennym dla gracza.
