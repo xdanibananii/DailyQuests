@@ -147,7 +147,7 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
         ConfigurationSection sec=pool();
         if(sec==null || sec.getKeys(false).isEmpty()) return new ArrayList<>();
         Set<String> recent=new HashSet<>();
-        try(PreparedStatement h=db.prepareStatement("SELECT task_id FROM task_history WHERE uuid=? AND assigned_day>=date(?, '-3 days')")){h.setString(1,p.getUniqueId().toString());h.setString(2,day);try(ResultSet r=h.executeQuery()){while(r.next())recent.add(r.getString(1));}}catch(SQLException ignored){}
+        try(PreparedStatement h=db.prepareStatement("SELECT task_id FROM task_history WHERE uuid=? AND assigned_day>=date(?, '-30 days')")){h.setString(1,p.getUniqueId().toString());h.setString(2,day);try(ResultSet r=h.executeQuery()){while(r.next())recent.add(r.getString(1));}}catch(SQLException ignored){}
         List<String> ids=new ArrayList<>(sec.getKeys(false));
         ids.removeIf(id -> { ConfigurationSection c=sec.getConfigurationSection(id); String d=c==null?"OVERWORLD":c.getString("dimension","OVERWORLD"); return !isDimensionEnabled(d); });
         Collections.shuffle(ids);

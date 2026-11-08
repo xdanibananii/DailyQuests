@@ -171,6 +171,19 @@ public final class QuestNpcSystem implements Listener {
         ConfigurationSection pool = quests().getConfigurationSection("contracts");
         if (pool == null || pool.getKeys(false).isEmpty()) return null;
         List<String> ids = new ArrayList<>(pool.getKeys(false));
+        Set<String> recentlyAssigned = new HashSet<>();
+        try (PreparedStatement history = db.prepareStatement(
+                "SELECT DISTINCT quest_id FROM npc_contracts WHERE uuid=? AND day>=date(?, '-30 days')")) {
+            history.setString(1, player.getUniqueId().toString());
+            history.setString(2, day);
+            try (ResultSet rows = history.executeQuery()) {
+                while (rows.next()) recentlyAssigned.add(rows.getString(1));
+            }
+        } catch (SQLException ex) {
+            plugin.getLogger().warning("Nie udało się odczytać historii kontraktów: " + ex.getMessage());
+        }
+        ids.removeIf(recentlyAssigned::contains);
+        if (ids.isEmpty()) ids = new ArrayList<>(pool.getKeys(false));
         Collections.shuffle(ids);
         for (String id : ids) {
             Contract c = readContract(id);

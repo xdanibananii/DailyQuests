@@ -1584,3 +1584,464 @@ tasks:
     reward-xp: 750
     reward-item: GHAST_TEAR
     reward-item-amount: 4
+  # Dodatkowe zadania Overworld – rozszerzenie sezonowe 1.0.1
+  break_birch:
+    name: "&aBrzozowy transport"
+    description: "&7Zbierz 48 kłód brzozy"
+    difficulty: EASY
+    type: BREAK
+    target: BIRCH_LOG
+    amount: 48
+    reward-xp: 150
+    reward-item: BIRCH_PLANKS
+    reward-item-amount: 24
+  break_spruce:
+    name: "&aŚwierkowy transport"
+    description: "&7Zbierz 48 kłód świerku"
+    difficulty: EASY
+    type: BREAK
+    target: SPRUCE_LOG
+    amount: 48
+    reward-xp: 150
+    reward-item: SPRUCE_PLANKS
+    reward-item-amount: 24
+  break_jungle:
+    name: "&eEgzotyczne drewno"
+    description: "&7Zbierz 32 kłody tropikalnego drzewa"
+    difficulty: MEDIUM
+    type: BREAK
+    target: JUNGLE_LOG
+    amount: 32
+    reward-xp: 190
+    reward-item: JUNGLE_PLANKS
+    reward-item-amount: 24
+  break_acacia:
+    name: "&aAkacjowy zapas"
+    description: "&7Zbierz 32 kłody akacji"
+    difficulty: EASY
+    type: BREAK
+    target: ACACIA_LOG
+    amount: 32
+    reward-xp: 150
+    reward-item: ACACIA_PLANKS
+    reward-item-amount: 24
+  break_dark_oak:
+    name: "&eCiemny dąb"
+    description: "&7Zbierz 32 kłody ciemnego dębu"
+    difficulty: MEDIUM
+    type: BREAK
+    target: DARK_OAK_LOG
+    amount: 32
+    reward-xp: 190
+    reward-item: DARK_OAK_PLANKS
+    reward-item-amount: 24
+  break_mangrove:
+    name: "&eBagienne drewno"
+    description: "&7Zbierz 32 kłody mangrowca"
+    difficulty: MEDIUM
+    type: BREAK
+    target: MANGROVE_LOG
+    amount: 32
+    reward-xp: 200
+    reward-item: MANGROVE_PLANKS
+    reward-item-amount: 24
+  break_cherry:
+    name: "&eRóżowy sad"
+    description: "&7Zbierz 32 kłody wiśni"
+    difficulty: MEDIUM
+    type: BREAK
+    target: CHERRY_LOG
+    amount: 32
+    reward-xp: 200
+    reward-item: CHERRY_PLANKS
+    reward-item-amount: 24
+  break_brown_mushroom:
+    name: "&aGrzybowe zbiory"
+    description: "&7Zbierz 16 brązowych grzybów"
+    difficulty: EASY
+    type: BREAK
+    target: BROWN_MUSHROOM
+    amount: 16
+    reward-xp: 140
+    reward-item: MUSHROOM_STEW
+    reward-item-amount: 4
+  break_red_mushroom:
+    name: "&aCzerwone kapelusze"
+    description: "&7Zbierz 16 czerwonych grzybów"
+    difficulty: EASY
+    type: BREAK
+    target: RED_MUSHROOM
+    amount: 16
+    reward-xp: 140
+    reward-item: MUSHROOM_STEW
+    reward-item-amount: 4
+  break_lily_pad:
+    name: "&aWodne liście"
+    description: "&7Zbierz 16 lilii wodnych"
+    difficulty: EASY
+    type: BREAK
+    target: LILY_PAD
+    amount: 16
+    reward-xp: 150
+    reward-item: OAK_BOAT
+    reward-item-amount: 2
+  break_vine:
+    name: "&aPnącza dżungli"
+    description: "&7Zbierz 32 pnącza"
+    difficulty: EASY
+    type: BREAK
+    target: VINE
+    amount: 32
+    reward-xp: 150
+    reward-item: SHEARS
+    reward-item-amount: 1
+  break_fern:
+    name: "&aLeśna wyprawa"
+    description: "&7Zbierz 24 paprocie"
+    difficulty: EASY
+    type: BREAK
+    target: FERN
+    amount: 24
+    reward-xp: 130
+    reward-item: BONE_MEAL
+    reward-item-amount: 16
+  break_dead_bush:
+    name: "&aPustynne krzewy"
+    description: "&7Zbierz 16 uschniętych krzewów"
+    difficulty: EASY
+    type: BREAK
+    target: DEAD_BUSH
+    amount: 16
+    reward-xp: 130
+    reward-item: STICK
+    reward-item-amount: 32
+  break_seagrass:
+    name: "&aPodwodna łąka"
+    description: "&7Zbierz 32 wodorosty"
+    difficulty: EASY
+    type: BREAK
+    target: SEAGRASS
+    amount: 32
+    reward-xp: 150
+    reward-item: KELP
+    reward-item-amount: 24
+  break_kelp:
+    name: "&aMorski zbiór"
+    description: "&7Zbierz 48 wodorostów kelp"
+    difficulty: EASY
+    type: BREAK
+    target: KELP
+    amount: 48
+    reward-xp: 150
+    reward-item: DRIED_KELP
+    reward-item-amount: 16
+  break_turtle_egg:
+    name: "&cŻółwie gniazdo"
+    description: "&7Zbierz 4 jaja żółwia"
+    difficulty: HARD
+    type: BREAK
+    target: TURTLE_EGG
+    amount: 4
+    reward-xp: 360
+    reward-item: SCUTE
+    reward-item-amount: 2
+  break_sponge:
+    name: "&cGąbki oceanu"
+    description: "&7Zbierz 8 gąbek"
+    difficulty: HARD
+    type: BREAK
+    target: SPONGE
+    amount: 8
+    reward-xp: 380
+    reward-item: WET_SPONGE
+    reward-item-amount: 4
+  break_campfire:
+    name: "&eObozowy ekwipunek"
+    description: "&7Zbierz 8 ognisk"
+    difficulty: MEDIUM
+    type: BREAK
+    target: CAMPFIRE
+    amount: 8
+    reward-xp: 220
+    reward-item: CHARCOAL
+    reward-item-amount: 16
+  break_bookshelf:
+    name: "&eBiblioteczne porządki"
+    description: "&7Zbierz 8 biblioteczek"
+    difficulty: MEDIUM
+    type: BREAK
+    target: BOOKSHELF
+    amount: 8
+    reward-xp: 220
+    reward-item: BOOK
+    reward-item-amount: 8
+  break_bell:
+    name: "&cDzwon osady"
+    description: "&7Zdobądź 1 dzwon"
+    difficulty: HARD
+    type: BREAK
+    target: BELL
+    amount: 1
+    reward-xp: 350
+    reward-item: GOLD_INGOT
+    reward-item-amount: 4
+  break_beehive:
+    name: "&ePszczeli interes"
+    description: "&7Zbierz 4 ule"
+    difficulty: MEDIUM
+    type: BREAK
+    target: BEEHIVE
+    amount: 4
+    reward-xp: 260
+    reward-item: HONEYCOMB
+    reward-item-amount: 8
+  break_copper_block:
+    name: "&eMiedziana konstrukcja"
+    description: "&7Zbierz 16 bloków miedzi"
+    difficulty: MEDIUM
+    type: BREAK
+    target: COPPER_BLOCK
+    amount: 16
+    reward-xp: 220
+    reward-item: COPPER_INGOT
+    reward-item-amount: 24
+  break_iron_block:
+    name: "&eŻelazne zapasy"
+    description: "&7Zbierz 8 bloków żelaza"
+    difficulty: MEDIUM
+    type: BREAK
+    target: IRON_BLOCK
+    amount: 8
+    reward-xp: 260
+    reward-item: IRON_INGOT
+    reward-item-amount: 16
+  break_gold_block:
+    name: "&cZłote zapasy"
+    description: "&7Zbierz 4 bloki złota"
+    difficulty: HARD
+    type: BREAK
+    target: GOLD_BLOCK
+    amount: 4
+    reward-xp: 320
+    reward-item: GOLD_INGOT
+    reward-item-amount: 12
+  break_diamond_block:
+    name: "&cBogactwo kopalni"
+    description: "&7Zbierz 2 bloki diamentu"
+    difficulty: HARD
+    type: BREAK
+    target: DIAMOND_BLOCK
+    amount: 2
+    reward-xp: 500
+    reward-item: DIAMOND
+    reward-item-amount: 2
+  kill_zombie_villager:
+    name: "&eUwolnij osadę"
+    description: "&7Pokonaj 5 zombie-osadników"
+    difficulty: MEDIUM
+    type: KILL
+    target: ZOMBIE_VILLAGER
+    amount: 5
+    reward-xp: 280
+    reward-item: GOLDEN_APPLE
+    reward-item-amount: 1
+  kill_bat:
+    name: "&aNocny obserwator"
+    description: "&7Spotkaj i pokonaj 5 nietoperzy"
+    difficulty: EASY
+    type: KILL
+    target: BAT
+    amount: 5
+    reward-xp: 120
+    reward-item: LEATHER
+    reward-item-amount: 4
+  kill_fox:
+    name: "&eLeśny tropiciel"
+    description: "&7Pokonaj 3 lisy"
+    difficulty: MEDIUM
+    type: KILL
+    target: FOX
+    amount: 3
+    reward-xp: 220
+    reward-item: SWEET_BERRIES
+    reward-item-amount: 16
+  kill_goat:
+    name: "&eGórski kozioł"
+    description: "&7Pokonaj 4 kozy"
+    difficulty: MEDIUM
+    type: KILL
+    target: GOAT
+    amount: 4
+    reward-xp: 220
+    reward-item: GOAT_HORN
+    reward-item-amount: 1
+  kill_dolphin:
+    name: "&cMorski drapieżnik"
+    description: "&7Pokonaj 2 delfiny"
+    difficulty: HARD
+    type: KILL
+    target: DOLPHIN
+    amount: 2
+    reward-xp: 300
+    reward-item: COD
+    reward-item-amount: 8
+  kill_turtle:
+    name: "&cŻółwi patrol"
+    description: "&7Pokonaj 3 żółwie"
+    difficulty: HARD
+    type: KILL
+    target: TURTLE
+    amount: 3
+    reward-xp: 300
+    reward-item: SCUTE
+    reward-item-amount: 1
+  kill_panda:
+    name: "&cBambusowy olbrzym"
+    description: "&7Pokonaj 2 pandy"
+    difficulty: HARD
+    type: KILL
+    target: PANDA
+    amount: 2
+    reward-xp: 300
+    reward-item: BAMBOO
+    reward-item-amount: 16
+  kill_llama:
+    name: "&eKarawana lam"
+    description: "&7Pokonaj 4 lamy"
+    difficulty: MEDIUM
+    type: KILL
+    target: LLAMA
+    amount: 4
+    reward-xp: 220
+    reward-item: LEATHER
+    reward-item-amount: 6
+  kill_iron_golem:
+    name: "&cStalowy strażnik"
+    description: "&7Pokonaj 2 żelazne golemy"
+    difficulty: HARD
+    type: KILL
+    target: IRON_GOLEM
+    amount: 2
+    reward-xp: 360
+    reward-item: IRON_INGOT
+    reward-item-amount: 8
+  kill_silverfish:
+    name: "&ePlaga srebrzyków"
+    description: "&7Pokonaj 12 rybików cukrowych"
+    difficulty: MEDIUM
+    type: KILL
+    target: SILVERFISH
+    amount: 12
+    reward-xp: 260
+    reward-item: STONE
+    reward-item-amount: 24
+  kill_endermite:
+    name: "&cSzczelina między światami"
+    description: "&7Pokonaj 5 endermitów"
+    difficulty: HARD
+    type: KILL
+    target: ENDERMITE
+    amount: 5
+    reward-xp: 340
+    reward-item: ENDER_PEARL
+    reward-item-amount: 4
+  craft_barrel:
+    name: "&aBeczki na zapasy"
+    description: "&7Wytwórz 8 beczek"
+    difficulty: EASY
+    type: CRAFT
+    target: BARREL
+    amount: 8
+    reward-xp: 160
+    reward-item: OAK_PLANKS
+    reward-item-amount: 24
+  craft_smoker:
+    name: "&eWędzarnia"
+    description: "&7Wytwórz 3 wędzarnie"
+    difficulty: MEDIUM
+    type: CRAFT
+    target: SMOKER
+    amount: 3
+    reward-xp: 220
+    reward-item: COOKED_BEEF
+    reward-item-amount: 8
+  craft_blast_furnace:
+    name: "&ePiec hutniczy"
+    description: "&7Wytwórz 3 piece hutnicze"
+    difficulty: MEDIUM
+    type: CRAFT
+    target: BLAST_FURNACE
+    amount: 3
+    reward-xp: 250
+    reward-item: IRON_INGOT
+    reward-item-amount: 12
+  craft_cartography:
+    name: "&eMapy świata"
+    description: "&7Wytwórz 4 stoły kartograficzne"
+    difficulty: MEDIUM
+    type: CRAFT
+    target: CARTOGRAPHY_TABLE
+    amount: 4
+    reward-xp: 230
+    reward-item: PAPER
+    reward-item-amount: 24
+  craft_fletching:
+    name: "&eWarsztat łuczarza"
+    description: "&7Wytwórz 4 stoły łuczarza"
+    difficulty: MEDIUM
+    type: CRAFT
+    target: FLETCHING_TABLE
+    amount: 4
+    reward-xp: 230
+    reward-item: ARROW
+    reward-item-amount: 24
+  craft_grindstone:
+    name: "&eOstrzenie narzędzi"
+    description: "&7Wytwórz 4 kamienie szlifierskie"
+    difficulty: MEDIUM
+    type: CRAFT
+    target: GRINDSTONE
+    amount: 4
+    reward-xp: 240
+    reward-item: IRON_INGOT
+    reward-item-amount: 8
+  craft_shears:
+    name: "&aPrzygotuj nożyce"
+    description: "&7Wytwórz 4 pary nożyc"
+    difficulty: EASY
+    type: CRAFT
+    target: SHEARS
+    amount: 4
+    reward-xp: 150
+    reward-item: IRON_INGOT
+    reward-item-amount: 8
+  craft_lead:
+    name: "&eSmycze dla stajni"
+    description: "&7Wytwórz 8 smyczy"
+    difficulty: MEDIUM
+    type: CRAFT
+    target: LEAD
+    amount: 8
+    reward-xp: 220
+    reward-item: SLIME_BALL
+    reward-item-amount: 8
+  eat_suspicious_stew:
+    name: "&cTajemniczy posiłek"
+    description: "&7Zjedz 3 podejrzane potrawki"
+    difficulty: HARD
+    type: EAT
+    target: SUSPICIOUS_STEW
+    amount: 3
+    reward-xp: 320
+    reward-item: BOWL
+    reward-item-amount: 8
+  eat_dried_kelp:
+    name: "&aMorska przekąska"
+    description: "&7Zjedz 24 suszone wodorosty"
+    difficulty: EASY
+    type: EAT
+    target: DRIED_KELP
+    amount: 24
+    reward-xp: 150
+    reward-item: KELP
+    reward-item-amount: 32

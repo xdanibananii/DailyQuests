@@ -25,7 +25,7 @@ Po aktualizacji zalecana jest kopia zapasowa całego katalogu `plugins/DailyQues
 
 ## Funkcje
 
-- 5 indywidualnych zadań dziennych dla każdego gracza, losowanych z puli 153 zadań (w tym zadania Netheru i Endu).
+- 5 indywidualnych zadań dziennych dla każdego gracza, losowanych z puli 198 zadań (w tym zadania Netheru i Endu).
 - Zadania z różnych aktywności: kopanie, walka, crafting, łowienie, chodzenie, pływanie, jedzenie, zaklinanie, rozmnażanie zwierząt, handel i kowadło.
 - Postęp zadań zapisywany w SQLite.
 - Nagrody XP i przedmioty, odbierane ręcznie w GUI.
@@ -113,7 +113,7 @@ Po zmianach w `tasks.yml` użyj `/dq reload`. Zachowuj unikalne identyfikatory z
 
 ### `npc_quests.yml`
 
-Pula 59 kontraktów Michaiła Łomonosowa. Każdy kontrakt określa:
+Pula 59 kontraktów, bez powtórek przez 30 dni Michaiła Łomonosowa. Każdy kontrakt określa:
 
 - `name` i `description` – nazwę i opis.
 - `item` – wymagany materiał.
