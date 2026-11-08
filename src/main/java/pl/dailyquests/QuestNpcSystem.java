@@ -468,6 +468,10 @@ public final class QuestNpcSystem implements Listener {
                             ChatColor.GRAY + "wymagane przedmioty.",
                             "", ChatColor.DARK_GRAY + "Brakuje: " + (c.amount - owned))));
         }
+        inv.setItem(46, item(Material.CLOCK, ChatColor.AQUA + "WYZWANIE TYGODNIA",
+                List.of(ChatColor.GRAY + "Sprawdź aktualne wyzwanie tygodnia.",
+                        ChatColor.GRAY + "Zobacz opis, postęp i nagrodę.",
+                        ChatColor.YELLOW + "Kliknij, aby podejrzeć.")));
         inv.setItem(42, item(Material.EXPERIENCE_BOTTLE, ChatColor.LIGHT_PURPLE + "PRZELOSUJ KONTRAKT",
                 List.of(ChatColor.GRAY + "Nie pasuje ci dzisiejsze zlecenie?",
                         ChatColor.GRAY + "Poproś Michaiła o nowe.",
@@ -484,6 +488,10 @@ public final class QuestNpcSystem implements Listener {
         if (!(event.getWhoClicked() instanceof Player player)) return;
         if (event.getRawSlot() == 49) {
             player.closeInventory();
+            return;
+        }
+        if (event.getRawSlot() == 46) {
+            plugin.openWeeklyPreview(player);
             return;
         }
         if (event.getRawSlot() == 42) {
