@@ -23,7 +23,8 @@ import java.util.*;
 
 public final class CrateSystem implements Listener {
     private static final String TITLE = ChatColor.DARK_GRAY + "Skrzynka DailyQuests";
-    private static final int COST = 20;
+    private static final int BASIC_COST = 10;
+    private static final int PREMIUM_COST = 20;
     private final JavaPlugin plugin;
     private final Connection db;
     private final Random random = new Random();
@@ -115,24 +116,24 @@ public final class CrateSystem implements Listener {
             }
         }
 
-        File oddsMarker = new File(plugin.getDataFolder(), "crate-odds-v5.done");
+        File oddsMarker = new File(plugin.getDataFolder(), "crate-odds-v6.done");
         if (!oddsMarker.exists()) {
             for (int i = 0; i < yaml.getMapList("rewards").size(); i++) {
                 String base = "rewards." + i + ".";
                 String tier = yaml.getString(base + "tier", "COMMON").toUpperCase(Locale.ROOT);
                 int weight = switch (tier) {
-                    case "UNCOMMON" -> 200;
-                    case "RARE" -> 30;
-                    case "EPIC" -> 8;
-                    case "LEGENDARY" -> 4;
-                    default -> 800;
+                    case "UNCOMMON" -> 3200;
+                    case "RARE" -> 600;
+                    case "EPIC" -> 390;
+                    case "LEGENDARY" -> 105;
+                    default -> 12000;
                 };
                 yaml.set(base + "weight", weight);
             }
             try {
                 yaml.save(file);
                 if (oddsMarker.createNewFile()) {
-                    plugin.getLogger().info("Zastosowano nowe szanse skrzynki: COMMON 800, UNCOMMON 200, RARE 30, EPIC 8, LEGENDARY 4.");
+                    plugin.getLogger().info("Zastosowano nowe szanse skrzynki: COMMON 12000, UNCOMMON 3200, RARE 600, EPIC 390, LEGENDARY 105.");
                 }
             } catch (java.io.IOException ex) {
                 plugin.getLogger().warning("Nie udało się zapisać nowych szans nagród: " + ex.getMessage());
@@ -241,7 +242,8 @@ public final class CrateSystem implements Listener {
     public void showBalance(Player player) {
         player.sendMessage(ChatColor.GOLD + "★ Twoje saldo: " + ChatColor.YELLOW + getStars(player.getUniqueId()) + " gwiazdek");
         player.sendMessage(ChatColor.GRAY + "Ukończ wszystkie 5 zadań dziennych, aby otrzymać kolejne 5.");
-        player.sendMessage(ChatColor.GRAY + "Skrzynka kosztuje " + ChatColor.YELLOW + "" + COST + " ★" + ChatColor.GRAY + ". Komenda: " + ChatColor.YELLOW + "/dq skrzynka");
+        player.sendMessage(ChatColor.GRAY + "Skrzynka zwykła: " + ChatColor.YELLOW + "10 ★" + ChatColor.GRAY
+                + " | Premium: " + ChatColor.GOLD + "20 ★");
     }
 
     public void open(Player player) {
@@ -249,44 +251,27 @@ public final class CrateSystem implements Listener {
             player.sendMessage(ChatColor.RED + "System skrzynek jest chwilowo niedostępny.");
             return;
         }
-        Inventory inv = Bukkit.createInventory(null, 54, TITLE);
+        Inventory inv = Bukkit.createInventory(null, 27, TITLE);
         ItemStack dark = item(Material.PURPLE_STAINED_GLASS_PANE, " ", List.of());
         ItemStack gold = item(Material.YELLOW_STAINED_GLASS_PANE, " ", List.of());
-        for (int slot = 0; slot < 54; slot++) {
-            int row = slot / 9, col = slot % 9;
-            if (row == 0 || row == 5 || col == 0 || col == 8) inv.setItem(slot, dark);
-            else inv.setItem(slot, item(Material.BLACK_STAINED_GLASS_PANE, " ", List.of()));
-        }
-        for (int slot : new int[]{0, 8, 45, 53}) inv.setItem(slot, gold);
+        for (int slot = 0; slot < 27; slot++) inv.setItem(slot, dark);
+        for (int slot : new int[]{0, 8, 18, 26}) inv.setItem(slot, gold);
         inv.setItem(4, item(Material.NETHER_STAR, ChatColor.GOLD + "✦  SKARBIEC DAILYQUESTS  ✦",
-                List.of(ChatColor.GRAY + "Stare złoto, wielkie emocje i odrobina szczęścia.",
-                        ChatColor.DARK_GRAY + "Niech los będzie po twojej stronie.")));
-        inv.setItem(10, item(Material.IRON_INGOT, ChatColor.GRAY + "COMMON",
-                List.of(ChatColor.DARK_GRAY + "Zwykłe łupy", ChatColor.WHITE + chanceForTier("COMMON") + "% szansy")));
-        inv.setItem(12, item(Material.EMERALD, ChatColor.GREEN + "UNCOMMON",
-                List.of(ChatColor.DARK_GRAY + "Nieco cenniejsze", ChatColor.GREEN + chanceForTier("UNCOMMON") + "% szansy")));
-        inv.setItem(14, item(Material.DIAMOND, ChatColor.BLUE + "RARE",
-                List.of(ChatColor.DARK_GRAY + "Rzadkie znaleziska", ChatColor.BLUE + chanceForTier("RARE") + "% szansy")));
-        inv.setItem(16, item(Material.AMETHYST_SHARD, ChatColor.LIGHT_PURPLE + "EPIC",
-                List.of(ChatColor.DARK_GRAY + "Łupy dla szczęśliwców", ChatColor.LIGHT_PURPLE + chanceForTier("EPIC") + "% szansy")));
-        inv.setItem(25, item(Material.NETHER_STAR, ChatColor.GOLD + "LEGENDARY",
-                List.of(ChatColor.DARK_GRAY + "Legenda skarbca", ChatColor.GOLD + chanceForTier("LEGENDARY") + "% szansy")));
-        ItemStack chest = item(Material.ENDER_CHEST, ChatColor.YELLOW + "✦ OTWÓRZ SKRZYNIĘ ✦",
-                List.of(ChatColor.GRAY + "Kliknij, by rozpocząć losowanie.",
-                        ChatColor.YELLOW + "Koszt: " + COST + " ★",
-                        ChatColor.GREEN + "Powodzenia, śmiałku!"));
-        ItemMeta meta = chest.getItemMeta();
-        meta.getPersistentDataContainer().set(crateKey, PersistentDataType.BYTE, (byte) 1);
-        chest.setItemMeta(meta);
-        inv.setItem(22, chest);
-        inv.setItem(45, item(Material.GOLD_INGOT, ChatColor.GOLD + "KOSZT LOSOWANIA",
-                List.of(ChatColor.YELLOW + "" + COST + " ★", ChatColor.GRAY + "Jedno podejście do skarbca.")));
-        inv.setItem(49, item(Material.SUNFLOWER, ChatColor.YELLOW + "TWOJE GWIAZDKI",
+                List.of(ChatColor.GRAY + "Wybierz skrzynię, którą chcesz otworzyć.",
+                        ChatColor.DARK_GRAY + "Twoje saldo: " + getStars(player.getUniqueId()) + " ★")));
+        inv.setItem(11, item(Material.CHEST, ChatColor.GREEN + "SKRZYNIA ZWYKŁA",
+                List.of(ChatColor.GRAY + "Tańsza skrzynia z podstawowymi łupami.",
+                        ChatColor.GRAY + "Nagrody: COMMON i UNCOMMON.",
+                        ChatColor.YELLOW + "Koszt: " + BASIC_COST + " ★",
+                        ChatColor.DARK_GREEN + "Kliknij, aby otworzyć.")));
+        inv.setItem(15, item(Material.ENDER_CHEST, ChatColor.LIGHT_PURPLE + "SKRZYNIA PREMIUM",
+                List.of(ChatColor.GRAY + "Pełna pula nagród i wszystkie rzadkości.",
+                        ChatColor.GRAY + "COMMON, UNCOMMON, RARE, EPIC, LEGENDARY.",
+                        ChatColor.GOLD + "Koszt: " + PREMIUM_COST + " ★",
+                        ChatColor.DARK_PURPLE + "Kliknij, aby otworzyć.")));
+        inv.setItem(22, item(Material.SUNFLOWER, ChatColor.YELLOW + "TWOJE GWIAZDKI",
                 List.of(ChatColor.GOLD + "" + getStars(player.getUniqueId()) + " ★",
-                        ChatColor.GRAY + "Zbieraj je za codzienne zadania.")));
-        inv.setItem(53, item(Material.BOOK, ChatColor.AQUA + "JAK TO DZIAŁA?",
-                List.of(ChatColor.GRAY + "Kliknij skrzynię na środku.",
-                        ChatColor.GRAY + "Wynik poznasz po animacji ruletki.")));
+                        ChatColor.GRAY + "Zdobywaj je za codzienne zadania.")));
         player.openInventory(inv);
         player.playSound(player.getLocation(), Sound.BLOCK_CHEST_OPEN, 0.7f, 1.1f);
     }
@@ -294,15 +279,19 @@ public final class CrateSystem implements Listener {
     @EventHandler public void onClick(InventoryClickEvent event) {
         if (!TITLE.equals(event.getView().getTitle())) return;
         event.setCancelled(true);
-        if (!(event.getWhoClicked() instanceof Player player) || event.getRawSlot() != 22) return;
+        if (!(event.getWhoClicked() instanceof Player player)) return;
         if (opening.containsKey(player.getUniqueId())) return;
-        if (!spend(player.getUniqueId(), COST)) {
-            player.sendMessage(ChatColor.RED + "Nie masz wystarczająco gwiazdek! Potrzebujesz " + COST + " ★.");
+        int slot = event.getRawSlot();
+        if (event.getView().getTopInventory().getSize() != 27 || (slot != 11 && slot != 15)) return;
+        boolean basic = slot == 11;
+        int cost = basic ? BASIC_COST : PREMIUM_COST;
+        if (!spend(player.getUniqueId(), cost)) {
+            player.sendMessage(ChatColor.RED + "Nie masz wystarczająco gwiazdek! Potrzebujesz " + cost + " ★.");
             player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 0.8f, 0.7f);
             open(player);
             return;
         }
-        beginOpening(player);
+        beginOpening(player, cost, basic);
     }
 
     @EventHandler public void onDrag(InventoryDragEvent event) {
@@ -322,10 +311,11 @@ public final class CrateSystem implements Listener {
         }
     }
 
-    private void beginOpening(Player player) {
+    private void beginOpening(Player player, int cost, boolean basic) {
         List<Reward> rewards = loadRewards();
+        if (basic) rewards = rewards.stream().filter(r -> r.tier.equals("COMMON") || r.tier.equals("UNCOMMON")).toList();
         if (rewards.isEmpty()) {
-            awardStars(player, COST);
+            awardStars(player, cost);
             player.sendMessage(ChatColor.RED + "Pula nagród jest nieprawidłowa lub pusta. Gwiazdki zwrócono; administrator powinien sprawdzić rewards.yml.");
             open(player);
             return;
@@ -341,7 +331,7 @@ public final class CrateSystem implements Listener {
         strip.set(winnerIndex, won);
 
         Inventory inv = player.getOpenInventory().getTopInventory();
-        player.sendMessage(ChatColor.LIGHT_PURPLE + "★ Ruletka skrzynki ruszyła! Obserwuj środek...");
+        player.sendMessage(ChatColor.LIGHT_PURPLE + "★ " + (basic ? "Skrzynia zwykła" : "Skrzynia premium") + " ruszyła! Obserwuj środek...");
         player.playSound(player.getLocation(), Sound.BLOCK_CHEST_OPEN, 1f, 0.8f);
 
         ItemStack frame = item(Material.GRAY_STAINED_GLASS_PANE, " ", List.of());
@@ -364,7 +354,7 @@ public final class CrateSystem implements Listener {
                 if (!player.isOnline()) {
                     cancel();
                     opening.remove(player.getUniqueId());
-                    refund(player.getUniqueId(), COST);
+                    refund(player.getUniqueId(), cost);
                     return;
                 }
                 if (ticksUntilMove > 0) {
