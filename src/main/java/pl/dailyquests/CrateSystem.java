@@ -242,8 +242,8 @@ public final class CrateSystem implements Listener {
     public void showBalance(Player player) {
         player.sendMessage(ChatColor.GOLD + "★ Twoje saldo: " + ChatColor.YELLOW + getStars(player.getUniqueId()) + " gwiazdek");
         player.sendMessage(ChatColor.GRAY + "Ukończ wszystkie 5 zadań dziennych, aby otrzymać kolejne 5.");
-        player.sendMessage(ChatColor.GRAY + "Skrzynka zwykła: " + ChatColor.YELLOW + "10 ★" + ChatColor.GRAY
-                + " | Premium: " + ChatColor.GOLD + "20 ★");
+        player.sendMessage(ChatColor.GREEN + "Skrzynia zwykła: " + ChatColor.YELLOW + "10 ★"
+                + ChatColor.GRAY + " | Skrzynia premium: " + ChatColor.LIGHT_PURPLE + "20 ★");
     }
 
     public void open(Player player) {
@@ -260,15 +260,9 @@ public final class CrateSystem implements Listener {
                 List.of(ChatColor.GRAY + "Wybierz skrzynię, którą chcesz otworzyć.",
                         ChatColor.DARK_GRAY + "Twoje saldo: " + getStars(player.getUniqueId()) + " ★")));
         inv.setItem(11, item(Material.CHEST, ChatColor.GREEN + "SKRZYNIA ZWYKŁA",
-                List.of(ChatColor.GRAY + "Tańsza skrzynia z podstawowymi łupami.",
-                        ChatColor.GRAY + "Nagrody: COMMON i UNCOMMON.",
-                        ChatColor.YELLOW + "Koszt: " + BASIC_COST + " ★",
-                        ChatColor.DARK_GREEN + "Kliknij, aby otworzyć.")));
+                crateLore(true)));
         inv.setItem(15, item(Material.ENDER_CHEST, ChatColor.LIGHT_PURPLE + "SKRZYNIA PREMIUM",
-                List.of(ChatColor.GRAY + "Pełna pula nagród i wszystkie rzadkości.",
-                        ChatColor.GRAY + "COMMON, UNCOMMON, RARE, EPIC, LEGENDARY.",
-                        ChatColor.GOLD + "Koszt: " + PREMIUM_COST + " ★",
-                        ChatColor.DARK_PURPLE + "Kliknij, aby otworzyć.")));
+                crateLore(false)));
         inv.setItem(22, item(Material.SUNFLOWER, ChatColor.YELLOW + "TWOJE GWIAZDKI",
                 List.of(ChatColor.GOLD + "" + getStars(player.getUniqueId()) + " ★",
                         ChatColor.GRAY + "Zdobywaj je za codzienne zadania.")));
@@ -314,26 +308,48 @@ public final class CrateSystem implements Listener {
         }
     }
 
-    private void beginOpening(Player player, int cost, boolean basic) {
+    private List<Reward> rewardsForCrate(boolean basic) {
         List<Reward> rewards = loadRewards();
-        if (basic) {
-            List<Reward> basicRewards = new ArrayList<>();
-            for (Reward original : rewards) {
-                if (!original.tier.equals("COMMON") && !original.tier.equals("UNCOMMON")) continue;
-                // Tańsza skrzynia ma mniejsze ilości i nie zawiera muszli shulkera.
-                if (original.material == Material.SHULKER_SHELL) continue;
-                Reward reduced = new Reward();
-                reduced.material = original.material;
-                reduced.amount = Math.max(1, (original.amount + 1) / 2);
-                reduced.weight = original.weight;
-                reduced.tier = original.tier;
-                reduced.name = original.name;
-                reduced.lore = original.lore;
-                reduced.enchants = original.enchants;
-                basicRewards.add(reduced);
-            }
-            rewards = basicRewards;
+        if (!basic) return rewards;
+        List<Reward> basicRewards = new ArrayList<>();
+        for (Reward original : rewards) {
+            if (!original.tier.equals("COMMON") && !original.tier.equals("UNCOMMON")) continue;
+            // Tańsza skrzynia ma mniejsze ilości i nie zawiera muszli shulkera.
+            if (original.material == Material.SHULKER_SHELL) continue;
+            Reward reduced = new Reward();
+            reduced.material = original.material;
+            reduced.amount = Math.max(1, (original.amount + 1) / 2);
+            reduced.weight = original.weight;
+            reduced.tier = original.tier;
+            reduced.name = original.name;
+            reduced.lore = original.lore;
+            reduced.enchants = original.enchants;
+            basicRewards.add(reduced);
         }
+        return basicRewards;
+    }
+
+    private List<String> crateLore(boolean basic) {
+        List<Reward> pool = rewardsForCrate(basic);
+        List<String> lore = new ArrayList<>();
+        lore.add(ChatColor.GRAY + (basic ? "Podstawowe nagrody, mniejsze ilości." : "Pełna pula nagród i wszystkie rzadkości."));
+        lore.add(ChatColor.DARK_GRAY + "──────── SZANSE ────────");
+        String[] tiers = basic ? new String[]{"COMMON", "UNCOMMON"}
+                : new String[]{"COMMON", "UNCOMMON", "RARE", "EPIC", "LEGENDARY"};
+        for (String tier : tiers) {
+            ChatColor color = tierColor(tier);
+            lore.add(color + "● " + tier + ChatColor.GRAY + " — " + color + chanceForTier(pool, tier) + "%");
+        }
+        if (basic) {
+            lore.add(ChatColor.DARK_GRAY + "Pozostałe rzadkości niedostępne.");
+        }
+        lore.add(ChatColor.YELLOW + "Koszt: " + (basic ? BASIC_COST : PREMIUM_COST) + " ★");
+        lore.add(ChatColor.GREEN + "Kliknij, aby otworzyć.");
+        return lore;
+    }
+
+    private void beginOpening(Player player, int cost, boolean basic) {
+        List<Reward> rewards = rewardsForCrate(basic);
         if (rewards.isEmpty()) {
             awardStars(player, cost);
             player.sendMessage(ChatColor.RED + "Pula nagród jest nieprawidłowa lub pusta. Gwiazdki zwrócono; administrator powinien sprawdzić rewards.yml.");
@@ -453,8 +469,7 @@ public final class CrateSystem implements Listener {
         return rewardCache;
     }
 
-    private String chanceForTier(String tier) {
-        List<Reward> rewards = loadRewards();
+    private String chanceForTier(List<Reward> rewards, String tier) {
         long total = rewards.stream().mapToLong(r -> r.weight).sum();
         if (total <= 0) return "0";
         long tierWeight = rewards.stream().filter(r -> r.tier.equalsIgnoreCase(tier))
