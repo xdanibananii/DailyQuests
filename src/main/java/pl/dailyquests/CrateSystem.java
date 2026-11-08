@@ -115,23 +115,24 @@ public final class CrateSystem implements Listener {
             }
         }
 
-        File oddsMarker = new File(plugin.getDataFolder(), "crate-odds-v4.done");
+        File oddsMarker = new File(plugin.getDataFolder(), "crate-odds-v5.done");
         if (!oddsMarker.exists()) {
             for (int i = 0; i < yaml.getMapList("rewards").size(); i++) {
                 String base = "rewards." + i + ".";
                 String tier = yaml.getString(base + "tier", "COMMON").toUpperCase(Locale.ROOT);
                 int weight = switch (tier) {
-                    case "UNCOMMON" -> 150;
-                    case "RARE" -> 10;
-                    case "EPIC", "LEGENDARY" -> 1;
-                    default -> 1000;
+                    case "UNCOMMON" -> 200;
+                    case "RARE" -> 30;
+                    case "EPIC" -> 8;
+                    case "LEGENDARY" -> 4;
+                    default -> 800;
                 };
                 yaml.set(base + "weight", weight);
             }
             try {
                 yaml.save(file);
                 if (oddsMarker.createNewFile()) {
-                    plugin.getLogger().info("Zastosowano bardzo rzadkie szanse dla nagród RARE, EPIC i LEGENDARY.");
+                    plugin.getLogger().info("Zastosowano nowe szanse skrzynki: COMMON 800, UNCOMMON 200, RARE 30, EPIC 8, LEGENDARY 4.");
                 }
             } catch (java.io.IOException ex) {
                 plugin.getLogger().warning("Nie udało się zapisać nowych szans nagród: " + ex.getMessage());
@@ -249,26 +250,43 @@ public final class CrateSystem implements Listener {
             return;
         }
         Inventory inv = Bukkit.createInventory(null, 54, TITLE);
-        ItemStack pane = item(Material.GRAY_STAINED_GLASS_PANE, " ", List.of());
-        for (int i = 0; i < 54; i++) inv.setItem(i, pane);
-        inv.setItem(4, item(Material.NETHER_STAR, ChatColor.GOLD + "★ SKRZYNKA DAILYQUESTS ★",
-                List.of(ChatColor.GRAY + "Losuj wyjątkowe nagrody!", "",
-                        ChatColor.YELLOW + "Koszt: " + COST + " gwiazdek",
-                        ChatColor.YELLOW + "Twoje saldo: " + getStars(player.getUniqueId()) + " ★",
-                        "", ChatColor.DARK_GRAY + "Szanse na rzadkości:",
-                        ChatColor.GRAY + "COMMON " + chanceForTier("COMMON") + "%  " + ChatColor.GREEN + "UNCOMMON " + chanceForTier("UNCOMMON") + "%",
-                        ChatColor.BLUE + "RARE " + chanceForTier("RARE") + "%  " + ChatColor.RED + "EPIC " + chanceForTier("EPIC") + "%",
-                        ChatColor.GOLD + "LEGENDARY " + chanceForTier("LEGENDARY") + "%")));
-        ItemStack chest = item(Material.CHEST, ChatColor.YELLOW + "OTWÓRZ SKRZYNKĘ",
-                List.of(ChatColor.GRAY + "Kliknij, aby wydać " + COST + " gwiazdek.",
-                        ChatColor.GRAY + "Aktualne saldo: " + getStars(player.getUniqueId()) + " ★",
-                        "", ChatColor.GREEN + "Powodzenia!"));
+        ItemStack dark = item(Material.PURPLE_STAINED_GLASS_PANE, " ", List.of());
+        ItemStack gold = item(Material.YELLOW_STAINED_GLASS_PANE, " ", List.of());
+        for (int slot = 0; slot < 54; slot++) {
+            int row = slot / 9, col = slot % 9;
+            if (row == 0 || row == 5 || col == 0 || col == 8) inv.setItem(slot, dark);
+            else inv.setItem(slot, item(Material.BLACK_STAINED_GLASS_PANE, " ", List.of()));
+        }
+        for (int slot : new int[]{0, 8, 45, 53}) inv.setItem(slot, gold);
+        inv.setItem(4, item(Material.NETHER_STAR, ChatColor.GOLD + "✦  SKARBIEC DAILYQUESTS  ✦",
+                List.of(ChatColor.GRAY + "Stare złoto, wielkie emocje i odrobina szczęścia.",
+                        ChatColor.DARK_GRAY + "Niech los będzie po twojej stronie.")));
+        inv.setItem(10, item(Material.IRON_INGOT, ChatColor.GRAY + "COMMON",
+                List.of(ChatColor.DARK_GRAY + "Zwykłe łupy", ChatColor.WHITE + chanceForTier("COMMON") + "% szansy")));
+        inv.setItem(12, item(Material.EMERALD, ChatColor.GREEN + "UNCOMMON",
+                List.of(ChatColor.DARK_GRAY + "Nieco cenniejsze", ChatColor.GREEN + chanceForTier("UNCOMMON") + "% szansy")));
+        inv.setItem(14, item(Material.DIAMOND, ChatColor.BLUE + "RARE",
+                List.of(ChatColor.DARK_GRAY + "Rzadkie znaleziska", ChatColor.BLUE + chanceForTier("RARE") + "% szansy")));
+        inv.setItem(16, item(Material.AMETHYST_SHARD, ChatColor.LIGHT_PURPLE + "EPIC",
+                List.of(ChatColor.DARK_GRAY + "Łupy dla szczęśliwców", ChatColor.LIGHT_PURPLE + chanceForTier("EPIC") + "% szansy")));
+        inv.setItem(25, item(Material.NETHER_STAR, ChatColor.GOLD + "LEGENDARY",
+                List.of(ChatColor.DARK_GRAY + "Legenda skarbca", ChatColor.GOLD + chanceForTier("LEGENDARY") + "% szansy")));
+        ItemStack chest = item(Material.ENDER_CHEST, ChatColor.YELLOW + "✦ OTWÓRZ SKRZYNIĘ ✦",
+                List.of(ChatColor.GRAY + "Kliknij, by rozpocząć losowanie.",
+                        ChatColor.YELLOW + "Koszt: " + COST + " ★",
+                        ChatColor.GREEN + "Powodzenia, śmiałku!"));
         ItemMeta meta = chest.getItemMeta();
         meta.getPersistentDataContainer().set(crateKey, PersistentDataType.BYTE, (byte) 1);
         chest.setItemMeta(meta);
         inv.setItem(22, chest);
-        inv.setItem(49, item(Material.GOLD_INGOT, ChatColor.GOLD + "Twoje gwiazdki",
-                List.of(ChatColor.YELLOW + "" + getStars(player.getUniqueId()) + " ★")));
+        inv.setItem(45, item(Material.GOLD_INGOT, ChatColor.GOLD + "KOSZT LOSOWANIA",
+                List.of(ChatColor.YELLOW + COST + " ★", ChatColor.GRAY + "Jedno podejście do skarbca.")));
+        inv.setItem(49, item(Material.SUNFLOWER, ChatColor.YELLOW + "TWOJE GWIAZDKI",
+                List.of(ChatColor.GOLD + "" + getStars(player.getUniqueId()) + " ★",
+                        ChatColor.GRAY + "Zbieraj je za codzienne zadania.")));
+        inv.setItem(53, item(Material.BOOK, ChatColor.AQUA + "JAK TO DZIAŁA?",
+                List.of(ChatColor.GRAY + "Kliknij skrzynię na środku.",
+                        ChatColor.GRAY + "Wynik poznasz po animacji ruletki.")));
         player.openInventory(inv);
         player.playSound(player.getLocation(), Sound.BLOCK_CHEST_OPEN, 0.7f, 1.1f);
     }
