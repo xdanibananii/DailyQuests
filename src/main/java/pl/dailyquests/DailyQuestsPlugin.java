@@ -406,6 +406,63 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
             q.setString(1,p.getUniqueId().toString());q.setString(2,weekKey());q.setInt(3,amount);q.executeUpdate();
         } catch(SQLException e) { getLogger().warning("Błąd postępu weekly: "+e.getMessage()); }
     }
+    void openWeeklyPreview(Player player) {
+        WeeklyChallenge challenge = weeklyChallenge();
+        String week = weekKey();
+        int progress = 0;
+        boolean claimed = false;
+        try (PreparedStatement query = db.prepareStatement(
+                "SELECT progress,claimed FROM weekly_tasks WHERE uuid=? AND week=?")) {
+            query.setString(1, player.getUniqueId().toString());
+            query.setString(2, week);
+            try (ResultSet result = query.executeQuery()) {
+                if (result.next()) {
+                    progress = result.getInt(1);
+                    claimed = result.getInt(2) == 1;
+                }
+            }
+        } catch (SQLException ex) {
+            player.sendMessage(ChatColor.RED + "Nie udało się odczytać wyzwania tygodnia.");
+            return;
+        }
+
+        String title = ChatColor.DARK_GRAY + "✦ WYZWANIE TYGODNIA ✦";
+        Inventory inventory = Bukkit.createInventory(null, 27, title);
+        ItemStack filler = make(Material.BLACK_STAINED_GLASS_PANE, " ", List.of());
+        for (int slot = 0; slot < 27; slot++) inventory.setItem(slot, filler);
+        inventory.setItem(4, make(Material.CLOCK, ChatColor.GOLD + "✦ WYZWANIE TYGODNIA ✦",
+                List.of(ChatColor.GRAY + "Aktualne wyzwanie: " + ChatColor.WHITE + week,
+                        ChatColor.DARK_GRAY + "Podgląd u Michaiła Łomonosowa")));
+        int current = Math.min(progress, challenge.amount());
+        inventory.setItem(11, make(Material.WRITABLE_BOOK, ChatColor.YELLOW + challenge.title(),
+                List.of(ChatColor.GRAY + challenge.description(), "",
+                        ChatColor.DARK_GRAY + "POSTĘP",
+                        progressBar(current, challenge.amount()),
+                        ChatColor.AQUA + current + ChatColor.GRAY + " / " + challenge.amount(),
+                        claimed ? ChatColor.GREEN + "Nagroda odebrana"
+                                : current >= challenge.amount() ? ChatColor.GOLD + "Wyzwanie ukończone"
+                                : ChatColor.YELLOW + "W trakcie realizacji")));
+        inventory.setItem(15, make(Material.CHEST, ChatColor.GOLD + "NAGRODA",
+                List.of(ChatColor.GREEN + "+" + challenge.xp() + " XP",
+                        ChatColor.GREEN + "+" + challenge.emeralds() + " szmaragdów",
+                        ChatColor.YELLOW + "+10 ★",
+                        "",
+                        ChatColor.DARK_GRAY + "Nagroda odbierana automatycznie",
+                        ChatColor.DARK_GRAY + "po ukończeniu wyzwania.")));
+        inventory.setItem(22, make(Material.BARRIER, ChatColor.RED + "ZAMKNIJ PODGLĄD",
+                List.of(ChatColor.GRAY + "Powrót do gry.")));
+        player.openInventory(inventory);
+    }
+
+    @EventHandler
+    public void onWeeklyPreviewClick(InventoryClickEvent event) {
+        if (!(ChatColor.DARK_GRAY + "✦ WYZWANIE TYGODNIA ✦").equals(event.getView().getTitle())) return;
+        event.setCancelled(true);
+        if (event.getWhoClicked() instanceof Player player && event.getRawSlot() == 22) {
+            player.closeInventory();
+        }
+    }
+
     private void showWeekly(CommandSender sender) {
         if(!(sender instanceof Player p)){sender.sendMessage("Tylko gracz może sprawdzić wyzwanie.");return;}
         WeeklyChallenge c=weeklyChallenge();String week=weekKey();int progress=0;boolean claimed=false;
