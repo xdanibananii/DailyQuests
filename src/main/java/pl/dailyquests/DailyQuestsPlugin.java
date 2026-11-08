@@ -375,7 +375,53 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
             }
         } catch (SQLException e) { getLogger().warning(e.getMessage()); }
     }
-    private void showWeekly(CommandSender sender){if(!(sender instanceof Player p)){sender.sendMessage("Tylko gracz może sprawdzić wyzwanie.");return;}String week=weekKey();int progress=0;boolean claimed=false;try(PreparedStatement q=db.prepareStatement("SELECT progress,claimed FROM weekly_tasks WHERE uuid=? AND week=?")){q.setString(1,p.getUniqueId().toString());q.setString(2,week);try(ResultSet r=q.executeQuery()){if(r.next()){progress=r.getInt(1);claimed=r.getInt(2)==1;}}}catch(SQLException e){p.sendMessage(ChatColor.RED+"Błąd odczytu wyzwania.");return;}p.sendMessage(ChatColor.GOLD+"━━ WYZWANIE TYGODNIA ━━");p.sendMessage(ChatColor.YELLOW+"Przepłyń 500 bloków.");p.sendMessage(ChatColor.GRAY+"Postęp: "+ChatColor.AQUA+progress+"/500");if(progress>=500&&!claimed){try(PreparedStatement u=db.prepareStatement("INSERT INTO weekly_tasks(uuid,week,progress,claimed) VALUES(?,?,500,1) ON CONFLICT(uuid,week) DO UPDATE SET claimed=1")){u.setString(1,p.getUniqueId().toString());u.setString(2,week);u.executeUpdate();}catch(SQLException ignored){}p.giveExp(1500);p.getInventory().addItem(new ItemStack(Material.EMERALD,5));p.sendMessage(ChatColor.GREEN+"Nagroda: 1500 XP i 5 szmaragdów!");}else if(claimed)p.sendMessage(ChatColor.GREEN+"Nagroda odebrana.");else p.sendMessage(ChatColor.GRAY+"Nagroda zostanie dostępna po ukończeniu.");}
+    private record WeeklyChallenge(String type,String target,int amount,String title,String description,int xp,int emeralds) {}
+    private static final WeeklyChallenge[] WEEKLY_POOL = {
+        new WeeklyChallenge("WALK","ANY",12000,"Wielka wyprawa","Przemierz 12 000 bloków pieszo",2500,12),
+        new WeeklyChallenge("SWIM","ANY",2500,"Władca oceanów","Przepłyń 2 500 bloków",2200,10),
+        new WeeklyChallenge("BREAK","DIAMOND_ORE",96,"Gorączka diamentów","Wykop 96 rud diamentu",2600,12),
+        new WeeklyChallenge("KILL","ZOMBIE",180,"Pogromca nieumarłych","Pokonaj 180 zombie",2300,10),
+        new WeeklyChallenge("KILL","SKELETON",150,"Łowca kości","Pokonaj 150 szkieletów",2300,10),
+        new WeeklyChallenge("CRAFT","ANY",640,"Mistrz rzemiosła","Wytwórz 640 przedmiotów",2200,10),
+        new WeeklyChallenge("FISH","ANY",80,"Głębinowy połów","Złów 80 ryb lub skarbów",2200,10),
+        new WeeklyChallenge("ENCHANT","ANY",18,"Zaklinacz","Zaklnij 18 przedmiotów",2500,12),
+        new WeeklyChallenge("BREED","ANY",45,"Hodowca","Rozmnoż 45 zwierząt",2100,10),
+        new WeeklyChallenge("TRADE","ANY",100,"Kupiec tygodnia","Dokonaj 100 wymian z osadnikami",2300,10),
+        new WeeklyChallenge("ANVIL","ANY",35,"Kowal","Połącz lub napraw 35 przedmiotów w kowadle",2400,11),
+        new WeeklyChallenge("BREAK","ANCIENT_DEBRIS",24,"Relikt Netheru","Wykop 24 pradawne zgliszcza",3000,15)
+    };
+    private WeeklyChallenge weeklyChallenge() {
+        long week=LocalDate.now(zone).with(java.time.DayOfWeek.MONDAY).toEpochDay()/7L;
+        return WEEKLY_POOL[Math.floorMod(week,WEEKLY_POOL.length)];
+    }
+    private void updateWeekly(Player p,String type,String target,int amount) {
+        if(amount<=0) return;
+        WeeklyChallenge c=weeklyChallenge();
+        if(!c.type().equals(type)||(!c.target().equals("ANY")&&!c.target().equals(target))) return;
+        try(PreparedStatement q=db.prepareStatement("INSERT INTO weekly_tasks(uuid,week,progress,claimed) VALUES(?,?,?,0) ON CONFLICT(uuid,week) DO UPDATE SET progress=MIN("+c.amount()+",progress+excluded.progress) WHERE claimed=0")) {
+            q.setString(1,p.getUniqueId().toString());q.setString(2,weekKey());q.setInt(3,amount);q.executeUpdate();
+        } catch(SQLException e) { getLogger().warning("Błąd postępu weekly: "+e.getMessage()); }
+    }
+    private void showWeekly(CommandSender sender) {
+        if(!(sender instanceof Player p)){sender.sendMessage("Tylko gracz może sprawdzić wyzwanie.");return;}
+        WeeklyChallenge c=weeklyChallenge();String week=weekKey();int progress=0;boolean claimed=false;
+        try(PreparedStatement q=db.prepareStatement("SELECT progress,claimed FROM weekly_tasks WHERE uuid=? AND week=?")) {
+            q.setString(1,p.getUniqueId().toString());q.setString(2,week);
+            try(ResultSet r=q.executeQuery()){if(r.next()){progress=r.getInt(1);claimed=r.getInt(2)==1;}}
+        } catch(SQLException e){p.sendMessage(ChatColor.RED+"Błąd odczytu wyzwania.");return;}
+        p.sendMessage(ChatColor.GOLD+"━━━━━━━━ WYZWANIE TYGODNIA ━━━━━━━━");
+        p.sendMessage(ChatColor.YELLOW+c.title());p.sendMessage(ChatColor.GRAY+c.description()+".");
+        p.sendMessage(ChatColor.GRAY+"Postęp: "+ChatColor.AQUA+Math.min(progress,c.amount())+"/"+c.amount());
+        if(progress>=c.amount()&&!claimed) {
+            try(PreparedStatement u=db.prepareStatement("INSERT INTO weekly_tasks(uuid,week,progress,claimed) VALUES(?,?,?,1) ON CONFLICT(uuid,week) DO UPDATE SET claimed=1")) {
+                u.setString(1,p.getUniqueId().toString());u.setString(2,week);u.setInt(3,c.amount());u.executeUpdate();
+            } catch(SQLException ignored) {}
+            p.giveExp(c.xp());p.getInventory().addItem(new ItemStack(Material.EMERALD,c.emeralds()));crateSystem.awardStars(p,10);
+            p.sendMessage(ChatColor.GREEN+"Wyzwanie ukończone! Nagroda: "+c.xp()+" XP, "+c.emeralds()+" szmaragdów i 10 ★.");
+        } else if(claimed)p.sendMessage(ChatColor.GREEN+"Nagroda odebrana.");
+        else p.sendMessage(ChatColor.GRAY+"Nagroda: "+ChatColor.GREEN+c.xp()+" XP, "+c.emeralds()+" szmaragdów i 10 ★");
+    }
+
     private void showLeaderboard(CommandSender sender){sender.sendMessage(ChatColor.GOLD+"━━ RANKING DAILY QUESTS ━━");try(Statement s=db.createStatement();ResultSet r=s.executeQuery("SELECT uuid,total_completed,streak FROM player_stats ORDER BY total_completed DESC LIMIT 10")){int i=1;while(r.next()){OfflinePlayer op=Bukkit.getOfflinePlayer(UUID.fromString(r.getString(1)));sender.sendMessage(ChatColor.YELLOW+"#"+i+" "+ChatColor.WHITE+(op.getName()==null?"Gracz":op.getName())+ChatColor.GRAY+" — "+ChatColor.GREEN+r.getInt(2)+" zadań "+ChatColor.DARK_GRAY+"(seria: "+r.getInt(3)+")");i++;}if(i==1)sender.sendMessage(ChatColor.GRAY+"Brak wyników.");}catch(SQLException e){sender.sendMessage(ChatColor.RED+"Błąd rankingu.");}}
 
     private void open(Player p) {
@@ -456,11 +502,13 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
     @EventHandler public void onBreak(BlockBreakEvent e){
         if(e.isCancelled())return;
         String type=e.getBlock().getType().name();
+        updateWeekly(e.getPlayer(),"BREAK",type,1);
         for(Task t:ensureTasks(e.getPlayer()))if(t.type.equals("BREAK")&&dimensionMatches(t,e.getBlock().getWorld())&&(t.target.equals("ANY")||t.target.equals(type)))update(e.getPlayer(),t,1);
     }
     @EventHandler public void onKill(EntityDeathEvent e){
         Player p=e.getEntity().getKiller();if(p==null)return;
         String type=e.getEntityType().name();
+        updateWeekly(p,"KILL",type,1);
         for(Task t:ensureTasks(p))if(t.type.equals("KILL")&&dimensionMatches(t,e.getEntity().getWorld())&&(t.target.equals("ANY")||t.target.equals(type)))update(p,t,1);
     }
     private int getCraftedAmount(CraftItemEvent e) {
@@ -498,6 +546,7 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
         if (!(e.getWhoClicked() instanceof Player p) || e.isCancelled()) return;
         String type = e.getRecipe().getResult().getType().name();
         int count = getCraftedAmount(e);
+        updateWeekly(p,"CRAFT",type,count);
         for (Task t : ensureTasks(p))
             if (t.type.equals("CRAFT") && (t.target.equals("ANY") || t.target.equals(type))) update(p, t, count);
     }
@@ -506,15 +555,16 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
         if(e.getState()!=PlayerFishEvent.State.CAUGHT_FISH)return;
         if (!(e.getCaught() instanceof org.bukkit.entity.Item caught)) return;
         String caughtType = caught.getItemStack().getType().name();
+        updateWeekly(e.getPlayer(),"FISH",caughtType,1);
         for(Task t:ensureTasks(e.getPlayer()))
             if(t.type.equals("FISH") && dimensionMatches(t,e.getPlayer().getWorld())
                     && (t.target.equals("ANY") || t.target.equals(caughtType))) update(e.getPlayer(),t,1);
     }
-    private void updateWeekly(Player p,int amount){String week=weekKey();try(PreparedStatement q=db.prepareStatement("INSERT INTO weekly_tasks(uuid,week,progress,claimed) VALUES(?,?,?,0) ON CONFLICT(uuid,week) DO UPDATE SET progress=MIN(500,progress+excluded.progress)")){q.setString(1,p.getUniqueId().toString());q.setString(2,week);q.setInt(3,amount);q.executeUpdate();}catch(SQLException e){getLogger().warning(e.getMessage());}}
-    @EventHandler public void onConsume(PlayerItemConsumeEvent e){for(Task t:ensureTasks(e.getPlayer()))if(t.type.equals("EAT")&&(t.target.equals("ANY")||t.target.equals(e.getItem().getType().name())))update(e.getPlayer(),t,1);}
-    @EventHandler public void onEnchant(org.bukkit.event.enchantment.EnchantItemEvent e){for(Task t:ensureTasks(e.getEnchanter()))if(t.type.equals("ENCHANT"))update(e.getEnchanter(),t,1);}
-    @EventHandler public void onBreed(org.bukkit.event.entity.EntityBreedEvent e){if(e.getBreeder() instanceof Player p)for(Task t:ensureTasks(p))if(t.type.equals("BREED")&&(t.target.equals("ANY")||t.target.equals(e.getEntity().getType().name())))update(p,t,1);}
-    @EventHandler public void onAnvil(InventoryClickEvent e){if(e.isCancelled()||!(e.getWhoClicked() instanceof Player p)||e.getRawSlot()!=2)return;if(e.getView().getType()==InventoryType.ANVIL)for(Task t:ensureTasks(p))if(t.type.equals("ANVIL"))update(p,t,1);if(e.getView().getType()==InventoryType.MERCHANT)for(Task t:ensureTasks(p))if(t.type.equals("TRADE"))update(p,t,1);}
+    
+    @EventHandler public void onConsume(PlayerItemConsumeEvent e){updateWeekly(e.getPlayer(),"EAT",e.getItem().getType().name(),1);for(Task t:ensureTasks(e.getPlayer()))if(t.type.equals("EAT")&&(t.target.equals("ANY")||t.target.equals(e.getItem().getType().name())))update(e.getPlayer(),t,1);}
+    @EventHandler public void onEnchant(org.bukkit.event.enchantment.EnchantItemEvent e){updateWeekly(e.getEnchanter(),"ENCHANT","ANY",1);for(Task t:ensureTasks(e.getEnchanter()))if(t.type.equals("ENCHANT"))update(e.getEnchanter(),t,1);}
+    @EventHandler public void onBreed(org.bukkit.event.entity.EntityBreedEvent e){if(e.getBreeder() instanceof Player p){updateWeekly(p,"BREED",e.getEntity().getType().name(),1);for(Task t:ensureTasks(p))if(t.type.equals("BREED")&&(t.target.equals("ANY")||t.target.equals(e.getEntity().getType().name())))update(p,t,1);}}
+    @EventHandler public void onAnvil(InventoryClickEvent e){if(e.isCancelled()||!(e.getWhoClicked() instanceof Player p)||e.getRawSlot()!=2)return;if(e.getView().getType()==InventoryType.ANVIL){updateWeekly(p,"ANVIL","ANY",1);for(Task t:ensureTasks(p))if(t.type.equals("ANVIL"))update(p,t,1);}if(e.getView().getType()==InventoryType.MERCHANT){updateWeekly(p,"TRADE","ANY",1);for(Task t:ensureTasks(p))if(t.type.equals("TRADE"))update(p,t,1);}}
     @EventHandler public void onMove(PlayerMoveEvent e){
         if(e.getTo()==null)return;
         Location a=e.getFrom(),b=e.getTo();if(a.getWorld()!=b.getWorld()||a.getBlockX()==b.getBlockX()&&a.getBlockZ()==b.getBlockZ())return;
@@ -522,7 +572,8 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
         Location prev=lastWalk.put(e.getPlayer().getUniqueId(),b.clone());
         if(prev==null||prev.getWorld()!=b.getWorld())return;
         int d=(int)Math.floor(Math.sqrt(Math.pow(b.getX()-prev.getX(),2)+Math.pow(b.getZ()-prev.getZ(),2)));
-        if(d>0&&e.getPlayer().isSwimming())updateWeekly(e.getPlayer(),d);
+        if(d>0&&e.getPlayer().isSwimming())updateWeekly(e.getPlayer(),"SWIM","ANY",d);
+        else if(d>0)updateWeekly(e.getPlayer(),"WALK","ANY",d);
         if(d>0&&e.getPlayer().isSwimming())for(Task t:ensureTasks(e.getPlayer()))if(t.type.equals("SWIM")&&dimensionMatches(t,b.getWorld()))update(e.getPlayer(),t,d);
         if(d>0)for(Task t:ensureTasks(e.getPlayer()))if(t.type.equals("WALK")&&dimensionMatches(t,b.getWorld()))update(e.getPlayer(),t,d);
     }
