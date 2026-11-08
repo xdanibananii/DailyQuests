@@ -281,8 +281,11 @@ public final class CrateSystem implements Listener {
         event.setCancelled(true);
         if (!(event.getWhoClicked() instanceof Player player)) return;
         if (opening.containsKey(player.getUniqueId())) return;
+        // Podczas animacji używamy osobnego, 6-rzędowego GUI. Kliknięcia
+        // w nim są blokowane, a wybór skrzyni jest możliwy tylko w menu 3-rzędowym.
+        if (event.getView().getTopInventory().getSize() != 27) return;
         int slot = event.getRawSlot();
-        if (event.getView().getTopInventory().getSize() != 27 || (slot != 11 && slot != 15)) return;
+        if (slot != 11 && slot != 15) return;
         boolean basic = slot == 11;
         int cost = basic ? BASIC_COST : PREMIUM_COST;
         if (!spend(player.getUniqueId(), cost)) {
@@ -347,7 +350,8 @@ public final class CrateSystem implements Listener {
         Reward won = choose(rewards);
         strip.set(winnerIndex, won);
 
-        Inventory inv = player.getOpenInventory().getTopInventory();
+        Inventory inv = Bukkit.createInventory(null, 54, TITLE);
+        player.openInventory(inv);
         player.sendMessage(ChatColor.LIGHT_PURPLE + "★ " + (basic ? "Skrzynia zwykła" : "Skrzynia premium") + " ruszyła! Obserwuj środek...");
         player.playSound(player.getLocation(), Sound.BLOCK_CHEST_OPEN, 1f, 0.8f);
 
