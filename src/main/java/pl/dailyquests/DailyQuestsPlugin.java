@@ -323,6 +323,8 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
             reloadConfig();reloadTaskPool();cache.clear();sender.sendMessage(ChatColor.GREEN+"DailyQuests: przeladowano konfigurację i pulę zadań.");return true;
         }
         if(args.length==0 || args[0].equalsIgnoreCase("help")) { showHelp(sender); return true; }
+        sender.sendMessage(ChatColor.RED + "Nieznana komenda: /" + label + " " + String.join(" ", args));
+        sender.sendMessage(ChatColor.GRAY + "Wpisz " + ChatColor.YELLOW + "/dq help" + ChatColor.GRAY + ", aby zobaczyć dostępne komendy.");
         showHelp(sender);
         return true;
     }
