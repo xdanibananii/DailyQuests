@@ -320,6 +320,7 @@ public final class QuestNpcSystem implements Listener {
                 if (playersInNpcRange.add(playerId)) {
                     String line = AMBIENT_LINES[random.nextInt(AMBIENT_LINES.length)];
                     say(player, line);
+                    player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 0.55f, 1.35f);
                 }
             }
             playersInNpcRange.retainAll(nearbyNow);
@@ -599,6 +600,7 @@ public final class QuestNpcSystem implements Listener {
                 lastWarning.put(player.getUniqueId(),now);
                 String[] lines={"Ejże, młodzieńcze! Rąk na starszych się nie podnosi. Okaż nieco szacunku.","Spokojnie, mój drogi. Mądrości nie wykuwa się pięścią.","Za moich czasów uczono, że starszyzna zasługuje na szacunek.","Ho, ho! Jeśli masz tyle energii, spożytkuj ją na porządne zadanie, nie na mnie."};
                 say(player,lines[random.nextInt(lines.length)]);
+                player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 0.65f, 0.85f);
             }
         }
     }
