@@ -498,6 +498,32 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
                     ChatColor.DARK_GRAY+"━━━━━━━━━━━━━━━━━━━━",
                     ChatColor.YELLOW+"Reset: "+ChatColor.WHITE+today(),
                     ChatColor.GRAY+"Kliknij ukończone zadanie, aby odebrać nagrodę.")));
+        WeeklyChallenge weekly = weeklyChallenge();
+        int weeklyProgress = 0;
+        boolean weeklyClaimed = false;
+        try (PreparedStatement q = db.prepareStatement("SELECT progress,claimed FROM weekly_tasks WHERE uuid=? AND week=?")) {
+            q.setString(1, p.getUniqueId().toString());
+            q.setString(2, weekKey());
+            try (ResultSet rs = q.executeQuery()) {
+                if (rs.next()) { weeklyProgress = rs.getInt(1); weeklyClaimed = rs.getInt(2) == 1; }
+            }
+        } catch (SQLException ex) {
+            getLogger().warning("Nie udało się odczytać podsumowania wyzwania tygodnia: " + ex.getMessage());
+        }
+        int weeklyCurrent = Math.min(weeklyProgress, weekly.amount());
+        inv.setItem(31, make(Material.CLOCK, ChatColor.LIGHT_PURPLE + "✦ WYZWANIE TYGODNIA ✦",
+                List.of(ChatColor.YELLOW + weekly.title(),
+                        ChatColor.GRAY + weekly.description(),
+                        "",
+                        ChatColor.DARK_GRAY + "POSTĘP",
+                        progressBar(weeklyCurrent, weekly.amount()),
+                        ChatColor.AQUA.toString() + weeklyCurrent + ChatColor.GRAY + " / " + weekly.amount(),
+                        weeklyClaimed ? ChatColor.GREEN + "✔ Nagroda odebrana"
+                                : weeklyCurrent >= weekly.amount() ? ChatColor.GOLD + "★ Ukończone"
+                                : ChatColor.YELLOW + "◷ W trakcie",
+                        "",
+                        ChatColor.GREEN + "Nagroda: " + weekly.xp() + " XP, " + weekly.emeralds() + " szmaragdów, 10 ★",
+                        ChatColor.YELLOW + "Kliknij, aby zobaczyć szczegóły.")));
         inv.setItem(40,make(rerollMode.contains(p.getUniqueId())?Material.REDSTONE_BLOCK:Material.EXPERIENCE_BOTTLE,
             rerollMode.contains(p.getUniqueId())?ChatColor.RED+"Anuluj przerzut":ChatColor.LIGHT_PURPLE+"Przerzuć jedno zadanie",
             List.of(ChatColor.GRAY+"Koszt: "+ChatColor.YELLOW+"5 poziomów XP",
@@ -642,6 +668,10 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
         if(!TITLE.equals(e.getView().getTitle()))return;
         e.setCancelled(true);if(!(e.getWhoClicked() instanceof Player p))return;
         int slot=e.getRawSlot();
+        if (slot == 31) {
+            openWeeklyPreview(p);
+            return;
+        }
         if(slot==40) {
             if(!rerollMode.add(p.getUniqueId())) rerollMode.remove(p.getUniqueId());
             p.sendMessage(rerollMode.contains(p.getUniqueId())
