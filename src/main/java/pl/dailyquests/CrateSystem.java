@@ -29,6 +29,7 @@ public final class CrateSystem implements Listener {
     private final Random random = new Random();
     private final Map<UUID, BukkitTask> opening = new HashMap<>();
     private final NamespacedKey crateKey;
+    private List<Reward> rewardCache;
 
     private static final class Reward {
         Material material;
@@ -348,6 +349,12 @@ public final class CrateSystem implements Listener {
     }
 
     private List<Reward> loadRewards() {
+        if (rewardCache != null) return rewardCache;
+
+        // Plik może zostać zmieniony lub uszkodzony już po starcie serwera.
+        // Sprawdzamy go ponownie przed pierwszym losowaniem i odtwarzamy zasób z JAR-a.
+        balanceExistingRewards();
+
         File file = new File(plugin.getDataFolder(), "rewards.yml");
         YamlConfiguration yaml = YamlConfiguration.loadConfiguration(file);
         List<Reward> result = new ArrayList<>();
@@ -381,7 +388,8 @@ public final class CrateSystem implements Listener {
         }
         if (result.isEmpty()) plugin.getLogger().severe("Nie wczytano żadnej poprawnej nagrody z rewards.yml. Sprawdź wpisy rewards (material, amount, weight); gwiazdki nie zostaną pobrane.");
         else plugin.getLogger().info("Wczytano "+result.size()+" poprawnych pozycji nagród do skrzynki.");
-        return result;
+        rewardCache = List.copyOf(result);
+        return rewardCache;
     }
 
     private String chanceForTier(String tier) {
