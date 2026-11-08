@@ -482,6 +482,10 @@ public final class QuestNpcSystem implements Listener {
         if (!TITLE.equals(event.getView().getTitle())) return;
         event.setCancelled(true);
         if (!(event.getWhoClicked() instanceof Player player)) return;
+        if (event.getRawSlot() == 49) {
+            player.closeInventory();
+            return;
+        }
         if (event.getRawSlot() == 42) {
             rerollContract(player);
             return;
