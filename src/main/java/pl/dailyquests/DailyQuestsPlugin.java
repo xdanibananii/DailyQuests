@@ -432,7 +432,7 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
         for (int slot = 0; slot < 27; slot++) inventory.setItem(slot, filler);
         inventory.setItem(4, make(Material.CLOCK, ChatColor.GOLD + "✦ WYZWANIE TYGODNIA ✦",
                 List.of(ChatColor.GRAY + "Aktualne wyzwanie: " + ChatColor.WHITE + week,
-                        ChatColor.DARK_GRAY + "Podgląd u Michaiła Łomonosowa")));
+                        ChatColor.DARK_GRAY + "Dostępne bezpośrednio w /zadania")));
         int current = Math.min(progress, challenge.amount());
         inventory.setItem(11, make(Material.WRITABLE_BOOK, ChatColor.YELLOW + challenge.title(),
                 List.of(ChatColor.GRAY + challenge.description(), "",
