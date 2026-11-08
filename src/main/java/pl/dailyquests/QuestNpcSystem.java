@@ -1,6 +1,8 @@
 package pl.dailyquests;
 
 import org.bukkit.*;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Entity;
@@ -368,8 +370,11 @@ public final class QuestNpcSystem implements Listener {
         } else {
             say(player, "Dobrze, że jesteś. Mam dla ciebie robotę — konkretną, uczciwie płatną i bez zbędnych pytań.");
             say(player, c.description);
-            say(player, "Jeśli podejmujesz się zlecenia, przynieś " + c.amount + " szt. " 
-                    + pretty(Material.valueOf(c.material)) + ". Resztę zostaw mnie.");
+            Material required = Material.valueOf(c.material);
+            player.sendMessage(Component.text(ChatColor.GOLD + "Michaił Łomonosow" + ChatColor.DARK_GRAY + " » "
+                    + ChatColor.YELLOW + "Jeśli podejmujesz się zlecenia, przynieś " + c.amount + " × ")
+                    .append(Component.translatable(required.getTranslationKey()))
+                    .append(Component.text(ChatColor.YELLOW + ". Resztę zostaw mnie.")));
         }
         open(player, c);
     }
@@ -401,14 +406,22 @@ public final class QuestNpcSystem implements Listener {
 
         Material required = Material.valueOf(c.material);
         int owned = count(player, required);
-        inv.setItem(20, item(required, ChatColor.YELLOW + "WYMAGANE TOWARY",
-                List.of(ChatColor.GRAY + "Dostarcz mi:",
-                        ChatColor.WHITE.toString() + c.amount + " × " + polishName(required),
-                        "", ChatColor.GRAY + "W twoim ekwipunku: "
-                                + (owned >= c.amount ? ChatColor.GREEN.toString() : ChatColor.RED.toString())
-                                + Math.min(owned, c.amount) + ChatColor.GRAY + " / " + c.amount,
-                        "", ChatColor.DARK_GRAY + "Przedmioty zostaną pobrane",
-                        ChatColor.DARK_GRAY + "dopiero po zatwierdzeniu zlecenia.")));
+        ItemStack requiredItem = item(required, ChatColor.YELLOW + "WYMAGANE TOWARY", List.of());
+        ItemMeta requiredMeta = requiredItem.getItemMeta();
+        LegacyComponentSerializer legacy = LegacyComponentSerializer.legacySection();
+        requiredMeta.lore(List.of(
+                legacy.deserialize(ChatColor.GRAY + "Dostarcz mi:"),
+                Component.text(ChatColor.WHITE + c.amount + " × ").append(Component.translatable(required.getTranslationKey())),
+                Component.empty(),
+                legacy.deserialize(ChatColor.GRAY + "W twoim ekwipunku: "
+                        + (owned >= c.amount ? ChatColor.GREEN.toString() : ChatColor.RED.toString())
+                        + Math.min(owned, c.amount) + ChatColor.GRAY + " / " + c.amount),
+                Component.empty(),
+                legacy.deserialize(ChatColor.DARK_GRAY + "Przedmioty zostaną pobrane"),
+                legacy.deserialize(ChatColor.DARK_GRAY + "dopiero po zatwierdzeniu zlecenia.")
+        ));
+        requiredItem.setItemMeta(requiredMeta);
+        inv.setItem(20, requiredItem);
 
         List<String> mapLore = new ArrayList<>();
         mapLore.add(ChatColor.GRAY + "ZLECENIE DNIA");
@@ -460,24 +473,6 @@ public final class QuestNpcSystem implements Listener {
         player.openInventory(inv);
     }
 
-    private String polishName(Material material) {
-        return switch (material) {
-            case LEATHER -> "skór";
-            case ROTTEN_FLESH -> "szt. zgniłego mięsa";
-            case IRON_INGOT -> "szt. sztabek żelaza";
-            case COD -> "szt. surowego dorsza";
-            case OAK_LOG -> "szt. dębowych bali";
-            case STRING -> "szt. nici";
-            case ENDER_PEARL -> "szt. pereł Endermana";
-            case BONE -> "szt. kości";
-            case GUNPOWDER -> "szt. prochu";
-            case COPPER_INGOT -> "szt. sztabek miedzi";
-            case WHEAT -> "szt. pszenicy";
-            case GOLD_INGOT -> "szt. sztabek złota";
-            default -> pretty(material);
-        };
-    }
-
     @EventHandler public void onContractClick(InventoryClickEvent event) {
         if (!TITLE.equals(event.getView().getTitle())) return;
         event.setCancelled(true);
@@ -487,7 +482,10 @@ public final class QuestNpcSystem implements Listener {
         Material required = Material.valueOf(c.material);
         int have = count(player, required);
         if (have < c.amount) {
-            say(player, "Do kompletu brakuje ci jeszcze " + (c.amount - have) + " szt. " + polishName(required) + ". Wróć, gdy będziesz mieć całą dostawę.");
+            player.sendMessage(Component.text(ChatColor.GOLD + "Michaił Łomonosow" + ChatColor.DARK_GRAY + " » "
+                    + ChatColor.YELLOW + "Do kompletu brakuje ci jeszcze " + (c.amount - have) + " × ")
+                    .append(Component.translatable(required.getTranslationKey()))
+                    .append(Component.text(ChatColor.YELLOW + ". Wróć, gdy będziesz mieć całą dostawę.")));
             player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 0.8f, 0.7f);
             open(player, c);
             return;
