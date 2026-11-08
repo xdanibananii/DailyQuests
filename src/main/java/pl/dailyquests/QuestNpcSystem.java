@@ -411,7 +411,7 @@ public final class QuestNpcSystem implements Listener {
         LegacyComponentSerializer legacy = LegacyComponentSerializer.legacySection();
         requiredMeta.lore(List.of(
                 legacy.deserialize(ChatColor.GRAY + "Dostarcz mi:"),
-                Component.text(ChatColor.WHITE + c.amount + " × ").append(Component.translatable(required.getTranslationKey())),
+                Component.text(ChatColor.WHITE.toString() + c.amount + " × ").append(Component.translatable(required.getTranslationKey())),
                 Component.empty(),
                 legacy.deserialize(ChatColor.GRAY + "W twoim ekwipunku: "
                         + (owned >= c.amount ? ChatColor.GREEN.toString() : ChatColor.RED.toString())
