@@ -70,6 +70,7 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
             }
         } catch (SQLException e) { getLogger().severe("Nie mozna otworzyc SQLite: " + e.getMessage()); getServer().getPluginManager().disablePlugin(this); return; }
         Objects.requireNonNull(getCommand("zadania")).setExecutor(this);
+        Objects.requireNonNull(getCommand("zadania")).setTabCompleter(this);
         crateSystem = new CrateSystem(this);
         npcSystem = new QuestNpcSystem(this, crateSystem);
         crateNpcSystem = new CrateNpcSystem(this, crateSystem);
@@ -234,6 +235,30 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
             sender.sendMessage(ChatColor.YELLOW + "/dq end <on|off>" + ChatColor.GRAY + " — włącza lub wyłącza zadania z Endu");
             sender.sendMessage(ChatColor.YELLOW + "/dq reload" + ChatColor.GRAY + " — przeładowuje konfigurację i pulę zadań");
         }
+    }
+
+    @Override public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+        List<String> suggestions = new ArrayList<>();
+        boolean admin = sender.hasPermission("dailyquests.admin");
+        if (args.length == 1) {
+            suggestions.addAll(List.of("help", "top", "weekly", "gwiazdki"));
+            if (admin) suggestions.addAll(List.of("npc", "roll", "nether", "end", "reload"));
+        } else if (args.length == 2 && args[0].equalsIgnoreCase("npc") && admin) {
+            suggestions.addAll(List.of("questy", "skarbiec"));
+        } else if (args.length == 3 && args[0].equalsIgnoreCase("npc") && admin
+                && (args[1].equalsIgnoreCase("questy") || args[1].equalsIgnoreCase("skarbiec"))) {
+            suggestions.addAll(List.of("postaw", "usun", "tp"));
+        } else if (args.length == 2 && args[0].equalsIgnoreCase("gwiazdki") && admin) {
+            suggestions.addAll(List.of("dodaj", "usun", "ustaw", "sprawdz"));
+        } else if (args.length == 3 && args[0].equalsIgnoreCase("gwiazdki") && admin
+                && Set.of("dodaj", "usun", "ustaw", "sprawdz").contains(args[1].toLowerCase(Locale.ROOT))) {
+            for (Player online : Bukkit.getOnlinePlayers()) suggestions.add(online.getName());
+        } else if (args.length == 2 && (args[0].equalsIgnoreCase("nether") || args[0].equalsIgnoreCase("end")) && admin) {
+            suggestions.addAll(List.of("on", "off"));
+        }
+        String current = args[args.length - 1].toLowerCase(Locale.ROOT);
+        suggestions.removeIf(value -> !value.toLowerCase(Locale.ROOT).startsWith(current));
+        return suggestions;
     }
 
     @Override public boolean onCommand(CommandSender sender,Command command,String label,String[] args) {
