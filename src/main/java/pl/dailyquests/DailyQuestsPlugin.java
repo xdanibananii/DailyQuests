@@ -237,6 +237,12 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
     }
 
     @Override public boolean onCommand(CommandSender sender,Command command,String label,String[] args) {
+        // /zadania ma otwierać GUI; aliasy /dq i /dailyquest bez argumentów pokazują pomoc.
+        if(command.getName().equalsIgnoreCase("zadania") && args.length==0) {
+            if(sender instanceof Player player) open(player);
+            else sender.sendMessage(ChatColor.YELLOW + "Tej komendy użyj w grze.");
+            return true;
+        }
         if(label.equalsIgnoreCase("dailyquest") && args.length==0) { showHelp(sender); return true; }
         if(args.length>0 && args[0].equalsIgnoreCase("npc")) {
             if(!sender.hasPermission("dailyquests.admin")) { sender.sendMessage(ChatColor.RED+"Brak uprawnień."); return true; }
