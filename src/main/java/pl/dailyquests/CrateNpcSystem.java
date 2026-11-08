@@ -14,6 +14,8 @@ import java.util.*;
 public final class CrateNpcSystem implements Listener {
  private final DailyQuestsPlugin plugin; private final CrateSystem crates; private final NamespacedKey key; private final File file;
  private final Set<UUID> playersInRange = new HashSet<>();
+ private final Map<UUID,Long> lastAmbientMessage = new HashMap<>();
+ private static final long AMBIENT_COOLDOWN_MS = 20_000L;
  private final Map<UUID, Long> lastWarning = new HashMap<>();
  private final Random random = new Random();
  private static final String[] AMBIENT_LINES = {
@@ -79,9 +81,13 @@ public final class CrateNpcSystem implements Listener {
     UUID id=player.getUniqueId();
     nearbyNow.add(id);
     if(playersInRange.add(id)) {
-     String line=AMBIENT_LINES[random.nextInt(AMBIENT_LINES.length)];
-     player.sendMessage(ChatColor.LIGHT_PURPLE+"Strażnik Skarbca"+ChatColor.DARK_GRAY+" » "+ChatColor.YELLOW+line);
-     player.playSound(player.getLocation(),Sound.BLOCK_NOTE_BLOCK_CHIME,0.55f,1.35f);
+     long now=System.currentTimeMillis();
+     if(now-lastAmbientMessage.getOrDefault(id,0L)>=AMBIENT_COOLDOWN_MS) {
+      lastAmbientMessage.put(id,now);
+      String line=AMBIENT_LINES[random.nextInt(AMBIENT_LINES.length)];
+      player.sendMessage(ChatColor.LIGHT_PURPLE+"Strażnik Skarbca"+ChatColor.DARK_GRAY+" » "+ChatColor.YELLOW+line);
+      player.playSound(player.getLocation(),Sound.BLOCK_NOTE_BLOCK_CHIME,0.55f,1.35f);
+     }
     }
    }
    playersInRange.retainAll(nearbyNow);
@@ -114,6 +120,11 @@ public final class CrateNpcSystem implements Listener {
   villager.setCustomName(ChatColor.GOLD+"✦ "+ChatColor.LIGHT_PURPLE+ChatColor.translateAlternateColorCodes('&',name)+ChatColor.GOLD+" ✦");
   villager.setCustomNameVisible(true);
   reply.accept(ChatColor.GREEN+"Zmieniono nazwę NPC na: "+ChatColor.translateAlternateColorCodes('&',name));
+ }
+ @EventHandler public void onQuit(org.bukkit.event.player.PlayerQuitEvent event) {
+  playersInRange.remove(event.getPlayer().getUniqueId());
+  lastAmbientMessage.remove(event.getPlayer().getUniqueId());
+  lastWarning.remove(event.getPlayer().getUniqueId());
  }
  void remove() { for(World w:Bukkit.getWorlds()) for(Entity e:w.getEntities()) if(e.getPersistentDataContainer().has(key,PersistentDataType.BYTE)) e.remove(); if(file.exists()) file.delete(); }
  void teleport(Player p) { YamlConfiguration y=YamlConfiguration.loadConfiguration(file); World w=Bukkit.getWorld(y.getString("world","")); if(w==null||!y.contains("x")) { p.sendMessage(ChatColor.RED+"Strażnik Skarbca nie został jeszcze postawiony."); return; } Location l=loc(y,w); w.getChunkAt(l).load(); p.teleport(l); }
