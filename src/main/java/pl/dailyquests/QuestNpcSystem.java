@@ -58,6 +58,7 @@ public final class QuestNpcSystem implements Listener {
         }
         loadDefaultPool();
         restoreNpc();
+        startWanderingTask();
     }
 
 
@@ -221,16 +222,53 @@ public final class QuestNpcSystem implements Listener {
     }
 
     private void configure(Villager villager) {
-        villager.setAI(false);
+        villager.setAI(true);
         villager.setInvulnerable(true);
         villager.setSilent(false);
         villager.setPersistent(true);
         villager.setRemoveWhenFarAway(false);
         villager.setCollidable(false);
+        villager.setCanPickupItems(false);
         villager.setProfession(Villager.Profession.CARTOGRAPHER);
         villager.setCustomName(ChatColor.GOLD + "✦ " + ChatColor.YELLOW + "Michaił Łomonosow" + ChatColor.GOLD + " ✦");
         villager.setCustomNameVisible(true);
         villager.getPersistentDataContainer().set(npcKey, PersistentDataType.BYTE, (byte) 1);
+    }
+
+    /**
+     * Pozwala NPC swobodnie spacerować, ale pilnuje kwadratowego obszaru 4x4
+     * wyznaczonego przez punkt, w którym administrator postawił Villagera.
+     */
+    private void startWanderingTask() {
+        Bukkit.getScheduler().runTaskTimer(plugin, () -> {
+            if (!npcFile.exists()) return;
+            YamlConfiguration yaml = YamlConfiguration.loadConfiguration(npcFile);
+            String savedUuid = yaml.getString("uuid", "");
+            if (savedUuid.isBlank()) return;
+
+            Entity entity;
+            try {
+                entity = Bukkit.getEntity(UUID.fromString(savedUuid));
+            } catch (IllegalArgumentException ex) {
+                return;
+            }
+            if (!(entity instanceof Villager villager) || !villager.isValid()) return;
+
+            World world = Bukkit.getWorld(yaml.getString("world", ""));
+            if (world == null || villager.getWorld() != world) return;
+
+            double centerX = yaml.getDouble("x");
+            double centerZ = yaml.getDouble("z");
+            Location center = new Location(world, centerX, yaml.getDouble("y"), centerZ,
+                    (float) yaml.getDouble("yaw"), 0.0f);
+
+            double dx = villager.getLocation().getX() - centerX;
+            double dz = villager.getLocation().getZ() - centerZ;
+            // Margines 1.8 bloku zostawia niewielki zapas przed granicą 4x4.
+            if (Math.abs(dx) > 1.8 || Math.abs(dz) > 1.8) {
+                villager.getPathfinder().moveTo(center, 0.8);
+            }
+        }, 20L, 10L);
     }
 
     void removeNpc() {
