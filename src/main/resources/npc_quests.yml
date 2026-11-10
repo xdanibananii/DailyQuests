@@ -320,6 +320,7 @@ contracts:
     reward-stars: 6
     reward-xp: 230
   blaze_rods_for_mage:
+    dimension: NETHER
     name: "&6Pręty płomienia"
     description: "&7Mag bada energię Netheru. Przynieś mu pręty płomienia, ale zachowaj ostrożność."
     item: BLAZE_ROD
@@ -327,6 +328,7 @@ contracts:
     reward-stars: 8
     reward-xp: 300
   ghast_tear_for_temple:
+    dimension: NETHER
     name: "&6Łzy ghasta"
     description: "&7Kapłan przygotowuje rytuał w świątyni. Brakuje mu niezwykle rzadkiego składnika."
     item: GHAST_TEAR
@@ -334,6 +336,7 @@ contracts:
     reward-stars: 9
     reward-xp: 340
   quartz_for_architect:
+    dimension: NETHER
     name: "&6Kwarc dla architekta"
     description: "&7Architekt ozdabia salę tronową. Potrzebuje jasnego kwarcu z Netheru."
     item: QUARTZ
@@ -341,6 +344,7 @@ contracts:
     reward-stars: 7
     reward-xp: 260
   glowstone_for_lamps:
+    dimension: NETHER
     name: "&6Jasnogłaz do lamp"
     description: "&7Latarnie na głównym trakcie wymagają nowych kryształów. Dostarcz jasnogłaz."
     item: GLOWSTONE_DUST
@@ -348,6 +352,7 @@ contracts:
     reward-stars: 6
     reward-xp: 230
   nether_bricks_for_fort:
+    dimension: NETHER
     name: "&6Cegły z Netheru"
     description: "&7Budowniczowie wzmacniają wartownię. Zamówili ognioodporne cegły z Netheru."
     item: NETHER_BRICK
@@ -355,6 +360,7 @@ contracts:
     reward-stars: 7
     reward-xp: 270
   ancient_debris_for_smith:
+    dimension: NETHER
     name: "&6Pradawne zgliszcza"
     description: "&7Kowal marzy o wykuciu legendarnego stopu. Przynieś mu pradawne zgliszcza."
     item: ANCIENT_DEBRIS
@@ -362,6 +368,7 @@ contracts:
     reward-stars: 10
     reward-xp: 420
   ender_pearls_for_portal:
+    dimension: END
     name: "&6Perły do portalu"
     description: "&7Badacze próbują ustabilizować portal. Potrzebują pereł Endermana."
     item: ENDER_PEARL
@@ -369,6 +376,7 @@ contracts:
     reward-stars: 8
     reward-xp: 300
   chorus_for_cook:
+    dimension: END
     name: "&6Owoce z krańca"
     description: "&7Kucharz eksperymentuje z egzotycznymi składnikami. Przynieś mu owoce refrenusu."
     item: CHORUS_FRUIT
@@ -376,6 +384,7 @@ contracts:
     reward-stars: 7
     reward-xp: 260
   shulker_shells_for_crafter:
+    dimension: END
     name: "&6Muszle shulkera"
     description: "&7Rzemieślnik chce stworzyć pojemnik na daleką wyprawę. Brakuje mu muszli shulkera."
     item: SHULKER_SHELL
@@ -383,6 +392,7 @@ contracts:
     reward-stars: 10
     reward-xp: 420
   dragon_breath_for_mage:
+    dimension: END
     name: "&6Oddech smoka"
     description: "&7Mag potrzebuje próbki smoczego oddechu do badań. To nie jest zwykłe zlecenie."
     item: DRAGON_BREATH
@@ -411,6 +421,7 @@ contracts:
     reward-stars: 7
     reward-xp: 280
   netherite_scrap_for_master:
+    dimension: NETHER
     name: "&6Netherit dla mistrza"
     description: "&7Mam pewien ambitny plan. Potrzebuję skrawków netheritu, a zapłata będzie odpowiednia."
     item: NETHERITE_SCRAP
