@@ -61,7 +61,7 @@ public final class QuestNpcSystem implements Listener {
     };
 
     private static final class Contract {
-        String id, name, description, material;
+        String id, name, description, material, dimension;
         int amount, stars, xp, delivered;
         boolean claimed;
     }
@@ -124,18 +124,22 @@ public final class QuestNpcSystem implements Listener {
         ConfigurationSection existing = current.getConfigurationSection("contracts");
         if (existing == null) existing = current.createSection("contracts");
         int added = 0;
+        int metadataUpdated = 0;
         for (String id : defaultContracts.getKeys(false)) {
-            if (existing.contains(id)) continue;
             ConfigurationSection contract = defaultContracts.getConfigurationSection(id);
-            if (contract != null) {
+            if (contract == null) continue;
+            if (!existing.contains(id)) {
                 existing.set(id, contract.getValues(true));
                 added++;
+            } else if (contract.contains("dimension") && !existing.isSet(id + ".dimension")) {
+                existing.set(id + ".dimension", contract.getString("dimension"));
+                metadataUpdated++;
             }
         }
-        if (added > 0) {
+        if (added > 0 || metadataUpdated > 0) {
             try {
                 current.save(questsFile);
-                plugin.getLogger().info("Dodano " + added + " nowych kontraktów Michaiła Łomonosowa; własne wpisy zachowano.");
+                plugin.getLogger().info("Zaktualizowano pulę kontraktów Michaiła: dodano " + added + ", uzupełniono metadane " + metadataUpdated + "; własne wpisy zachowano.");
             } catch (java.io.IOException ex) {
                 plugin.getLogger().warning("Nie udało się zapisać nowych kontraktów: " + ex.getMessage());
             }
@@ -162,6 +166,7 @@ public final class QuestNpcSystem implements Listener {
             c.name = color(section.getString("name", id));
             c.description = color(section.getString("description", ""));
             c.material = Material.valueOf(section.getString("item", "LEATHER").toUpperCase(Locale.ROOT)).name();
+            c.dimension = section.getString("dimension", "OVERWORLD").toUpperCase(Locale.ROOT);
             c.amount = Math.max(1, section.getInt("amount", 1));
             c.stars = Math.max(0, section.getInt("reward-stars", 0));
             c.xp = Math.max(0, section.getInt("reward-xp", 0));
@@ -180,9 +185,15 @@ public final class QuestNpcSystem implements Listener {
             try (ResultSet r = q.executeQuery()) {
                 if (r.next()) {
                     Contract c = readContract(r.getString(1));
-                    if (c != null) {
+                    if (c != null && plugin.isDimensionEnabled(c.dimension)) {
                         c.claimed = r.getInt(2) == 1;
                         return c;
+                    }
+                    try (PreparedStatement delete = db.prepareStatement(
+                            "DELETE FROM npc_contracts WHERE uuid=? AND day=?")) {
+                        delete.setString(1, player.getUniqueId().toString());
+                        delete.setString(2, day);
+                        delete.executeUpdate();
                     }
                 }
             }
@@ -194,6 +205,11 @@ public final class QuestNpcSystem implements Listener {
         ConfigurationSection pool = quests().getConfigurationSection("contracts");
         if (pool == null || pool.getKeys(false).isEmpty()) return null;
         List<String> ids = new ArrayList<>(pool.getKeys(false));
+        ids.removeIf(id -> {
+            Contract contract = readContract(id);
+            return contract == null || !plugin.isDimensionEnabled(contract.dimension);
+        });
+        if (ids.isEmpty()) return null;
         Set<String> recentlyAssigned = new HashSet<>();
         try (PreparedStatement history = db.prepareStatement(
                 "SELECT DISTINCT quest_id FROM npc_contracts WHERE uuid=? AND day>=date(?, '-30 days')")) {
@@ -206,7 +222,13 @@ public final class QuestNpcSystem implements Listener {
             plugin.getLogger().warning("Nie udało się odczytać historii kontraktów: " + ex.getMessage());
         }
         ids.removeIf(recentlyAssigned::contains);
-        if (ids.isEmpty()) ids = new ArrayList<>(pool.getKeys(false));
+        if (ids.isEmpty()) {
+            ids = new ArrayList<>(pool.getKeys(false));
+            ids.removeIf(id -> {
+                Contract contract = readContract(id);
+                return contract == null || !plugin.isDimensionEnabled(contract.dimension);
+            });
+        }
         Collections.shuffle(ids);
         for (String id : ids) {
             Contract c = readContract(id);
@@ -572,7 +594,8 @@ public final class QuestNpcSystem implements Listener {
         Collections.shuffle(candidates);
         String replacement = null;
         for (String id : candidates) {
-            if (readContract(id) != null) { replacement = id; break; }
+            Contract candidate = readContract(id);
+            if (candidate != null && plugin.isDimensionEnabled(candidate.dimension)) { replacement = id; break; }
         }
         if (replacement == null) {
             say(player, "Nie mam teraz żadnego innego zlecenia. Zajrzyj później.");
