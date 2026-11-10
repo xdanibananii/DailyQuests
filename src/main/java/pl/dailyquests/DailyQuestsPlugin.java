@@ -365,7 +365,7 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
         showHelp(sender);
         return true;
     }
-    private boolean isDimensionEnabled(String dimension) {
+    boolean isDimensionEnabled(String dimension) {
         String normalized = dimension == null ? "OVERWORLD" : dimension.toUpperCase(Locale.ROOT);
         if (normalized.equals("NETHER")) return getConfig().getBoolean("dimensions.nether-enabled", false);
         if (normalized.equals("END") || normalized.equals("THE_END")) return getConfig().getBoolean("dimensions.end-enabled", false);
