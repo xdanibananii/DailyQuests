@@ -1,6 +1,9 @@
 package pl.dailyquests;
 
 import org.bukkit.*;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.command.*;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.EntityType;
@@ -36,6 +39,8 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
     private QuestNpcSystem npcSystem;
     private CrateNpcSystem crateNpcSystem;
 
+    private record TaskSlot(int slot, String taskId) { }
+
     private static final class Task {
         String id, name, description, type, target, rewardItem, dimension, difficulty;
         int amount, xp, itemAmount, progress;
@@ -45,7 +50,7 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
     @Override public void onEnable() {
         saveDefaultConfig();
         saveResource("tasks.yml", false);
-        File poolMarker = new File(getDataFolder(), "quest-pool-v4.done");
+        File poolMarker = new File(getDataFolder(), "quest-pool-v5.done");
         if (!poolMarker.exists()) {
             mergeDefaultTasks();
             try { poolMarker.createNewFile(); } catch (java.io.IOException ex) { getLogger().warning("Nie zapisano znacznika aktualizacji puli zadan: " + ex.getMessage()); }
@@ -59,7 +64,8 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
             try (Statement s = db.createStatement()) {
                 s.executeUpdate("CREATE TABLE IF NOT EXISTS player_tasks (uuid TEXT NOT NULL, day TEXT NOT NULL, slot INTEGER NOT NULL, task_id TEXT NOT NULL, progress INTEGER NOT NULL DEFAULT 0, claimed INTEGER NOT NULL DEFAULT 0, PRIMARY KEY(uuid,day,slot))");
                 s.executeUpdate("CREATE TABLE IF NOT EXISTS player_stats (uuid TEXT PRIMARY KEY, streak INTEGER NOT NULL DEFAULT 0, last_streak_day TEXT NOT NULL DEFAULT '', total_completed INTEGER NOT NULL DEFAULT 0)");
-                s.executeUpdate("CREATE TABLE IF NOT EXISTS weekly_tasks (uuid TEXT NOT NULL, week TEXT NOT NULL, progress INTEGER NOT NULL DEFAULT 0, claimed INTEGER NOT NULL DEFAULT 0, PRIMARY KEY(uuid,week))");
+                s.executeUpdate("CREATE TABLE IF NOT EXISTS weekly_tasks (uuid TEXT NOT NULL, week TEXT NOT NULL, progress INTEGER NOT NULL DEFAULT 0, claimed INTEGER NOT NULL DEFAULT 0, challenge_id TEXT NOT NULL DEFAULT '', PRIMARY KEY(uuid,week))");
+                try { s.executeUpdate("ALTER TABLE weekly_tasks ADD COLUMN challenge_id TEXT NOT NULL DEFAULT ''"); } catch (SQLException ignored) { }
                 s.executeUpdate("CREATE TABLE IF NOT EXISTS task_history (uuid TEXT NOT NULL, task_id TEXT NOT NULL, assigned_day TEXT NOT NULL, PRIMARY KEY(uuid,task_id,assigned_day))");
                 File resetMarker = new File(getDataFolder(), "test-reset-v2.done");
                 if (!resetMarker.exists()) {
@@ -139,30 +145,68 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
     }
 
     private List<Task> ensureTasks(Player p) {
-        String day = today();
-        try (PreparedStatement q = db.prepareStatement("SELECT task_id,progress,claimed FROM player_tasks WHERE uuid=? AND day=? ORDER BY slot")) {
+        String day=today();
+        List<Task> found=new ArrayList<>();
+        List<Integer> slots=new ArrayList<>();
+        try(PreparedStatement q=db.prepareStatement("SELECT slot,task_id,progress,claimed FROM player_tasks WHERE uuid=? AND day=? ORDER BY slot")) {
             q.setString(1,p.getUniqueId().toString()); q.setString(2,day);
-            try (ResultSet rs=q.executeQuery()) {
-                List<Task> found=new ArrayList<>();
-                while(rs.next()) { Task t=loadTask(rs.getString(1)); if(t!=null){t.progress=rs.getInt(2);t.claimed=rs.getInt(3)==1;found.add(t);} }
-                if(found.size()==5 && found.stream().allMatch(this::isTaskEnabled)){cache.put(p.getUniqueId(),found);return found;}
+            try(ResultSet rs=q.executeQuery()) {
+                while(rs.next()) {
+                    Task task=loadTask(rs.getString(2));
+                    if(task!=null && isTaskEnabled(task)) {
+                        task.progress=rs.getInt(3); task.claimed=rs.getInt(4)==1;
+                        found.add(task); slots.add(rs.getInt(1));
+                    }
+                }
             }
-        } catch(SQLException e){getLogger().warning(e.getMessage());}
+        } catch(SQLException e) { getLogger().warning(e.getMessage()); }
+        if(found.size()==5) { cache.put(p.getUniqueId(),found); return found; }
+
         ConfigurationSection sec=pool();
-        if(sec==null || sec.getKeys(false).isEmpty()) return new ArrayList<>();
+        if(sec==null || sec.getKeys(false).isEmpty()) return found;
         Set<String> recent=new HashSet<>();
-        try(PreparedStatement h=db.prepareStatement("SELECT task_id FROM task_history WHERE uuid=? AND assigned_day>=date(?, '-30 days')")){h.setString(1,p.getUniqueId().toString());h.setString(2,day);try(ResultSet r=h.executeQuery()){while(r.next())recent.add(r.getString(1));}}catch(SQLException ignored){}
+        try(PreparedStatement h=db.prepareStatement("SELECT task_id FROM task_history WHERE uuid=? AND assigned_day>=date(?, '-30 days')")) {
+            h.setString(1,p.getUniqueId().toString()); h.setString(2,day);
+            try(ResultSet r=h.executeQuery()) { while(r.next()) recent.add(r.getString(1)); }
+        } catch(SQLException ignored) { }
+        Set<String> assigned=new HashSet<>();
+        for(Task task:found) assigned.add(task.id);
         List<String> ids=new ArrayList<>(sec.getKeys(false));
-        ids.removeIf(id -> { ConfigurationSection c=sec.getConfigurationSection(id); String d=c==null?"OVERWORLD":c.getString("dimension","OVERWORLD"); return !isDimensionEnabled(d); });
+        ids.removeIf(id -> {
+            Task candidate=loadTask(id);
+            return candidate==null || !isTaskEnabled(candidate) || assigned.contains(id);
+        });
         Collections.shuffle(ids);
-        List<Task> chosen=new ArrayList<>();
-        for(String id:ids){if(recent.contains(id))continue;Task t=loadTask(id);if(t!=null){chosen.add(t);if(chosen.size()==5)break;}}
-        if(chosen.size()<5)for(String id:ids){if(chosen.stream().anyMatch(t->t.id.equals(id)))continue;Task t=loadTask(id);if(t!=null){chosen.add(t);if(chosen.size()==5)break;}}
-        try(PreparedStatement del=db.prepareStatement("DELETE FROM player_tasks WHERE uuid=?")) {
-            del.setString(1,p.getUniqueId().toString());del.executeUpdate();
-        }catch(SQLException ignored){}
-        for(int i=0;i<chosen.size();i++){save(p.getUniqueId(),i,chosen.get(i));try(PreparedStatement h=db.prepareStatement("INSERT OR REPLACE INTO task_history(uuid,task_id,assigned_day) VALUES(?,?,?)")){h.setString(1,p.getUniqueId().toString());h.setString(2,chosen.get(i).id);h.setString(3,day);h.executeUpdate();}catch(SQLException ignored){}}
-        cache.put(p.getUniqueId(),chosen); return chosen;
+        List<Task> replacements=new ArrayList<>();
+        for(String id:ids) {
+            if(recent.contains(id)) continue;
+            Task task=loadTask(id);
+            if(task!=null) { replacements.add(task); if(found.size()+replacements.size()>=5) break; }
+        }
+        if(found.size()+replacements.size()<5) {
+            for(String id:ids) {
+                if(assigned.contains(id) || replacements.stream().anyMatch(t->t.id.equals(id))) continue;
+                Task task=loadTask(id);
+                if(task!=null) { replacements.add(task); if(found.size()+replacements.size()>=5) break; }
+            }
+        }
+        try(PreparedStatement del=db.prepareStatement("DELETE FROM player_tasks WHERE uuid=? AND day=?")) {
+            del.setString(1,p.getUniqueId().toString()); del.setString(2,day); del.executeUpdate();
+        } catch(SQLException ex) { getLogger().warning("Nie udało się odświeżyć zadań: "+ex.getMessage()); }
+        List<Task> result=new ArrayList<>(found);
+        for(int i=0;i<found.size();i++) save(p.getUniqueId(),slots.get(i),found.get(i));
+        int nextSlot=0;
+        for(Task task:found) nextSlot=Math.max(nextSlot,slots.get(result.indexOf(task))+1);
+        for(Task task:replacements) {
+            while(slots.contains(nextSlot)) nextSlot++;
+            save(p.getUniqueId(),nextSlot++,task);
+            result.add(task);
+            try(PreparedStatement h=db.prepareStatement("INSERT OR REPLACE INTO task_history(uuid,task_id,assigned_day) VALUES(?,?,?)")) {
+                h.setString(1,p.getUniqueId().toString()); h.setString(2,task.id); h.setString(3,day); h.executeUpdate();
+            } catch(SQLException ignored) { }
+        }
+        cache.put(p.getUniqueId(),result);
+        return result;
     }
 
     private Task loadTask(String id) {
@@ -347,12 +391,23 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
         }
         if(args.length>0 && (args[0].equalsIgnoreCase("nether") || args[0].equalsIgnoreCase("end"))) {
             if(!sender.hasPermission("dailyquests.admin")){sender.sendMessage(ChatColor.RED+"Brak uprawnien.");return true;}
-            String dimension=args[0].toLowerCase(Locale.ROOT), path="dimensions."+dimension+"-enabled";
-            boolean enabled=!(args.length>1 && args[1].equalsIgnoreCase("off"));
-            getConfig().set(path,enabled);saveConfig();cache.clear();
-            try(Statement st=db.createStatement()){st.executeUpdate("DELETE FROM player_tasks WHERE day='"+today()+"'");}catch(SQLException ex){getLogger().warning(ex.getMessage());}
-            for(Player online:Bukkit.getOnlinePlayers()) ensureTasks(online);
-            sender.sendMessage(ChatColor.GREEN+"DailyQuests: zadania z wymiaru "+dimension.toUpperCase(Locale.ROOT)+(enabled?" aktywowane.":" wylaczone.")+" Zadania dzienne zostaly wylosowane ponownie.");
+            String dimension=args[0].equalsIgnoreCase("nether") ? "NETHER" : "THE_END";
+            String configPath="dimensions."+(dimension.equals("NETHER")?"nether":"end")+"-enabled";
+            if(args.length!=2 || (!args[1].equalsIgnoreCase("on") && !args[1].equalsIgnoreCase("off"))) {
+                sender.sendMessage(ChatColor.YELLOW+"Użycie: /dq "+(dimension.equals("NETHER")?"nether":"end")+" <on|off>");
+                return true;
+            }
+            boolean enabled=args[1].equalsIgnoreCase("on");
+            getConfig().set(configPath,enabled);
+            saveConfig();
+            if(!enabled) replaceDisabledDimensionTasks(dimension);
+            cache.clear();
+            for(Player online:Bukkit.getOnlinePlayers()) {
+                ensureTasks(online);
+                if(TITLE.equals(online.getOpenInventory().getTitle())) open(online);
+            }
+            sender.sendMessage(ChatColor.GREEN+"DailyQuests: zadania "+(dimension.equals("NETHER")?"Netheru":"Endu")+
+                    (enabled?" włączone. Nowe losowania mogą je uwzględniać.":" wyłączone. Zastąpiono tylko zadania z tego wymiaru; pozostały postęp zachowano."));
             return true;
         }
         if(args.length>0 && args[0].equalsIgnoreCase("reload")){
@@ -365,6 +420,62 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
         showHelp(sender);
         return true;
     }
+    private void replaceDisabledDimensionTasks(String dimension) {
+        String day=today();
+        ConfigurationSection section=pool();
+        if(section==null) return;
+        List<String> candidateIds=new ArrayList<>();
+        for(String id:section.getKeys(false)) {
+            Task candidate=loadTask(id);
+            if(candidate!=null && !candidate.dimension.equals(dimension) && isTaskEnabled(candidate))
+                candidateIds.add(id);
+        }
+        try(PreparedStatement players=db.prepareStatement("SELECT DISTINCT uuid FROM player_tasks WHERE day=?")) {
+            players.setString(1,day);
+            try(ResultSet playerRows=players.executeQuery()) {
+                while(playerRows.next()) {
+                    String uuid=playerRows.getString(1);
+                    List<TaskSlot> replacements=new ArrayList<>();
+                    Set<String> assigned=new HashSet<>();
+                    try(PreparedStatement rows=db.prepareStatement("SELECT slot,task_id FROM player_tasks WHERE uuid=? AND day=? ORDER BY slot")) {
+                        rows.setString(1,uuid); rows.setString(2,day);
+                        try(ResultSet tasks=rows.executeQuery()) {
+                            while(tasks.next()) {
+                                int slot=tasks.getInt(1);
+                                String taskId=tasks.getString(2);
+                                assigned.add(taskId);
+                                Task current=loadTask(taskId);
+                                if(current!=null && current.dimension.equals(dimension))
+                                    replacements.add(new TaskSlot(slot,taskId));
+                            }
+                        }
+                    }
+                    List<String> available=new ArrayList<>(candidateIds);
+                    available.removeIf(assigned::contains);
+                    Collections.shuffle(available);
+                    int count=Math.min(replacements.size(),available.size());
+                    for(int i=0;i<count;i++) {
+                        TaskSlot slot=replacements.get(i);
+                        String nextId=available.get(i);
+                        try(PreparedStatement update=db.prepareStatement("UPDATE player_tasks SET task_id=?,progress=0,claimed=0 WHERE uuid=? AND day=? AND slot=?")) {
+                            update.setString(1,nextId); update.setString(2,uuid); update.setString(3,day); update.setInt(4,slot.slot());
+                            update.executeUpdate();
+                        }
+                        try(PreparedStatement history=db.prepareStatement("INSERT OR REPLACE INTO task_history(uuid,task_id,assigned_day) VALUES(?,?,?)")) {
+                            history.setString(1,uuid); history.setString(2,nextId); history.setString(3,day);
+                            history.executeUpdate();
+                        }
+                        assigned.add(nextId);
+                    }
+                    if(count<replacements.size())
+                        getLogger().warning("Nie znaleziono wystarczającej liczby zamienników dla "+uuid+" ("+dimension+").");
+                }
+            }
+        } catch(SQLException ex) {
+            getLogger().severe("Nie udało się wymienić zadań "+dimension+": "+ex.getMessage());
+        }
+    }
+
     boolean isDimensionEnabled(String dimension) {
         String normalized = dimension == null ? "OVERWORLD" : dimension.toUpperCase(Locale.ROOT);
         if (normalized.equals("NETHER")) return getConfig().getBoolean("dimensions.nether-enabled", false);
@@ -410,7 +521,11 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
             }
         } catch (SQLException e) { getLogger().warning(e.getMessage()); }
     }
-    private record WeeklyChallenge(String type,String target,int amount,String title,String description,int xp,int emeralds) {}
+    private record WeeklyChallenge(String type,String target,int amount,String title,String description,int xp,int emeralds,String dimension) {
+        WeeklyChallenge(String type,String target,int amount,String title,String description,int xp,int emeralds) {
+            this(type,target,amount,title,description,xp,emeralds,"OVERWORLD");
+        }
+    }
     private static final WeeklyChallenge[] WEEKLY_POOL = {
         new WeeklyChallenge("WALK","ANY",12000,"Wielka wyprawa","Przemierz 12 000 bloków pieszo",2500,12),
         new WeeklyChallenge("SWIM","ANY",2500,"Władca oceanów","Przepłyń 2 500 bloków",2200,10),
@@ -423,18 +538,42 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
         new WeeklyChallenge("BREED","ANY",45,"Hodowca","Rozmnoż 45 zwierząt",2100,10),
         new WeeklyChallenge("TRADE","ANY",100,"Kupiec tygodnia","Dokonaj 100 wymian z osadnikami",2300,10),
         new WeeklyChallenge("ANVIL","ANY",35,"Kowal","Połącz lub napraw 35 przedmiotów w kowadle",2400,11),
-        new WeeklyChallenge("BREAK","ANCIENT_DEBRIS",24,"Relikt Netheru","Wykop 24 pradawne zgliszcza",3000,15)
+        new WeeklyChallenge("BREAK","ANCIENT_DEBRIS",24,"Relikt Netheru","Wykop 24 pradawne zgliszcza",3000,15,"NETHER")
     };
     private WeeklyChallenge weeklyChallenge() {
         long week=LocalDate.now(zone).with(java.time.DayOfWeek.MONDAY).toEpochDay()/7L;
-        return WEEKLY_POOL[Math.floorMod(week,WEEKLY_POOL.length)];
+        int start=Math.floorMod(week,WEEKLY_POOL.length);
+        for(int offset=0;offset<WEEKLY_POOL.length;offset++) {
+            WeeklyChallenge candidate=WEEKLY_POOL[(start+offset)%WEEKLY_POOL.length];
+            if(isDimensionEnabled(candidate.dimension())) return candidate;
+        }
+        return WEEKLY_POOL[0];
+    }
+    private String weeklyChallengeId(WeeklyChallenge challenge) {
+        return challenge.type()+":"+challenge.target()+":"+challenge.title();
+    }
+    private int[] weeklyProgress(UUID uuid,WeeklyChallenge challenge) throws SQLException {
+        try(PreparedStatement query=db.prepareStatement("SELECT progress,claimed,challenge_id FROM weekly_tasks WHERE uuid=? AND week=?")) {
+            query.setString(1,uuid.toString()); query.setString(2,weekKey());
+            try(ResultSet result=query.executeQuery()) {
+                if(result.next() && weeklyChallengeId(challenge).equals(result.getString(3)))
+                    return new int[]{result.getInt(1),result.getInt(2)};
+            }
+        }
+        return new int[]{0,0};
     }
     private void updateWeekly(Player p,String type,String target,int amount) {
         if(amount<=0) return;
         WeeklyChallenge c=weeklyChallenge();
-        if(!c.type().equals(type)||(!c.target().equals("ANY")&&!c.target().equals(target))) return;
-        try(PreparedStatement q=db.prepareStatement("INSERT INTO weekly_tasks(uuid,week,progress,claimed) VALUES(?,?,?,0) ON CONFLICT(uuid,week) DO UPDATE SET progress=MIN("+c.amount()+",progress+excluded.progress) WHERE claimed=0")) {
-            q.setString(1,p.getUniqueId().toString());q.setString(2,weekKey());q.setInt(3,amount);q.executeUpdate();
+        if(!isDimensionEnabled(c.dimension()) || !c.type().equals(type)||(!c.target().equals("ANY")&&!c.target().equals(target))) return;
+        try(PreparedStatement q=db.prepareStatement(
+                "INSERT INTO weekly_tasks(uuid,week,progress,claimed,challenge_id) VALUES(?,?,?,0,?) " +
+                "ON CONFLICT(uuid,week) DO UPDATE SET " +
+                "progress=CASE WHEN weekly_tasks.challenge_id=excluded.challenge_id THEN MIN("+c.amount()+",weekly_tasks.progress+excluded.progress) ELSE MIN("+c.amount()+",excluded.progress) END, " +
+                "claimed=CASE WHEN weekly_tasks.challenge_id=excluded.challenge_id THEN weekly_tasks.claimed ELSE 0 END, " +
+                "challenge_id=excluded.challenge_id " +
+                "WHERE weekly_tasks.claimed=0 OR weekly_tasks.challenge_id<>excluded.challenge_id")) {
+            q.setString(1,p.getUniqueId().toString());q.setString(2,weekKey());q.setInt(3,amount);q.setString(4,weeklyChallengeId(c));q.executeUpdate();
         } catch(SQLException e) { getLogger().warning("Błąd postępu weekly: "+e.getMessage()); }
     }
     void openWeeklyPreview(Player player) {
@@ -442,16 +581,9 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
         String week = weekKey();
         int progress = 0;
         boolean claimed = false;
-        try (PreparedStatement query = db.prepareStatement(
-                "SELECT progress,claimed FROM weekly_tasks WHERE uuid=? AND week=?")) {
-            query.setString(1, player.getUniqueId().toString());
-            query.setString(2, week);
-            try (ResultSet result = query.executeQuery()) {
-                if (result.next()) {
-                    progress = result.getInt(1);
-                    claimed = result.getInt(2) == 1;
-                }
-            }
+        try {
+            int[] state=weeklyProgress(player.getUniqueId(),challenge);
+            progress=state[0]; claimed=state[1]==1;
         } catch (SQLException ex) {
             player.sendMessage(ChatColor.RED + "Nie udało się odczytać wyzwania tygodnia.");
             return;
@@ -497,16 +629,16 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
     private void showWeekly(CommandSender sender) {
         if(!(sender instanceof Player p)){sender.sendMessage("Tylko gracz może sprawdzić wyzwanie.");return;}
         WeeklyChallenge c=weeklyChallenge();String week=weekKey();int progress=0;boolean claimed=false;
-        try(PreparedStatement q=db.prepareStatement("SELECT progress,claimed FROM weekly_tasks WHERE uuid=? AND week=?")) {
-            q.setString(1,p.getUniqueId().toString());q.setString(2,week);
-            try(ResultSet r=q.executeQuery()){if(r.next()){progress=r.getInt(1);claimed=r.getInt(2)==1;}}
-        } catch(SQLException e){p.sendMessage(ChatColor.RED+"Błąd odczytu wyzwania.");return;}
+        try { int[] state=weeklyProgress(p.getUniqueId(),c); progress=state[0]; claimed=state[1]==1; }
+        catch(SQLException e){p.sendMessage(ChatColor.RED+"Błąd odczytu wyzwania.");return;}
         p.sendMessage(ChatColor.GOLD+"━━━━━━━━ WYZWANIE TYGODNIA ━━━━━━━━");
         p.sendMessage(ChatColor.YELLOW+c.title());p.sendMessage(ChatColor.GRAY+c.description()+".");
         p.sendMessage(ChatColor.GRAY+"Postęp: "+ChatColor.AQUA+Math.min(progress,c.amount())+"/"+c.amount());
         if(progress>=c.amount()&&!claimed) {
-            try(PreparedStatement u=db.prepareStatement("INSERT INTO weekly_tasks(uuid,week,progress,claimed) VALUES(?,?,?,1) ON CONFLICT(uuid,week) DO UPDATE SET claimed=1")) {
-                u.setString(1,p.getUniqueId().toString());u.setString(2,week);u.setInt(3,c.amount());u.executeUpdate();
+            try(PreparedStatement u=db.prepareStatement(
+                    "INSERT INTO weekly_tasks(uuid,week,progress,claimed,challenge_id) VALUES(?,?,?,1,?) " +
+                    "ON CONFLICT(uuid,week) DO UPDATE SET progress=excluded.progress,claimed=1,challenge_id=excluded.challenge_id")) {
+                u.setString(1,p.getUniqueId().toString());u.setString(2,week);u.setInt(3,c.amount());u.setString(4,weeklyChallengeId(c));u.executeUpdate();
             } catch(SQLException ignored) {}
             p.giveExp(c.xp());p.getInventory().addItem(new ItemStack(Material.EMERALD,c.emeralds()));crateSystem.awardStars(p,10);
             p.sendMessage(ChatColor.GREEN+"Wyzwanie ukończone! Nagroda: "+c.xp()+" XP, "+c.emeralds()+" szmaragdów i 10 ★.");
@@ -532,12 +664,9 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
         WeeklyChallenge weekly = weeklyChallenge();
         int weeklyProgress = 0;
         boolean weeklyClaimed = false;
-        try (PreparedStatement q = db.prepareStatement("SELECT progress,claimed FROM weekly_tasks WHERE uuid=? AND week=?")) {
-            q.setString(1, p.getUniqueId().toString());
-            q.setString(2, weekKey());
-            try (ResultSet rs = q.executeQuery()) {
-                if (rs.next()) { weeklyProgress = rs.getInt(1); weeklyClaimed = rs.getInt(2) == 1; }
-            }
+        try {
+            int[] state=weeklyProgress(p.getUniqueId(),weekly);
+            weeklyProgress=state[0]; weeklyClaimed=state[1]==1;
         } catch (SQLException ex) {
             getLogger().warning("Nie udało się odczytać podsumowania wyzwania tygodnia: " + ex.getMessage());
         }
@@ -580,22 +709,31 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
             lore.add("");
             lore.add(ChatColor.DARK_GRAY+"NAGRODA");
             lore.add(ChatColor.GREEN+"✦ "+t.xp+" XP");
-            if(!t.rewardItem.isBlank()) lore.add(ChatColor.AQUA+"✦ "+t.itemAmount+"x "+pretty(t.rewardItem));
+            if(!t.rewardItem.isBlank()) lore.add(ChatColor.AQUA+"✦ "+t.itemAmount+"x "+t.rewardItem);
             lore.add("");
             lore.add(status);
-            inv.setItem(slots[i],make(t.claimed?Material.LIME_STAINED_GLASS_PANE:(t.progress>=t.amount?Material.GOLD_BLOCK:icon),ChatColor.WHITE+t.name,lore));
+            ItemStack taskItem=make(t.claimed?Material.LIME_STAINED_GLASS_PANE:(t.progress>=t.amount?Material.GOLD_BLOCK:icon),ChatColor.WHITE+t.name,lore);
+            Material rewardMaterial=material(t.rewardItem);
+            if(rewardMaterial!=null && !t.rewardItem.isBlank()) {
+                List<Component> translatedLore=new ArrayList<>();
+                String rewardPrefix=ChatColor.AQUA+"✦ "+t.itemAmount+"x "+t.rewardItem;
+                for(String line:lore) {
+                    if(line.equals(rewardPrefix))
+                        translatedLore.add(Component.text("✦ "+t.itemAmount+"x ",NamedTextColor.AQUA)
+                                .append(Component.translatable(rewardMaterial.getTranslationKey())));
+                    else translatedLore.add(LegacyComponentSerializer.legacySection().deserialize(line));
+                }
+                ItemMeta taskMeta=taskItem.getItemMeta();
+                taskMeta.lore(translatedLore);
+                taskItem.setItemMeta(taskMeta);
+            }
+            inv.setItem(slots[i],taskItem);
         }
         p.openInventory(inv);
     }
     private String progressBar(int progress,int amount){
         int filled=Math.min(10,(int)Math.floor(10.0*progress/Math.max(1,amount)));
         return ChatColor.GREEN+"▰".repeat(filled)+ChatColor.DARK_GRAY+"▰".repeat(10-filled);
-    }
-    private String pretty(String material){
-        String[] words=material.toLowerCase(Locale.ROOT).split("_");
-        StringJoiner result=new StringJoiner(" ");
-        for(String word:words) result.add(Character.toUpperCase(word.charAt(0))+word.substring(1));
-        return result.toString();
     }
     private Material taskIcon(Task t){
         if(t.type.equals("KILL")) return switch(t.target){
