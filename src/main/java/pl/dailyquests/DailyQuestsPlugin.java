@@ -145,30 +145,68 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
     }
 
     private List<Task> ensureTasks(Player p) {
-        String day = today();
-        try (PreparedStatement q = db.prepareStatement("SELECT task_id,progress,claimed FROM player_tasks WHERE uuid=? AND day=? ORDER BY slot")) {
+        String day=today();
+        List<Task> found=new ArrayList<>();
+        List<Integer> slots=new ArrayList<>();
+        try(PreparedStatement q=db.prepareStatement("SELECT slot,task_id,progress,claimed FROM player_tasks WHERE uuid=? AND day=? ORDER BY slot")) {
             q.setString(1,p.getUniqueId().toString()); q.setString(2,day);
-            try (ResultSet rs=q.executeQuery()) {
-                List<Task> found=new ArrayList<>();
-                while(rs.next()) { Task t=loadTask(rs.getString(1)); if(t!=null){t.progress=rs.getInt(2);t.claimed=rs.getInt(3)==1;found.add(t);} }
-                if(found.size()==5 && found.stream().allMatch(this::isTaskEnabled)){cache.put(p.getUniqueId(),found);return found;}
+            try(ResultSet rs=q.executeQuery()) {
+                while(rs.next()) {
+                    Task task=loadTask(rs.getString(2));
+                    if(task!=null && isTaskEnabled(task)) {
+                        task.progress=rs.getInt(3); task.claimed=rs.getInt(4)==1;
+                        found.add(task); slots.add(rs.getInt(1));
+                    }
+                }
             }
-        } catch(SQLException e){getLogger().warning(e.getMessage());}
+        } catch(SQLException e) { getLogger().warning(e.getMessage()); }
+        if(found.size()==5) { cache.put(p.getUniqueId(),found); return found; }
+
         ConfigurationSection sec=pool();
-        if(sec==null || sec.getKeys(false).isEmpty()) return new ArrayList<>();
+        if(sec==null || sec.getKeys(false).isEmpty()) return found;
         Set<String> recent=new HashSet<>();
-        try(PreparedStatement h=db.prepareStatement("SELECT task_id FROM task_history WHERE uuid=? AND assigned_day>=date(?, '-30 days')")){h.setString(1,p.getUniqueId().toString());h.setString(2,day);try(ResultSet r=h.executeQuery()){while(r.next())recent.add(r.getString(1));}}catch(SQLException ignored){}
+        try(PreparedStatement h=db.prepareStatement("SELECT task_id FROM task_history WHERE uuid=? AND assigned_day>=date(?, '-30 days')")) {
+            h.setString(1,p.getUniqueId().toString()); h.setString(2,day);
+            try(ResultSet r=h.executeQuery()) { while(r.next()) recent.add(r.getString(1)); }
+        } catch(SQLException ignored) { }
+        Set<String> assigned=new HashSet<>();
+        for(Task task:found) assigned.add(task.id);
         List<String> ids=new ArrayList<>(sec.getKeys(false));
-        ids.removeIf(id -> { ConfigurationSection c=sec.getConfigurationSection(id); String d=c==null?"OVERWORLD":c.getString("dimension","OVERWORLD"); return !isDimensionEnabled(d); });
+        ids.removeIf(id -> {
+            Task candidate=loadTask(id);
+            return candidate==null || !isTaskEnabled(candidate) || assigned.contains(id);
+        });
         Collections.shuffle(ids);
-        List<Task> chosen=new ArrayList<>();
-        for(String id:ids){if(recent.contains(id))continue;Task t=loadTask(id);if(t!=null){chosen.add(t);if(chosen.size()==5)break;}}
-        if(chosen.size()<5)for(String id:ids){if(chosen.stream().anyMatch(t->t.id.equals(id)))continue;Task t=loadTask(id);if(t!=null){chosen.add(t);if(chosen.size()==5)break;}}
-        try(PreparedStatement del=db.prepareStatement("DELETE FROM player_tasks WHERE uuid=?")) {
-            del.setString(1,p.getUniqueId().toString());del.executeUpdate();
-        }catch(SQLException ignored){}
-        for(int i=0;i<chosen.size();i++){save(p.getUniqueId(),i,chosen.get(i));try(PreparedStatement h=db.prepareStatement("INSERT OR REPLACE INTO task_history(uuid,task_id,assigned_day) VALUES(?,?,?)")){h.setString(1,p.getUniqueId().toString());h.setString(2,chosen.get(i).id);h.setString(3,day);h.executeUpdate();}catch(SQLException ignored){}}
-        cache.put(p.getUniqueId(),chosen); return chosen;
+        List<Task> replacements=new ArrayList<>();
+        for(String id:ids) {
+            if(recent.contains(id)) continue;
+            Task task=loadTask(id);
+            if(task!=null) { replacements.add(task); if(found.size()+replacements.size()>=5) break; }
+        }
+        if(found.size()+replacements.size()<5) {
+            for(String id:ids) {
+                if(assigned.contains(id) || replacements.stream().anyMatch(t->t.id.equals(id))) continue;
+                Task task=loadTask(id);
+                if(task!=null) { replacements.add(task); if(found.size()+replacements.size()>=5) break; }
+            }
+        }
+        try(PreparedStatement del=db.prepareStatement("DELETE FROM player_tasks WHERE uuid=? AND day=?")) {
+            del.setString(1,p.getUniqueId().toString()); del.setString(2,day); del.executeUpdate();
+        } catch(SQLException ex) { getLogger().warning("Nie udało się odświeżyć zadań: "+ex.getMessage()); }
+        List<Task> result=new ArrayList<>(found);
+        for(int i=0;i<found.size();i++) save(p.getUniqueId(),slots.get(i),found.get(i));
+        int nextSlot=0;
+        for(Task task:found) nextSlot=Math.max(nextSlot,slots.get(result.indexOf(task))+1);
+        for(Task task:replacements) {
+            while(slots.contains(nextSlot)) nextSlot++;
+            save(p.getUniqueId(),nextSlot++,task);
+            result.add(task);
+            try(PreparedStatement h=db.prepareStatement("INSERT OR REPLACE INTO task_history(uuid,task_id,assigned_day) VALUES(?,?,?)")) {
+                h.setString(1,p.getUniqueId().toString()); h.setString(2,task.id); h.setString(3,day); h.executeUpdate();
+            } catch(SQLException ignored) { }
+        }
+        cache.put(p.getUniqueId(),result);
+        return result;
     }
 
     private Task loadTask(String id) {
