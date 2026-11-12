@@ -640,6 +640,7 @@ tasks:
     reward-item: SUGAR
     reward-item-amount: 24
   break_nether_wart:
+    dimension: NETHER
     name: "&eAlchemiczne żniwa"
     description: "&7Zbierz 32 brodawki Netheru"
     difficulty: MEDIUM
@@ -870,6 +871,7 @@ tasks:
     reward-item: SPIDER_EYE
     reward-item-amount: 8
   kill_magma_cube:
+    dimension: NETHER
     name: "&cGorąca przeszkoda"
     description: "&7Pokonaj 8 kostek magmy"
     difficulty: HARD
