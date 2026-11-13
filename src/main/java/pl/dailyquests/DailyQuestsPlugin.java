@@ -30,6 +30,8 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
     private Connection db;
     private ZoneId zone;
     private final Map<UUID, List<Task>> cache = new ConcurrentHashMap<>();
+    private final Map<UUID, String> cacheDay = new ConcurrentHashMap<>();
+    private final Map<UUID, Double> movementRemainder = new ConcurrentHashMap<>();
     private org.bukkit.configuration.file.YamlConfiguration tasksConfig;
     private final Map<UUID, Location> lastWalk = new ConcurrentHashMap<>();
     private final Random random = new Random();
@@ -61,6 +63,11 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
         try {
             if (!getDataFolder().exists()) getDataFolder().mkdirs();
             db = DriverManager.getConnection("jdbc:sqlite:" + new File(getDataFolder(), "dailyquests.db").getAbsolutePath());
+            try (Statement pragmas = db.createStatement()) {
+                pragmas.execute("PRAGMA journal_mode=WAL");
+                pragmas.execute("PRAGMA synchronous=NORMAL");
+                pragmas.execute("PRAGMA busy_timeout=1500");
+            }
             try (Statement s = db.createStatement()) {
                 s.executeUpdate("CREATE TABLE IF NOT EXISTS player_tasks (uuid TEXT NOT NULL, day TEXT NOT NULL, slot INTEGER NOT NULL, task_id TEXT NOT NULL, progress INTEGER NOT NULL DEFAULT 0, claimed INTEGER NOT NULL DEFAULT 0, PRIMARY KEY(uuid,day,slot))");
                 s.executeUpdate("CREATE TABLE IF NOT EXISTS player_stats (uuid TEXT PRIMARY KEY, streak INTEGER NOT NULL DEFAULT 0, last_streak_day TEXT NOT NULL DEFAULT '', total_completed INTEGER NOT NULL DEFAULT 0)");
@@ -146,6 +153,10 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
 
     private List<Task> ensureTasks(Player p) {
         String day=today();
+        UUID uuid=p.getUniqueId();
+        List<Task> cached=cache.get(uuid);
+        if(cached!=null && cached.size()==5 && day.equals(cacheDay.get(uuid))
+                && cached.stream().allMatch(this::isTaskEnabled)) return cached;
         List<Task> found=new ArrayList<>();
         List<Integer> slots=new ArrayList<>();
         try(PreparedStatement q=db.prepareStatement("SELECT slot,task_id,progress,claimed FROM player_tasks WHERE uuid=? AND day=? ORDER BY slot")) {
@@ -160,7 +171,7 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
                 }
             }
         } catch(SQLException e) { getLogger().warning(e.getMessage()); }
-        if(found.size()==5) { cache.put(p.getUniqueId(),found); return found; }
+        if(found.size()==5) { cache.put(uuid,found); cacheDay.put(uuid,day); return found; }
 
         ConfigurationSection sec=pool();
         if(sec==null || sec.getKeys(false).isEmpty()) return found;
@@ -205,7 +216,8 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
                 h.setString(1,p.getUniqueId().toString()); h.setString(2,task.id); h.setString(3,day); h.executeUpdate();
             } catch(SQLException ignored) { }
         }
-        cache.put(p.getUniqueId(),result);
+        cache.put(uuid,result);
+        cacheDay.put(uuid,day);
         return result;
     }
 
@@ -226,7 +238,8 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
     }
     private void update(Player p,Task t,int delta) {
         if(delta<=0 || !isTaskEnabled(t))return;
-        List<Task> list=ensureTasks(p);
+        List<Task> list=cache.get(p.getUniqueId());
+        if(list==null) list=ensureTasks(p);
         for(int i=0;i<list.size();i++) if(list.get(i).id.equals(t.id)){
             Task actual=list.get(i); if(actual.claimed)return;
             int before=actual.progress;
@@ -754,7 +767,7 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
     private Material material(String name){try{return Material.valueOf(name);}catch(Exception e){return null;}}
 
     @EventHandler public void onJoin(PlayerJoinEvent e){ensureTasks(e.getPlayer());lastWalk.put(e.getPlayer().getUniqueId(),e.getPlayer().getLocation());}
-    @EventHandler public void onQuit(PlayerQuitEvent e){lastWalk.remove(e.getPlayer().getUniqueId());cache.remove(e.getPlayer().getUniqueId());rerollMode.remove(e.getPlayer().getUniqueId());}
+    @EventHandler public void onQuit(PlayerQuitEvent e){UUID uuid=e.getPlayer().getUniqueId();lastWalk.remove(uuid);movementRemainder.remove(uuid);cache.remove(uuid);cacheDay.remove(uuid);rerollMode.remove(uuid);}
     @EventHandler public void onBreak(BlockBreakEvent e){
         if(e.isCancelled())return;
         String type=e.getBlock().getType().name();
@@ -823,15 +836,33 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
     @EventHandler public void onAnvil(InventoryClickEvent e){if(e.isCancelled()||!(e.getWhoClicked() instanceof Player p)||e.getRawSlot()!=2)return;if(e.getView().getType()==InventoryType.ANVIL){updateWeekly(p,"ANVIL","ANY",1);for(Task t:ensureTasks(p))if(t.type.equals("ANVIL"))update(p,t,1);}if(e.getView().getType()==InventoryType.MERCHANT){updateWeekly(p,"TRADE","ANY",1);for(Task t:ensureTasks(p))if(t.type.equals("TRADE"))update(p,t,1);}}
     @EventHandler public void onMove(PlayerMoveEvent e){
         if(e.getTo()==null)return;
-        Location a=e.getFrom(),b=e.getTo();if(a.getWorld()!=b.getWorld()||a.getBlockX()==b.getBlockX()&&a.getBlockZ()==b.getBlockZ())return;
-        if(e.getPlayer().isInsideVehicle()||e.getPlayer().isFlying())return;
-        Location prev=lastWalk.put(e.getPlayer().getUniqueId(),b.clone());
-        if(prev==null||prev.getWorld()!=b.getWorld())return;
-        int d=(int)Math.floor(Math.sqrt(Math.pow(b.getX()-prev.getX(),2)+Math.pow(b.getZ()-prev.getZ(),2)));
-        if(d>0&&e.getPlayer().isSwimming())updateWeekly(e.getPlayer(),"SWIM","ANY",d);
-        else if(d>0)updateWeekly(e.getPlayer(),"WALK","ANY",d);
-        if(d>0&&e.getPlayer().isSwimming())for(Task t:ensureTasks(e.getPlayer()))if(t.type.equals("SWIM")&&dimensionMatches(t,b.getWorld()))update(e.getPlayer(),t,d);
-        if(d>0)for(Task t:ensureTasks(e.getPlayer()))if(t.type.equals("WALK")&&dimensionMatches(t,b.getWorld()))update(e.getPlayer(),t,d);
+        Player player=e.getPlayer();
+        Location from=e.getFrom(),to=e.getTo();
+        UUID uuid=player.getUniqueId();
+        if(from.getWorld()!=to.getWorld()) {
+            lastWalk.put(uuid,to.clone());
+            movementRemainder.remove(uuid);
+            return;
+        }
+        if(player.isInsideVehicle()||player.isFlying()) {
+            lastWalk.put(uuid,to.clone());
+            movementRemainder.remove(uuid);
+            return;
+        }
+        Location previous=lastWalk.put(uuid,to.clone());
+        if(previous==null||previous.getWorld()!=to.getWorld())return;
+        double segment=Math.hypot(to.getX()-previous.getX(),to.getZ()-previous.getZ());
+        if(segment<0.0001)return;
+        double accumulated=movementRemainder.getOrDefault(uuid,0.0)+segment;
+        int blocks=(int)Math.floor(accumulated);
+        movementRemainder.put(uuid,accumulated-blocks);
+        if(blocks<=0)return;
+        boolean swimming=player.isSwimming();
+        String movementType=swimming?"SWIM":"WALK";
+        updateWeekly(player,movementType,"ANY",blocks);
+        for(Task task:ensureTasks(player)) {
+            if(task.type.equals(movementType)&&dimensionMatches(task,to.getWorld())) update(player,task,blocks);
+        }
     }
     @EventHandler public void onInventoryClick(InventoryClickEvent e){
         if(!TITLE.equals(e.getView().getTitle()))return;
@@ -881,6 +912,7 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
             Task next=candidates.get(random.nextInt(candidates.size()));
             tasks.set(index,next);
             cache.put(p.getUniqueId(),tasks);
+            cacheDay.put(p.getUniqueId(),today());
             save(p.getUniqueId(),index,next);
             try(PreparedStatement h=db.prepareStatement("INSERT OR REPLACE INTO task_history(uuid,task_id,assigned_day) VALUES(?,?,?)")) {
                 h.setString(1,p.getUniqueId().toString());h.setString(2,next.id);h.setString(3,today());h.executeUpdate();

@@ -40,7 +40,7 @@ public final class CrateSystem implements Listener {
         Map<String,Integer> enchants;
     }
 
-    public CrateSystem(JavaPlugin plugin) {
+    public CrateSystem(DailyQuestsPlugin plugin) {
         this.plugin = plugin;
         this.crateKey = new NamespacedKey(plugin, "dq_crate_button");
         File rewardsFile = new File(plugin.getDataFolder(), "rewards.yml");
@@ -49,17 +49,13 @@ public final class CrateSystem implements Listener {
         plugin.saveResource("rewards.yml", false);
         balanceExistingRewards();
         if (hadValidRewards) reduceExistingLowTierRewards();
-        Connection connection = null;
-        try {
-            connection = DriverManager.getConnection("jdbc:sqlite:" + new File(plugin.getDataFolder(), "dailyquests.db").getAbsolutePath());
-            try (Statement st = connection.createStatement()) {
-                st.executeUpdate("CREATE TABLE IF NOT EXISTS dq_wallet (uuid TEXT PRIMARY KEY, stars INTEGER NOT NULL DEFAULT 0)");
-                st.executeUpdate("CREATE TABLE IF NOT EXISTS dq_crate_stats (uuid TEXT PRIMARY KEY, opened INTEGER NOT NULL DEFAULT 0, legendary INTEGER NOT NULL DEFAULT 0)");
-            }
+        this.db = plugin.database();
+        try (Statement st = db.createStatement()) {
+            st.executeUpdate("CREATE TABLE IF NOT EXISTS dq_wallet (uuid TEXT PRIMARY KEY, stars INTEGER NOT NULL DEFAULT 0)");
+            st.executeUpdate("CREATE TABLE IF NOT EXISTS dq_crate_stats (uuid TEXT PRIMARY KEY, opened INTEGER NOT NULL DEFAULT 0, legendary INTEGER NOT NULL DEFAULT 0)");
         } catch (SQLException ex) {
             plugin.getLogger().severe("Nie można uruchomić systemu skrzynek: " + ex.getMessage());
         }
-        this.db = connection;
     }
 
 
@@ -177,7 +173,6 @@ public final class CrateSystem implements Listener {
     public void close() {
         for (BukkitTask task : opening.values()) task.cancel();
         opening.clear();
-        if (db != null) try { db.close(); } catch (SQLException ignored) {}
     }
 
     public int getStars(UUID uuid) {
