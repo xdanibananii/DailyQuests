@@ -25,5 +25,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: DailyQuests-1.0.18
-          path: target/DailyQuests-1.0.17.jar
+          path: target/DailyQuests-1.0.18.jar
           if-no-files-found: error
