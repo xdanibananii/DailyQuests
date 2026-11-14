@@ -768,11 +768,20 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
 
     @EventHandler public void onJoin(PlayerJoinEvent e){ensureTasks(e.getPlayer());lastWalk.put(e.getPlayer().getUniqueId(),e.getPlayer().getLocation());}
     @EventHandler public void onQuit(PlayerQuitEvent e){UUID uuid=e.getPlayer().getUniqueId();lastWalk.remove(uuid);movementRemainder.remove(uuid);cache.remove(uuid);cacheDay.remove(uuid);rerollMode.remove(uuid);}
+    private String normalizedBlockType(Material material) {
+        String type=material.name();
+        // Kelp has a bottom block (KELP) and upper plant segments (KELP_PLANT).
+        // Both represent harvested kelp for quest progress.
+        return type.equals("KELP_PLANT") ? "KELP" : type;
+    }
+
     @EventHandler public void onBreak(BlockBreakEvent e){
         if(e.isCancelled())return;
-        String type=e.getBlock().getType().name();
+        String type=normalizedBlockType(e.getBlock().getType());
         updateWeekly(e.getPlayer(),"BREAK",type,1);
-        for(Task t:ensureTasks(e.getPlayer()))if(t.type.equals("BREAK")&&dimensionMatches(t,e.getBlock().getWorld())&&(t.target.equals("ANY")||t.target.equals(type)))update(e.getPlayer(),t,1);
+        for(Task t:ensureTasks(e.getPlayer()))if(t.type.equals("BREAK")&&dimensionMatches(t,e.getBlock().getWorld())
+                &&(t.target.equals("ANY")||t.target.equals(type)
+                ||(t.target.equals("KELP_PLANT")&&type.equals("KELP"))))update(e.getPlayer(),t,1);
     }
     @EventHandler public void onKill(EntityDeathEvent e){
         Player p=e.getEntity().getKiller();if(p==null)return;
