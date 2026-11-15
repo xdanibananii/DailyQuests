@@ -769,7 +769,15 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
     @EventHandler public void onJoin(PlayerJoinEvent e){ensureTasks(e.getPlayer());lastWalk.put(e.getPlayer().getUniqueId(),e.getPlayer().getLocation());}
     @EventHandler public void onQuit(PlayerQuitEvent e){UUID uuid=e.getPlayer().getUniqueId();lastWalk.remove(uuid);movementRemainder.remove(uuid);cache.remove(uuid);cacheDay.remove(uuid);rerollMode.remove(uuid);}
     private String normalizedBlockType(Material material) {
-        String type=material.name();
+        String type = material.name();
+
+        // Treat regular and deepslate ore blocks as the same ore for BREAK quests.
+        // The quest counts the block-break event, not the dropped item
+        // (e.g. diamond ore drops DIAMOND, not DIAMOND_ORE).
+        if (type.startsWith("DEEPSLATE_") && type.endsWith("_ORE")) {
+            type = type.substring("DEEPSLATE_".length());
+        }
+
         // Kelp has a bottom block (KELP) and upper plant segments (KELP_PLANT).
         // Both represent harvested kelp for quest progress.
         return type.equals("KELP_PLANT") ? "KELP" : type;
@@ -789,44 +797,42 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
         updateWeekly(p,"KILL",type,1);
         for(Task t:ensureTasks(p))if(t.type.equals("KILL")&&dimensionMatches(t,e.getEntity().getWorld())&&(t.target.equals("ANY")||t.target.equals(type)))update(p,t,1);
     }
-    private int getCraftedAmount(CraftItemEvent e) {
-        ItemStack result = e.getRecipe().getResult();
-        int outputPerCraft = Math.max(1, result.getAmount());
-        if (!e.isShiftClick()) return outputPerCraft;
-        ItemStack[] matrix = e.getInventory().getMatrix();
-        int crafts = Integer.MAX_VALUE;
-        if (e.getRecipe() instanceof ShapedRecipe shaped) {
-            Map<Character, ItemStack> ingredients = shaped.getIngredientMap();
-            Map<Character, Integer> required = new HashMap<>();
-            for (String line : shaped.getShape()) for (char symbol : line.toCharArray())
-                if (symbol != ' ' && ingredients.get(symbol) != null) required.merge(symbol, 1, Integer::sum);
-            for (Map.Entry<Character, Integer> entry : required.entrySet()) {
-                ItemStack ingredient = ingredients.get(entry.getKey());
-                int available = 0;
-                for (ItemStack item : matrix) if (item != null && item.getType() == ingredient.getType()) available += item.getAmount();
-                crafts = Math.min(crafts, available / entry.getValue());
-            }
-        } else if (e.getRecipe() instanceof ShapelessRecipe shapeless) {
-            Map<Material, Integer> required = new HashMap<>();
-            for (ItemStack ingredient : shapeless.getIngredientList())
-                if (ingredient != null && !ingredient.getType().isAir()) required.merge(ingredient.getType(), 1, Integer::sum);
-            for (Map.Entry<Material, Integer> entry : required.entrySet()) {
-                int available = 0;
-                for (ItemStack item : matrix) if (item != null && item.getType() == entry.getKey()) available += item.getAmount();
-                crafts = Math.min(crafts, available / entry.getValue());
-            }
-        } else return outputPerCraft;
-        if (crafts == Integer.MAX_VALUE || crafts <= 0) return outputPerCraft;
-        return crafts * outputPerCraft;
+    private long countCraftedItems(Player player, Material material) {
+        long total = 0;
+        for (ItemStack item : player.getInventory().getStorageContents()) {
+            if (item != null && item.getType() == material) total += item.getAmount();
+        }
+        ItemStack cursor = player.getItemOnCursor();
+        if (cursor != null && cursor.getType() == material) total += cursor.getAmount();
+        return total;
     }
 
     @EventHandler public void onCraft(CraftItemEvent e) {
         if (!(e.getWhoClicked() instanceof Player p) || e.isCancelled()) return;
-        String type = e.getRecipe().getResult().getType().name();
-        int count = getCraftedAmount(e);
-        updateWeekly(p,"CRAFT",type,count);
-        for (Task t : ensureTasks(p))
-            if (t.type.equals("CRAFT") && (t.target.equals("ANY") || t.target.equals(type))) update(p, t, count);
+
+        // CraftItemEvent is fired before Minecraft has completed the click.
+        // Measure the real result on the next tick: this includes every item
+        // produced by shift-click crafting, including ingredients pulled from
+        // the player's inventory to refill the crafting grid.
+        Material resultType = e.getRecipe().getResult().getType();
+        long before = countCraftedItems(p, resultType);
+
+        Bukkit.getScheduler().runTask(this, () -> {
+            if (!p.isOnline() || e.isCancelled()) return;
+
+            long after = countCraftedItems(p, resultType);
+            long crafted = Math.max(0L, after - before);
+            if (crafted <= 0) return;
+
+            int count = (int) Math.min(Integer.MAX_VALUE, crafted);
+            String type = resultType.name();
+            updateWeekly(p, "CRAFT", type, count);
+            for (Task t : ensureTasks(p)) {
+                if (t.type.equals("CRAFT") && (t.target.equals("ANY") || t.target.equals(type))) {
+                    update(p, t, count);
+                }
+            }
+        });
     }
 
     @EventHandler public void onFish(PlayerFishEvent e){
