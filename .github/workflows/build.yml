@@ -24,6 +24,6 @@ jobs:
       - name: Upload plugin JAR
         uses: actions/upload-artifact@v4
         with:
-          name: DailyQuests-1.0.19
-          path: target/DailyQuests-1.0.19.jar
+          name: DailyQuests-1.0.20
+          path: target/DailyQuests-1.0.20.jar
           if-no-files-found: error
