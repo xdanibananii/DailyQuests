@@ -618,13 +618,14 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
                         claimed ? ChatColor.GREEN + "Nagroda odebrana"
                                 : current >= challenge.amount() ? ChatColor.GOLD + "Wyzwanie ukończone"
                                 : ChatColor.YELLOW + "W trakcie realizacji")));
-        inventory.setItem(15, make(Material.CHEST, ChatColor.GOLD + "NAGRODA",
+        inventory.setItem(15, make(claimed ? Material.LIME_SHULKER_BOX : Material.CHEST, ChatColor.GOLD + "NAGRODA",
                 List.of(ChatColor.GREEN + "+" + challenge.xp() + " XP",
                         ChatColor.GREEN + "+" + challenge.emeralds() + " szmaragdów",
                         ChatColor.YELLOW + "+10 ★",
                         "",
-                        ChatColor.DARK_GRAY + "Nagroda odbierana automatycznie",
-                        ChatColor.DARK_GRAY + "po ukończeniu wyzwania.")));
+                        claimed ? ChatColor.GREEN + "Nagroda odebrana"
+                                : current >= challenge.amount() ? ChatColor.YELLOW + "Kliknij, aby odebrać nagrodę"
+                                : ChatColor.DARK_GRAY + "Ukończ wyzwanie, aby odebrać nagrodę.")));
         inventory.setItem(22, make(Material.BARRIER, ChatColor.RED + "ZAMKNIJ PODGLĄD",
                 List.of(ChatColor.GRAY + "Powrót do gry.")));
         player.openInventory(inventory);
@@ -634,29 +635,95 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
     public void onWeeklyPreviewClick(InventoryClickEvent event) {
         if (!(ChatColor.DARK_GRAY + "✦ WYZWANIE TYGODNIA ✦").equals(event.getView().getTitle())) return;
         event.setCancelled(true);
-        if (event.getWhoClicked() instanceof Player player && event.getRawSlot() == 22) {
+        if (!(event.getWhoClicked() instanceof Player player)) return;
+        if (event.getRawSlot() == 22) {
             player.closeInventory();
+            return;
+        }
+        if (event.getRawSlot() == 15) {
+            claimWeeklyReward(player);
+            if (player.isOnline()) openWeeklyPreview(player);
         }
     }
 
+    private void claimWeeklyReward(Player player) {
+        WeeklyChallenge challenge = weeklyChallenge();
+        String week = weekKey();
+        int[] state;
+        try {
+            state = weeklyProgress(player.getUniqueId(), challenge);
+        } catch (SQLException ex) {
+            player.sendMessage(ChatColor.RED + "Nie udało się odczytać wyzwania tygodnia.");
+            getLogger().warning("Błąd odczytu nagrody tygodniowej: " + ex.getMessage());
+            return;
+        }
+
+        int progress = Math.min(state[0], challenge.amount());
+        if (state[1] == 1) {
+            player.sendMessage(ChatColor.GREEN + "Nagroda za wyzwanie tygodnia została już odebrana.");
+            return;
+        }
+        if (progress < challenge.amount()) {
+            player.sendMessage(ChatColor.RED + "Najpierw ukończ wyzwanie tygodnia: "
+                    + progress + "/" + challenge.amount() + ".");
+            return;
+        }
+
+        try (PreparedStatement claim = db.prepareStatement(
+                "UPDATE weekly_tasks SET claimed=1 WHERE uuid=? AND week=? AND challenge_id=? AND progress>=? AND claimed=0")) {
+            claim.setString(1, player.getUniqueId().toString());
+            claim.setString(2, week);
+            claim.setString(3, weeklyChallengeId(challenge));
+            claim.setInt(4, challenge.amount());
+            if (claim.executeUpdate() != 1) {
+                player.sendMessage(ChatColor.RED + "Nie udało się odebrać nagrody. Otwórz wyzwanie ponownie.");
+                return;
+            }
+        } catch (SQLException ex) {
+            player.sendMessage(ChatColor.RED + "Wystąpił błąd podczas odbierania nagrody.");
+            getLogger().warning("Błąd zapisu odbioru nagrody tygodniowej: " + ex.getMessage());
+            return;
+        }
+
+        player.giveExp(challenge.xp());
+        Map<Integer, ItemStack> overflow = player.getInventory().addItem(
+                new ItemStack(Material.EMERALD, challenge.emeralds()));
+        overflow.values().forEach(item -> player.getWorld().dropItemNaturally(player.getLocation(), item));
+        crateSystem.awardStars(player, 10);
+        player.sendMessage(ChatColor.GREEN + "Odebrano nagrodę za wyzwanie tygodnia: "
+                + challenge.xp() + " XP, " + challenge.emeralds() + " szmaragdów i 10 ★.");
+    }
+
     private void showWeekly(CommandSender sender) {
-        if(!(sender instanceof Player p)){sender.sendMessage("Tylko gracz może sprawdzić wyzwanie.");return;}
-        WeeklyChallenge c=weeklyChallenge();String week=weekKey();int progress=0;boolean claimed=false;
-        try { int[] state=weeklyProgress(p.getUniqueId(),c); progress=state[0]; claimed=state[1]==1; }
-        catch(SQLException e){p.sendMessage(ChatColor.RED+"Błąd odczytu wyzwania.");return;}
-        p.sendMessage(ChatColor.GOLD+"━━━━━━━━ WYZWANIE TYGODNIA ━━━━━━━━");
-        p.sendMessage(ChatColor.YELLOW+c.title());p.sendMessage(ChatColor.GRAY+c.description()+".");
-        p.sendMessage(ChatColor.GRAY+"Postęp: "+ChatColor.AQUA+Math.min(progress,c.amount())+"/"+c.amount());
-        if(progress>=c.amount()&&!claimed) {
-            try(PreparedStatement u=db.prepareStatement(
-                    "INSERT INTO weekly_tasks(uuid,week,progress,claimed,challenge_id) VALUES(?,?,?,1,?) " +
-                    "ON CONFLICT(uuid,week) DO UPDATE SET progress=excluded.progress,claimed=1,challenge_id=excluded.challenge_id")) {
-                u.setString(1,p.getUniqueId().toString());u.setString(2,week);u.setInt(3,c.amount());u.setString(4,weeklyChallengeId(c));u.executeUpdate();
-            } catch(SQLException ignored) {}
-            p.giveExp(c.xp());p.getInventory().addItem(new ItemStack(Material.EMERALD,c.emeralds()));crateSystem.awardStars(p,10);
-            p.sendMessage(ChatColor.GREEN+"Wyzwanie ukończone! Nagroda: "+c.xp()+" XP, "+c.emeralds()+" szmaragdów i 10 ★.");
-        } else if(claimed)p.sendMessage(ChatColor.GREEN+"Nagroda odebrana.");
-        else p.sendMessage(ChatColor.GRAY+"Nagroda: "+ChatColor.GREEN+c.xp()+" XP, "+c.emeralds()+" szmaragdów i 10 ★");
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage("Tylko gracz może sprawdzić wyzwanie.");
+            return;
+        }
+        WeeklyChallenge challenge = weeklyChallenge();
+        int progress;
+        boolean claimed;
+        try {
+            int[] state = weeklyProgress(player.getUniqueId(), challenge);
+            progress = state[0];
+            claimed = state[1] == 1;
+        } catch (SQLException ex) {
+            player.sendMessage(ChatColor.RED + "Błąd odczytu wyzwania.");
+            return;
+        }
+
+        player.sendMessage(ChatColor.GOLD + "━━━━━━━━ WYZWANIE TYGODNIA ━━━━━━━━");
+        player.sendMessage(ChatColor.YELLOW + challenge.title());
+        player.sendMessage(ChatColor.GRAY + challenge.description() + ".");
+        player.sendMessage(ChatColor.GRAY + "Postęp: " + ChatColor.AQUA
+                + Math.min(progress, challenge.amount()) + "/" + challenge.amount());
+        if (progress >= challenge.amount() && !claimed) {
+            claimWeeklyReward(player);
+        } else if (claimed) {
+            player.sendMessage(ChatColor.GREEN + "Nagroda odebrana.");
+        } else {
+            player.sendMessage(ChatColor.GRAY + "Nagroda: " + ChatColor.GREEN
+                    + challenge.xp() + " XP, " + challenge.emeralds() + " szmaragdów i 10 ★");
+        }
     }
 
     private void showLeaderboard(CommandSender sender){sender.sendMessage(ChatColor.GOLD+"━━ RANKING DAILY QUESTS ━━");try(Statement s=db.createStatement();ResultSet r=s.executeQuery("SELECT uuid,total_completed,streak FROM player_stats ORDER BY total_completed DESC LIMIT 10")){int i=1;while(r.next()){OfflinePlayer op=Bukkit.getOfflinePlayer(UUID.fromString(r.getString(1)));sender.sendMessage(ChatColor.YELLOW+"#"+i+" "+ChatColor.WHITE+(op.getName()==null?"Gracz":op.getName())+ChatColor.GRAY+" — "+ChatColor.GREEN+r.getInt(2)+" zadań "+ChatColor.DARK_GRAY+"(seria: "+r.getInt(3)+")");i++;}if(i==1)sender.sendMessage(ChatColor.GRAY+"Brak wyników.");}catch(SQLException e){sender.sendMessage(ChatColor.RED+"Błąd rankingu.");}}
