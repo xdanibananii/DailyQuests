@@ -437,25 +437,11 @@ public final class QuestNpcSystem implements Listener {
         event.setCancelled(true);
         Player player = event.getPlayer();
         player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_TRADE, 0.8f, 0.9f);
-        Contract c = getContract(player);
-        if (c == null) {
-            say(player, "Na dziś nie mam już wolnego zlecenia. Zajrzyj jutro — interesy nie uciekną.");
-            return;
-        }
-        if (c.claimed) {
-            say(player, "Widzę, że dzisiejszą sprawę mamy już załatwioną. Dobra robota. Jutro powinienem mieć coś nowego.");
-        } else {
-            say(player, "Dobrze, że jesteś. Mam dla ciebie robotę — konkretną, uczciwie płatną i bez zbędnych pytań.");
-            say(player, c.description);
-            Material required = Material.valueOf(c.material);
-            player.sendMessage(Component.text(ChatColor.GOLD + "Michaił Łomonosow" + ChatColor.DARK_GRAY + " » "
-                    + ChatColor.YELLOW + "Jeśli podejmujesz się zlecenia, przynieś " + c.amount + " × ")
-                    .append(Component.translatable(required.getTranslationKey()))
-                    .append(Component.text(ChatColor.YELLOW + ". Resztę zostaw mnie.")));
-        }
-        open(player, c);
+        List<Contract> contracts = getContracts(player);
+        if (contracts.isEmpty()) { say(player, "Na dziś nie mam wolnych zleceń. Zajrzyj jutro."); return; }
+        say(player, "Mam dla ciebie trzy kontrakty. Wybierz te, które najbardziej ci odpowiadają.");
+        open(player, contracts);
     }
-
     private void say(Player player, String message) {
         player.sendMessage(ChatColor.GOLD + "Michaił Łomonosow" + ChatColor.DARK_GRAY + " » "
                 + ChatColor.YELLOW + message);
