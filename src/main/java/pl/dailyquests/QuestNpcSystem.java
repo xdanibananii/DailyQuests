@@ -148,6 +148,13 @@ public final class QuestNpcSystem implements Listener {
                 metadataUpdated++;
             }
         }
+        // Ender pearls are obtainable in the Overworld; older pool versions
+        // incorrectly restricted this contract to an enabled End dimension.
+        if (existing.contains("ender_pearls_for_portal.dimension")
+                && "END".equalsIgnoreCase(existing.getString("ender_pearls_for_portal.dimension", ""))) {
+            existing.set("ender_pearls_for_portal.dimension", "OVERWORLD");
+            metadataUpdated++;
+        }
         if (added > 0 || metadataUpdated > 0) {
             try {
                 current.save(questsFile);
