@@ -178,31 +178,22 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
 
         ConfigurationSection sec=pool();
         if(sec==null || sec.getKeys(false).isEmpty()) return found;
-        Set<String> recent=new HashSet<>();
-        try(PreparedStatement h=db.prepareStatement("SELECT task_id FROM task_history WHERE uuid=? AND assigned_day>=date(?, '-30 days')")) {
-            h.setString(1,p.getUniqueId().toString()); h.setString(2,day);
-            try(ResultSet r=h.executeQuery()) { while(r.next()) recent.add(r.getString(1)); }
-        } catch(SQLException ignored) { }
-        Set<String> assigned=new HashSet<>();
-        for(Task task:found) assigned.add(task.id);
+        Set<String> assignedToday=tasksAssignedToday(uuid);
+        // Ensure tasks created by older plugin versions are also recorded before any reroll.
+        for(Task task:found) {
+            assignedToday.add(task.id);
+            recordTaskHistory(uuid,task.id,day);
+        }
         List<String> ids=new ArrayList<>(sec.getKeys(false));
         ids.removeIf(id -> {
             Task candidate=loadTask(id);
-            return candidate==null || !isTaskEnabled(candidate) || assigned.contains(id);
+            return candidate==null || !isTaskEnabled(candidate) || assignedToday.contains(id);
         });
         Collections.shuffle(ids);
         List<Task> replacements=new ArrayList<>();
         for(String id:ids) {
-            if(recent.contains(id)) continue;
             Task task=loadTask(id);
             if(task!=null) { replacements.add(task); if(found.size()+replacements.size()>=5) break; }
-        }
-        if(found.size()+replacements.size()<5) {
-            for(String id:ids) {
-                if(assigned.contains(id) || replacements.stream().anyMatch(t->t.id.equals(id))) continue;
-                Task task=loadTask(id);
-                if(task!=null) { replacements.add(task); if(found.size()+replacements.size()>=5) break; }
-            }
         }
         try(PreparedStatement del=db.prepareStatement("DELETE FROM player_tasks WHERE uuid=? AND day=?")) {
             del.setString(1,p.getUniqueId().toString()); del.setString(2,day); del.executeUpdate();
@@ -215,9 +206,7 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
             while(slots.contains(nextSlot)) nextSlot++;
             save(p.getUniqueId(),nextSlot++,task);
             result.add(task);
-            try(PreparedStatement h=db.prepareStatement("INSERT OR REPLACE INTO task_history(uuid,task_id,assigned_day) VALUES(?,?,?)")) {
-                h.setString(1,p.getUniqueId().toString()); h.setString(2,task.id); h.setString(3,day); h.executeUpdate();
-            } catch(SQLException ignored) { }
+            recordTaskHistory(uuid,task.id,day);
         }
         cache.put(uuid,result);
         cacheDay.put(uuid,day);
@@ -239,6 +228,33 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
             p.setString(1,uuid.toString());p.setString(2,today());p.setInt(3,slot);p.setString(4,t.id);p.setInt(5,t.progress);p.setInt(6,t.claimed?1:0);p.executeUpdate();
         }catch(SQLException e){getLogger().warning("Blad zapisu zadania: "+e.getMessage());}
     }
+    private Set<String> tasksAssignedToday(UUID uuid) {
+        Set<String> assigned = new HashSet<>();
+        try (PreparedStatement query = db.prepareStatement(
+                "SELECT task_id FROM task_history WHERE uuid=? AND assigned_day=?")) {
+            query.setString(1, uuid.toString());
+            query.setString(2, today());
+            try (ResultSet result = query.executeQuery()) {
+                while (result.next()) assigned.add(result.getString(1));
+            }
+        } catch (SQLException ex) {
+            getLogger().warning("Nie udało się odczytać dzisiejszej historii zadań: " + ex.getMessage());
+        }
+        return assigned;
+    }
+
+    private void recordTaskHistory(UUID uuid, String taskId, String day) {
+        try (PreparedStatement history = db.prepareStatement(
+                "INSERT OR IGNORE INTO task_history(uuid,task_id,assigned_day) VALUES(?,?,?)")) {
+            history.setString(1, uuid.toString());
+            history.setString(2, taskId);
+            history.setString(3, day);
+            history.executeUpdate();
+        } catch (SQLException ex) {
+            getLogger().warning("Nie udało się zapisać historii zadania: " + ex.getMessage());
+        }
+    }
+
     private void update(Player p,Task t,int delta) {
         if(delta<=0 || !isTaskEnabled(t))return;
         List<Task> list=cache.get(p.getUniqueId());
@@ -1123,12 +1139,16 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
                 open(p);
                 return;
             }
-            Set<String> assigned=new HashSet<>();
-            for(Task existing:tasks) if(!existing.id.equals(t.id)) assigned.add(existing.id);
+            Set<String> assignedToday=tasksAssignedToday(p.getUniqueId());
+            // Also protect against task assignments made before daily history was introduced.
+            for(Task existing:tasks) {
+                assignedToday.add(existing.id);
+                recordTaskHistory(p.getUniqueId(),existing.id,today());
+            }
             ConfigurationSection available=pool();
             List<Task> candidates=new ArrayList<>();
             if(available!=null) for(String id:available.getKeys(false)) {
-                if(assigned.contains(id)) continue;
+                if(assignedToday.contains(id)) continue;
                 Task candidate=loadTask(id);
                 if(candidate!=null && isTaskEnabled(candidate)) candidates.add(candidate);
             }
@@ -1143,9 +1163,7 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
             cache.put(p.getUniqueId(),tasks);
             cacheDay.put(p.getUniqueId(),today());
             save(p.getUniqueId(),index,next);
-            try(PreparedStatement h=db.prepareStatement("INSERT OR REPLACE INTO task_history(uuid,task_id,assigned_day) VALUES(?,?,?)")) {
-                h.setString(1,p.getUniqueId().toString());h.setString(2,next.id);h.setString(3,today());h.executeUpdate();
-            } catch(SQLException ex) { getLogger().warning("Nie udało się zapisać historii przerzutu: "+ex.getMessage()); }
+            recordTaskHistory(p.getUniqueId(),next.id,today());
             p.playSound(p.getLocation(),Sound.ENTITY_EXPERIENCE_ORB_PICKUP,0.8f,1.4f);
             p.sendMessage(ChatColor.GREEN+"Wylosowano nowe zadanie za 5 poziomów XP: "+ChatColor.YELLOW+ChatColor.stripColor(next.name));
             open(p);
