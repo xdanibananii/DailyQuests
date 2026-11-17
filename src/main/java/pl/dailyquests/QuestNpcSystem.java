@@ -447,209 +447,100 @@ public final class QuestNpcSystem implements Listener {
                 + ChatColor.YELLOW + message);
     }
 
-    private void open(Player player, Contract c) {
-        Inventory inv = Bukkit.createInventory(null, 54, TITLE);
+    private void open(Player player, List<Contract> contracts) {
+        Inventory inventory = Bukkit.createInventory(null, 54, TITLE);
         ItemStack dark = item(Material.BLACK_STAINED_GLASS_PANE, " ", List.of());
         ItemStack green = item(Material.GREEN_STAINED_GLASS_PANE, " ", List.of());
-        for (int i = 0; i < 54; i++) inv.setItem(i, dark);
-        for (int i = 0; i < 9; i++) {
-            inv.setItem(i, green);
-            inv.setItem(45 + i, green);
+        for (int slot = 0; slot < 54; slot++) inventory.setItem(slot, dark);
+        for (int slot = 0; slot < 9; slot++) { inventory.setItem(slot, green); inventory.setItem(45 + slot, green); }
+        for (int row = 1; row < 5; row++) { inventory.setItem(row * 9, green); inventory.setItem(row * 9 + 8, green); }
+        inventory.setItem(4, item(Material.WRITABLE_BOOK, ChatColor.GOLD + "✦ KSIĘGA KONTRAKTÓW ✦",
+                List.of(ChatColor.GRAY + "Michaił przygotował trzy zlecenia.",
+                        ChatColor.GRAY + "Każde rozliczasz i odbierasz osobno.",
+                        "", ChatColor.DARK_GREEN + "MISTRZ ZLECEŃ", ChatColor.DARK_GRAY + "3 kontrakty dziennie.")));
+        int[] infoSlots = {20, 22, 24}, deliverSlots = {29, 31, 33}, rerollSlots = {38, 40, 42};
+        for (int index = 0; index < 3; index++) {
+            Contract c = contractAt(contracts, index);
+            if (c == null) continue;
+            Material required = Material.matchMaterial(c.material);
+            if (required == null) required = Material.PAPER;
+            int owned = count(player, required);
+            List<String> lore = new ArrayList<>(wrapLore(c.description, 34));
+            lore.add(""); lore.add(ChatColor.GRAY + "Wymagane: " + ChatColor.WHITE + c.amount + " × " + pretty(required));
+            lore.add(ChatColor.GRAY + "Masz: " + (owned >= c.amount ? ChatColor.GREEN : ChatColor.RED) + Math.min(owned, c.amount) + ChatColor.GRAY + " / " + c.amount);
+            lore.add(""); lore.add(ChatColor.GOLD + "Nagroda: " + c.stars + " ★"); lore.add(ChatColor.GREEN + "+" + c.xp + " XP");
+            lore.add(""); lore.add(c.claimed ? ChatColor.GREEN + "✔ Kontrakt rozliczony" : ChatColor.YELLOW + "Dostawa do rozliczenia");
+            inventory.setItem(infoSlots[index], item(required, ChatColor.GOLD + (index + 1) + ". " + c.name, lore));
+            if (c.claimed) {
+                inventory.setItem(deliverSlots[index], item(Material.LIME_DYE, ChatColor.GREEN + "KONTRAKT ROZLICZONY", List.of(ChatColor.GRAY + "To zlecenie zostało już wykonane.")));
+                inventory.setItem(rerollSlots[index], item(Material.GRAY_DYE, ChatColor.DARK_GRAY + "KONTRAKT ZAKOŃCZONY", List.of(ChatColor.GRAY + "Nie można go już zmienić.")));
+            } else {
+                inventory.setItem(deliverSlots[index], item(owned >= c.amount ? Material.LIME_CONCRETE : Material.GRAY_DYE,
+                        owned >= c.amount ? ChatColor.GREEN + "ODDAJ TOWAR" : ChatColor.RED + "BRAKUJE TOWARU",
+                        List.of(ChatColor.GRAY + "Wymagane: " + c.amount + " × " + pretty(required), ChatColor.GRAY + "W ekwipunku: " + owned, "",
+                                owned >= c.amount ? ChatColor.YELLOW + "Kliknij, aby odebrać zapłatę." : ChatColor.DARK_GRAY + "Wróć po zebraniu całej dostawy.")));
+                inventory.setItem(rerollSlots[index], item(Material.EXPERIENCE_BOTTLE, ChatColor.LIGHT_PURPLE + "PRZELOSUJ KONTRAKT",
+                        List.of(ChatColor.GRAY + "Wylosuj inne zlecenie w tym miejscu.", "", ChatColor.YELLOW + "Koszt: 10 poziomów Minecraft")));
+            }
         }
-        for (int row = 1; row < 5; row++) {
-            inv.setItem(row * 9, green);
-            inv.setItem(row * 9 + 8, green);
-        }
-
-        inv.setItem(4, item(Material.WRITABLE_BOOK, ChatColor.GOLD + "✦ KSIĘGA KONTRAKTÓW ✦",
-                List.of(ChatColor.GRAY + "Zlecenia są proste: wykonujesz pracę,",
-                        ChatColor.GRAY + "odbierasz zapłatę. Bez targowania.",
-                        "", ChatColor.DARK_GREEN + "MISTRZ ZLECEŃ",
-                        ChatColor.DARK_GRAY + "Jedno zlecenie na dzień.")));
-
-        Material required = Material.valueOf(c.material);
-        int owned = count(player, required);
-        ItemStack requiredItem = item(required, ChatColor.YELLOW + "WYMAGANE TOWARY", List.of());
-        ItemMeta requiredMeta = requiredItem.getItemMeta();
-        LegacyComponentSerializer legacy = LegacyComponentSerializer.legacySection();
-        requiredMeta.lore(List.of(
-                legacy.deserialize(ChatColor.GRAY + "Dostarcz mi:"),
-                Component.text(ChatColor.WHITE.toString() + c.amount + " × ").append(Component.translatable(required.getTranslationKey())),
-                Component.empty(),
-                legacy.deserialize(ChatColor.GRAY + "W twoim ekwipunku: "
-                        + (owned >= c.amount ? ChatColor.GREEN.toString() : ChatColor.RED.toString())
-                        + Math.min(owned, c.amount) + ChatColor.GRAY + " / " + c.amount),
-                Component.empty(),
-                legacy.deserialize(ChatColor.DARK_GRAY + "Przedmioty zostaną pobrane"),
-                legacy.deserialize(ChatColor.DARK_GRAY + "dopiero po zatwierdzeniu zlecenia.")
-        ));
-        requiredItem.setItemMeta(requiredMeta);
-        inv.setItem(20, requiredItem);
-
-        List<String> mapLore = new ArrayList<>();
-        mapLore.add(ChatColor.GRAY + "ZLECENIE DNIA");
-        mapLore.add("");
-        mapLore.addAll(wrapLore(c.description, 38));
-        mapLore.add("");
-        mapLore.add(c.claimed ? ChatColor.GREEN + "✔ To zlecenie zostało już rozliczone."
-                : ChatColor.YELLOW + "Czeka na twoją dostawę.");
-        inv.setItem(22, item(Material.FILLED_MAP, ChatColor.GOLD + c.name, mapLore));
-
-        inv.setItem(24, item(Material.CHEST, ChatColor.GOLD + "WYNAGRODZENIE",
-                List.of(ChatColor.GRAY + "Za wykonanie zlecenia otrzymasz:",
-                        "",
-                        ChatColor.YELLOW + "★ " + c.stars + " gwiazdek",
-                        ChatColor.GREEN + "+" + c.xp + " doświadczenia",
-                        "",
-                        ChatColor.DARK_GRAY + "Zapłata po oddaniu kompletu.")));
-
-        int progress = Math.min(10, (int) Math.floor(10.0 * owned / Math.max(1, c.amount)));
-        List<String> progressLore = new ArrayList<>();
-        progressLore.add(ChatColor.GRAY + "Postęp dostawy: " + owned + " / " + c.amount);
-        progressLore.add("");
-        StringBuilder bar = new StringBuilder(ChatColor.DARK_GREEN.toString());
-        for (int i = 0; i < 10; i++) bar.append(i < progress ? "■" : "□");
-        progressLore.add(bar.toString());
-        progressLore.add("");
-        progressLore.add(c.claimed ? ChatColor.GREEN + "Zlecenie zakończone."
-                : owned >= c.amount ? ChatColor.GREEN + "Masz wszystko. Możesz zdać zlecenie."
-                : ChatColor.RED + "Brakuje ci jeszcze " + (c.amount - owned) + " szt.");
-        inv.setItem(31, item(Material.BOOK, ChatColor.AQUA + "STATUS ZLECENIA", progressLore));
-
-        if (c.claimed) {
-            inv.setItem(40, item(Material.LIME_DYE, ChatColor.GREEN + "ZLECENIE ROZLICZONE",
-                    List.of(ChatColor.GRAY + "Dziękuję za solidną robotę.",
-                            ChatColor.GRAY + "Wróć jutro po kolejne.")));
-        } else if (owned >= c.amount) {
-            inv.setItem(40, item(Material.LIME_CONCRETE, ChatColor.GREEN + "ODDAJ TOWAR",
-                    List.of(ChatColor.GRAY + "Masz wymagane przedmioty.",
-                            ChatColor.YELLOW + "Kliknij, aby zakończyć zlecenie.",
-                            "", ChatColor.DARK_GREEN + "Odbierz swoje wynagrodzenie.")));
-        } else {
-            inv.setItem(40, item(Material.GRAY_DYE, ChatColor.RED + "NIE MASZ JESZCZE KOMPLETU",
-                    List.of(ChatColor.GRAY + "Wróć, gdy zbierzesz wszystkie",
-                            ChatColor.GRAY + "wymagane przedmioty.",
-                            "", ChatColor.DARK_GRAY + "Brakuje: " + (c.amount - owned))));
-        }
-        inv.setItem(42, item(Material.EXPERIENCE_BOTTLE, ChatColor.LIGHT_PURPLE + "PRZELOSUJ KONTRAKT",
-                List.of(ChatColor.GRAY + "Nie pasuje ci dzisiejsze zlecenie?",
-                        ChatColor.GRAY + "Poproś Michaiła o nowe.",
-                        "", ChatColor.YELLOW + "Koszt: 10 poziomów Minecraft",
-                        ChatColor.DARK_GRAY + "Możliwe tylko przed oddaniem kontraktu.")));
-        inv.setItem(49, item(Material.BARRIER, ChatColor.RED + "ZAMKNIJ KSIĘGĘ",
-                List.of(ChatColor.GRAY + "Wróć, kiedy będziesz gotów.")));
-        player.openInventory(inv);
+        inventory.setItem(49, item(Material.BARRIER, ChatColor.RED + "ZAMKNIJ KSIĘGĘ", List.of(ChatColor.GRAY + "Wróć, kiedy będziesz gotów.")));
+        player.openInventory(inventory);
     }
 
     @EventHandler public void onContractClick(InventoryClickEvent event) {
         if (!TITLE.equals(event.getView().getTitle())) return;
         event.setCancelled(true);
         if (!(event.getWhoClicked() instanceof Player player)) return;
-        if (event.getRawSlot() == 49) {
-            player.closeInventory();
-            return;
-        }
-        if (event.getRawSlot() == 42) {
-            rerollContract(player);
-            return;
-        }
-        if (event.getRawSlot() != 40) return;
-        Contract c = getContract(player);
-        if (c == null || c.claimed) { open(player, c == null ? emptyContract() : c); return; }
-        Material required = Material.valueOf(c.material);
+        int clicked = event.getRawSlot();
+        if (clicked == 49) { player.closeInventory(); return; }
+        int slot = switch (clicked) { case 29, 38 -> 0; case 31, 40 -> 1; case 33, 42 -> 2; default -> -1; };
+        if (slot < 0) return;
+        if (clicked == 29 || clicked == 31 || clicked == 33) deliverContract(player, slot);
+        else rerollContract(player, slot);
+    }
+
+    private void deliverContract(Player player, int slot) {
+        List<Contract> contracts = getContracts(player);
+        Contract c = contractAt(contracts, slot);
+        if (c == null || c.claimed) { open(player, contracts); return; }
+        Material required = Material.matchMaterial(c.material);
+        if (required == null) return;
         int have = count(player, required);
-        if (have < c.amount) {
-            player.sendMessage(Component.text(ChatColor.GOLD + "Michaił Łomonosow" + ChatColor.DARK_GRAY + " » "
-                    + ChatColor.YELLOW.toString() + "Do kompletu brakuje ci jeszcze " + (c.amount - have) + " × ")
-                    .append(Component.translatable(required.getTranslationKey()))
-                    .append(Component.text(ChatColor.YELLOW + ". Wróć, gdy będziesz mieć całą dostawę.")));
-            player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 0.8f, 0.7f);
-            open(player, c);
-            return;
-        }
+        if (have < c.amount) { player.sendMessage(ChatColor.YELLOW + "Brakuje ci jeszcze " + (c.amount - have) + " × " + pretty(required) + "."); open(player, contracts); return; }
         remove(player, required, c.amount);
-        try (PreparedStatement u = db.prepareStatement(
-                "UPDATE npc_contracts SET claimed=1 WHERE uuid=? AND day=? AND claimed=0")) {
-            u.setString(1, player.getUniqueId().toString());
-            u.setString(2, today());
-            if (u.executeUpdate() != 1) {
-                player.getInventory().addItem(new ItemStack(required, c.amount));
-                player.sendMessage(ChatColor.RED + "Nie udało się zatwierdzić kontraktu. Przedmioty zwrócono.");
-                return;
-            }
-        } catch (SQLException ex) {
-            player.getInventory().addItem(new ItemStack(required, c.amount));
-            plugin.getLogger().warning("Blad zatwierdzania kontraktu: " + ex.getMessage());
-            player.sendMessage(ChatColor.RED + "Wystąpił błąd. Przedmioty zwrócono.");
-            return;
-        }
-        if (c.stars > 0) crates.awardStars(player, c.stars);
-        if (c.xp > 0) player.giveExp(c.xp);
-        say(player, "Dostawa się zgadza. Dobra robota — oto twoja zapłata. Jeśli będziesz szukać kolejnego zajęcia, wiesz, gdzie mnie znaleźć.");
-        player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_HARP, 0.25f, 1.6f);
-        open(player, getContract(player));
+        try (PreparedStatement update = db.prepareStatement("UPDATE npc_contracts SET claimed=1 WHERE uuid=? AND day=? AND slot=? AND claimed=0")) {
+            update.setString(1, player.getUniqueId().toString()); update.setString(2, today()); update.setInt(3, slot);
+            if (update.executeUpdate() != 1) { player.getInventory().addItem(new ItemStack(required, c.amount)); player.sendMessage(ChatColor.RED + "Nie udało się zatwierdzić kontraktu. Przedmioty zwrócono."); return; }
+        } catch (SQLException ex) { player.getInventory().addItem(new ItemStack(required, c.amount)); plugin.getLogger().warning("Błąd zatwierdzania kontraktu NPC: " + ex.getMessage()); player.sendMessage(ChatColor.RED + "Wystąpił błąd. Przedmioty zwrócono."); return; }
+        if (c.stars > 0) crates.awardStars(player, c.stars); if (c.xp > 0) player.giveExp(c.xp);
+        say(player, "Dostawa się zgadza. Dobra robota — oto twoja zapłata.");
+        open(player, getContracts(player));
     }
 
-
-    private void rerollContract(Player player) {
-        Contract current = getContract(player);
-        if (current == null || current.claimed) {
-            say(player, "Tego kontraktu nie można już zmienić. Najpierw dokończ go albo wróć jutro.");
-            if (current != null) open(player, current);
-            return;
-        }
-        ConfigurationSection pool = quests().getConfigurationSection("contracts");
-        if (pool == null) return;
+    private void rerollContract(Player player, int slot) {
+        List<Contract> currentContracts = getContracts(player);
+        Contract current = contractAt(currentContracts, slot);
+        if (current == null || current.claimed) { say(player, "Tego kontraktu nie można już zmienić."); open(player, currentContracts); return; }
+        ConfigurationSection pool = quests().getConfigurationSection("contracts"); if (pool == null) return;
+        Set<String> used = new HashSet<>(); for (Contract c : currentContracts) if (c.slot != slot) used.add(c.id);
+        Set<String> recent = new HashSet<>();
+        try (PreparedStatement history = db.prepareStatement("SELECT DISTINCT quest_id FROM npc_contracts WHERE uuid=? AND day>=date(?, '-30 days')")) {
+            history.setString(1, player.getUniqueId().toString()); history.setString(2, today());
+            try (ResultSet rows = history.executeQuery()) { while (rows.next()) recent.add(rows.getString(1)); }
+        } catch (SQLException ex) { plugin.getLogger().warning("Błąd odczytu historii kontraktów: " + ex.getMessage()); }
         List<String> candidates = new ArrayList<>(pool.getKeys(false));
-        candidates.remove(current.id);
+        candidates.removeIf(id -> { Contract c = readContract(id); return c == null || !plugin.isDimensionEnabled(c.dimension) || used.contains(id) || id.equals(current.id) || recent.contains(id); });
+        if (candidates.isEmpty()) { candidates = new ArrayList<>(pool.getKeys(false)); candidates.removeIf(id -> { Contract c = readContract(id); return c == null || !plugin.isDimensionEnabled(c.dimension) || used.contains(id) || id.equals(current.id); }); }
+        if (candidates.isEmpty()) { say(player, "Nie mam teraz innego zlecenia."); open(player, currentContracts); return; }
+        if (player.getLevel() < 10) { say(player, "Do ponownego losowania potrzebujesz 10 poziomów doświadczenia."); open(player, currentContracts); return; }
         Collections.shuffle(candidates);
-        String replacement = null;
-        for (String id : candidates) {
-            Contract candidate = readContract(id);
-            if (candidate != null && plugin.isDimensionEnabled(candidate.dimension)) { replacement = id; break; }
-        }
-        if (replacement == null) {
-            say(player, "Nie mam teraz żadnego innego zlecenia. Zajrzyj później.");
-            open(player, current);
-            return;
-        }
-        if (player.getLevel() < 10) {
-            say(player, "Do ponownego losowania potrzebujesz 10 pełnych poziomów doświadczenia.");
-            open(player, current);
-            return;
-        }
-        try (PreparedStatement update = db.prepareStatement(
-                "UPDATE npc_contracts SET quest_id=?, claimed=0 WHERE uuid=? AND day=? AND claimed=0")) {
-            update.setString(1, replacement);
-            update.setString(2, player.getUniqueId().toString());
-            update.setString(3, today());
-            if (update.executeUpdate() != 1) {
-                say(player, "Nie udało się zmienić kontraktu. Nic nie pobrałem.");
-                open(player, getContract(player));
-                return;
-            }
-            player.setLevel(player.getLevel() - 10);
-            Contract next = getContract(player);
-            player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.9f, 1.2f);
-            say(player, "Ho, ho! Mam dla ciebie coś innego. Nowy kontrakt kosztował 10 poziomów doświadczenia.");
-            if (next != null) {
-                say(player, next.description);
-                open(player, next);
-            }
-        } catch (SQLException ex) {
-            plugin.getLogger().warning("Nie udało się przerzucić kontraktu NPC: " + ex.getMessage());
-            say(player, "Coś poszło nie tak. Spróbuj ponownie za chwilę.");
-            open(player, current);
-        }
+        try (PreparedStatement update = db.prepareStatement("UPDATE npc_contracts SET quest_id=?,claimed=0 WHERE uuid=? AND day=? AND slot=? AND claimed=0")) {
+            update.setString(1, candidates.get(0)); update.setString(2, player.getUniqueId().toString()); update.setString(3, today()); update.setInt(4, slot);
+            if (update.executeUpdate() != 1) { say(player, "Nie udało się zmienić kontraktu."); open(player, getContracts(player)); return; }
+            player.setLevel(player.getLevel() - 10); player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.9f, 1.2f);
+            say(player, "Mam dla ciebie coś innego. Nowy kontrakt kosztował 10 poziomów doświadczenia."); open(player, getContracts(player));
+        } catch (SQLException ex) { plugin.getLogger().warning("Nie udało się przerzucić kontraktu NPC: " + ex.getMessage()); say(player, "Coś poszło nie tak. Spróbuj ponownie."); open(player, currentContracts); }
     }
-
-    private Contract emptyContract() {
-        Contract c = new Contract();
-        c.name = "Brak zlecenia"; c.description = "Wróć jutro."; c.material = Material.PAPER.name();
-        c.amount = 1; c.claimed = true;
-        return c;
-    }
-
     @EventHandler public void onContractDrag(InventoryDragEvent event) {
         if (TITLE.equals(event.getView().getTitle())) event.setCancelled(true);
     }
