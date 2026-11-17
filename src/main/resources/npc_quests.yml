@@ -552,7 +552,7 @@ contracts:
   turtle_scutes:
     name: "&6Żółwie tarcze"
     description: "&7Płatnerz chce zbadać wytrzymałość żółwich skorup. Potrzebuje łusek."
-    item: SCUTE
+    item: TURTLE_SCUTE
     amount: 8
     reward-stars: 8
     reward-xp: 300
