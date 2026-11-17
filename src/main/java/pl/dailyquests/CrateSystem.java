@@ -573,12 +573,11 @@ public final class CrateSystem implements Listener {
         player.sendMessage(ChatColor.GRAY + "Rzadkość: " + tierColor + reward.tier);
         player.sendMessage(ChatColor.GOLD + "━━━━━━━━━━━━━━━━━━━━━━━━");
         Bukkit.broadcastMessage(ChatColor.DARK_GRAY + "[Skarbiec] " + tierColor
-                + player.getName() + ChatColor.GRAY + " wylosował(a): " + tierColor
+                + player.getName() + ChatColor.GRAY + " otwiera skrzynię i zdobywa: " + tierColor
                 + reward.name + ChatColor.GRAY + " ×" + reward.amount
                 + ChatColor.DARK_GRAY + " [" + tierColor + reward.tier + ChatColor.DARK_GRAY + "]");
         player.playSound(player.getLocation(), reward.tier.equals("LEGENDARY") ? Sound.UI_TOAST_CHALLENGE_COMPLETE : Sound.ENTITY_PLAYER_LEVELUP, 1f, reward.tier.equals("LEGENDARY") ? 0.8f : 1.2f);
         if (reward.tier.equals("LEGENDARY")) {
-            Bukkit.broadcastMessage(ChatColor.GOLD + "★ " + ChatColor.YELLOW + player.getName() + ChatColor.WHITE + " trafił(a) " + ChatColor.GOLD + "LEGENDARY " + reward.name + ChatColor.GOLD + " ze skrzynki DailyQuests!");
             player.getWorld().spawnParticle(Particle.TOTEM_OF_UNDYING, player.getLocation().add(0, 1, 0), 50, 0.6, 0.8, 0.6, 0.15);
         } else if (reward.tier.equals("EPIC")) {
             player.getWorld().spawnParticle(Particle.FIREWORK, player.getLocation().add(0, 1, 0), 25, 0.5, 0.7, 0.5, 0.08);
