@@ -476,7 +476,7 @@ public final class QuestNpcSystem implements Listener {
             lore.add(ChatColor.GRAY + "Masz: " + (owned >= c.amount ? ChatColor.GREEN : ChatColor.RED) + Math.min(owned, c.amount) + ChatColor.GRAY + " / " + c.amount);
             lore.add(""); lore.add(ChatColor.GOLD + "Nagroda: " + c.stars + " ★"); lore.add(ChatColor.GREEN + "+" + c.xp + " XP");
             lore.add(""); lore.add(c.claimed ? ChatColor.GREEN + "✔ Kontrakt rozliczony" : ChatColor.YELLOW + "Dostawa do rozliczenia");
-            inventory.setItem(infoSlots[index], item(required, ChatColor.GOLD + (index + 1) + ". " + c.name, lore));
+            inventory.setItem(infoSlots[index], item(required, ChatColor.GOLD + String.valueOf(index + 1) + ". " + c.name, lore));
             if (c.claimed) {
                 inventory.setItem(deliverSlots[index], item(Material.LIME_DYE, ChatColor.GREEN + "KONTRAKT ROZLICZONY", List.of(ChatColor.GRAY + "To zlecenie zostało już wykonane.")));
                 inventory.setItem(rerollSlots[index], item(Material.GRAY_DYE, ChatColor.DARK_GRAY + "KONTRAKT ZAKOŃCZONY", List.of(ChatColor.GRAY + "Nie można go już zmienić.")));
