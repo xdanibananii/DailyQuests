@@ -283,13 +283,24 @@ public final class CrateSystem implements Listener {
         if (slot != 11 && slot != 15) return;
         boolean basic = slot == 11;
         int cost = basic ? BASIC_COST : PREMIUM_COST;
+        List<Reward> availableRewards = rewardsForCrate(basic);
+        if (availableRewards.isEmpty()) {
+            player.sendMessage(ChatColor.RED + "Pula nagród jest chwilowo niedostępna.");
+            return;
+        }
+        Reward selectedReward = choose(availableRewards);
+        if (!canFitReward(player, selectedReward)) {
+            player.sendMessage(ChatColor.RED + "Zwolnij miejsce w ekwipunku, aby rozpocząć losowanie.");
+            player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 0.8f, 0.7f);
+            return;
+        }
         if (!spend(player.getUniqueId(), cost)) {
             player.sendMessage(ChatColor.RED + "Nie masz wystarczająco gwiazdek! Potrzebujesz " + cost + " ★.");
             player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 0.8f, 0.7f);
             open(player);
             return;
         }
-        beginOpening(player, cost, basic);
+        beginOpening(player, cost, basic, selectedReward);
     }
 
     @EventHandler public void onDrag(InventoryDragEvent event) {
@@ -349,7 +360,18 @@ public final class CrateSystem implements Listener {
         return lore;
     }
 
-    private void beginOpening(Player player, int cost, boolean basic) {
+    private boolean canFitReward(Player player, Reward reward) {
+        Inventory simulation = Bukkit.createInventory(null, 36);
+        ItemStack[] contents = player.getInventory().getStorageContents();
+        for (int slot = 0; slot < Math.min(contents.length, simulation.getSize()); slot++) {
+            ItemStack item = contents[slot];
+            if (item != null && !item.getType().isAir()) simulation.setItem(slot, item.clone());
+        }
+        Map<Integer, ItemStack> overflow = simulation.addItem(rewardItem(reward, false));
+        return overflow.isEmpty();
+    }
+
+    private void beginOpening(Player player, int cost, boolean basic, Reward won) {
         List<Reward> rewards = rewardsForCrate(basic);
         if (rewards.isEmpty()) {
             awardStars(player, cost);
@@ -364,7 +386,6 @@ public final class CrateSystem implements Listener {
         final int finalOffset = winnerIndex - 4;
         List<Reward> strip = new ArrayList<>();
         for (int i = 0; i <= winnerIndex + 4; i++) strip.add(choose(rewards));
-        Reward won = choose(rewards);
         strip.set(winnerIndex, won);
 
         Inventory inv = Bukkit.createInventory(null, 54, TITLE);
@@ -507,9 +528,14 @@ public final class CrateSystem implements Listener {
         overflow.values().forEach(item -> player.getWorld().dropItemNaturally(player.getLocation(), item));
         ChatColor tierColor = tierColor(reward.tier);
         player.sendMessage(ChatColor.GOLD + "━━━━━━━━━━━━━━━━━━━━━━━━");
-        player.sendMessage(ChatColor.GOLD + "★ " + tierColor + "WYLOSOWANO: " + reward.name);
+        player.sendMessage(ChatColor.GOLD + "★ " + tierColor + "WYLOSOWANO: " + reward.name
+                + ChatColor.GRAY + " ×" + reward.amount);
         player.sendMessage(ChatColor.GRAY + "Rzadkość: " + tierColor + reward.tier);
         player.sendMessage(ChatColor.GOLD + "━━━━━━━━━━━━━━━━━━━━━━━━");
+        Bukkit.broadcastMessage(ChatColor.DARK_GRAY + "[Skarbiec] " + tierColor
+                + player.getName() + ChatColor.GRAY + " wylosował(a): " + tierColor
+                + reward.name + ChatColor.GRAY + " ×" + reward.amount
+                + ChatColor.DARK_GRAY + " [" + tierColor + reward.tier + ChatColor.DARK_GRAY + "]");
         player.playSound(player.getLocation(), reward.tier.equals("LEGENDARY") ? Sound.UI_TOAST_CHALLENGE_COMPLETE : Sound.ENTITY_PLAYER_LEVELUP, 1f, reward.tier.equals("LEGENDARY") ? 0.8f : 1.2f);
         if (reward.tier.equals("LEGENDARY")) {
             Bukkit.broadcastMessage(ChatColor.GOLD + "★ " + ChatColor.YELLOW + player.getName() + ChatColor.WHITE + " trafił(a) " + ChatColor.GOLD + "LEGENDARY " + reward.name + ChatColor.GOLD + " ze skrzynki DailyQuests!");
