@@ -2094,26 +2094,6 @@ tasks:
     reward-xp: 210
     reward-item: PRISMARINE_SHARD
     reward-item-amount: 12
-  break_lily_pad:
-    name: "&aLiście na tafli"
-    description: "&7Zbierz 20 lilii wodnych"
-    difficulty: EASY
-    type: BREAK
-    target: LILY_PAD
-    amount: 20
-    reward-xp: 150
-    reward-item: SLIME_BALL
-    reward-item-amount: 4
-  break_vine:
-    name: "&2Zielona ściana"
-    description: "&7Zbierz 48 pnączy"
-    difficulty: EASY
-    type: BREAK
-    target: VINE
-    amount: 48
-    reward-xp: 150
-    reward-item: BONE_MEAL
-    reward-item-amount: 16
   break_mangrove_roots:
     name: "&6Korzenie bagien"
     description: "&7Zbierz 32 namorzynowe korzenie"
@@ -2154,26 +2134,6 @@ tasks:
     reward-xp: 260
     reward-item: HONEYCOMB
     reward-item-amount: 8
-  kill_zombie_villager:
-    name: "&2Powrót do osady"
-    description: "&7Pokonaj 5 zombie-osadników"
-    difficulty: MEDIUM
-    type: KILL
-    target: ZOMBIE_VILLAGER
-    amount: 5
-    reward-xp: 280
-    reward-item: GOLDEN_APPLE
-    reward-item-amount: 1
-  kill_silverfish:
-    name: "&7Srebrny problem"
-    description: "&7Pokonaj 8 rybików cukrowych"
-    difficulty: MEDIUM
-    type: KILL
-    target: SILVERFISH
-    amount: 8
-    reward-xp: 280
-    reward-item: STONE_BRICKS
-    reward-item-amount: 24
   craft_stonecutter:
     name: "&6Precyzja kamieniarza"
     description: "&7Wytwórz 3 kamieniarze"
@@ -2374,26 +2334,6 @@ tasks:
     reward-xp: 380
     reward-item: TROPICAL_FISH
     reward-item-amount: 4
-  fish_pufferfish:
-    name: "&eNiebezpieczny połów"
-    description: "&7Złów 4 rozdymki"
-    difficulty: MEDIUM
-    type: FISH
-    target: PUFFERFISH
-    amount: 4
-    reward-xp: 250
-    reward-item: WATER_BUCKET
-    reward-item-amount: 1
-  fish_tropical:
-    name: "&bKolorowa zdobycz"
-    description: "&7Złów 4 ryby tropikalne"
-    difficulty: HARD
-    type: FISH
-    target: TROPICAL_FISH
-    amount: 4
-    reward-xp: 340
-    reward-item: TROPICAL_FISH_BUCKET
-    reward-item-amount: 1
   trade_emeralds_5:
     name: "&aMały handel"
     description: "&7Dokonaj 5 wymian z osadnikami"
