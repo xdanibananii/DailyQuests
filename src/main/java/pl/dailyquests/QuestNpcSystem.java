@@ -155,6 +155,14 @@ public final class QuestNpcSystem implements Listener {
             existing.set("ender_pearls_for_portal.dimension", "OVERWORLD");
             metadataUpdated++;
         }
+        // Bukkit/Paper exposes the item as TURTLE_SCUTE; migrate older SCUTE configs.
+        for (String id : existing.getKeys(false)) {
+            String item = existing.getString(id + ".item", "");
+            if ("SCUTE".equalsIgnoreCase(item)) {
+                existing.set(id + ".item", "TURTLE_SCUTE");
+                metadataUpdated++;
+            }
+        }
         if (added > 0 || metadataUpdated > 0) {
             try {
                 current.save(questsFile);
@@ -184,7 +192,9 @@ public final class QuestNpcSystem implements Listener {
             c.id = id;
             c.name = color(section.getString("name", id));
             c.description = color(section.getString("description", ""));
-            c.material = Material.valueOf(section.getString("item", "LEATHER").toUpperCase(Locale.ROOT)).name();
+            String materialName = section.getString("item", "LEATHER").toUpperCase(Locale.ROOT);
+            if ("SCUTE".equals(materialName)) materialName = "TURTLE_SCUTE";
+            c.material = Material.valueOf(materialName).name();
             c.dimension = section.getString("dimension", "OVERWORLD").toUpperCase(Locale.ROOT);
             c.amount = Math.max(1, section.getInt("amount", 1));
             c.stars = Math.max(0, section.getInt("reward-stars", 0));
