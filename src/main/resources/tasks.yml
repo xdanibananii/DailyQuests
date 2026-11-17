@@ -375,6 +375,7 @@ tasks:
     reward-item: DRAGON_BREATH
     reward-item-amount: 2
   end_crystal:
+    requires-nether: true
     name: "&dSmocza technologia"
     description: "&7Wytwórz 4 kryształy Endu"
     difficulty: HARD
@@ -1092,6 +1093,7 @@ tasks:
     reward-item: GUNPOWDER
     reward-item-amount: 16
   craft_ender_chest:
+    requires-nether: true
     name: "&cSkarbiec podróżnika"
     description: "&7Wytwórz 1 skrzynię Endu"
     difficulty: HARD
@@ -1112,6 +1114,7 @@ tasks:
     reward-item: IRON_INGOT
     reward-item-amount: 12
   craft_brewing_stand:
+    requires-nether: true
     name: "&eLaboratorium alchemika"
     description: "&7Wytwórz 2 statywy alchemiczne"
     difficulty: MEDIUM
@@ -1499,6 +1502,7 @@ tasks:
     reward-item: PURPUR_BLOCK
     reward-item-amount: 16
   end_end_rod:
+    requires-nether: true
     name: "&eŚwiatło krańca"
     description: "&7Wytwórz 16 prętów Endu"
     difficulty: MEDIUM
@@ -1576,6 +1580,7 @@ tasks:
     reward-item: GLASS_BOTTLE
     reward-item-amount: 16
   end_crystal_craft:
+    requires-nether: true
     name: "&cKryształowa moc"
     description: "&7Wytwórz 8 kryształów Endu"
     difficulty: HARD
@@ -2047,3 +2052,365 @@ tasks:
     reward-xp: 150
     reward-item: KELP
     reward-item-amount: 32
+
+  # Dodatkowe zadania Overworld — rozszerzenie puli 1.0.23
+  break_oak_leaves:
+    name: "&2Jesienny ogrodnik"
+    description: "&7Zbierz 48 bloków liści dębu"
+    difficulty: EASY
+    type: BREAK
+    target: OAK_LEAVES
+    amount: 48
+    reward-xp: 140
+    reward-item: OAK_SAPLING
+    reward-item-amount: 8
+  break_dripstone:
+    name: "&6Jaskiniowy stalaktyt"
+    description: "&7Zbierz 24 bloki naciekowe"
+    difficulty: MEDIUM
+    type: BREAK
+    target: DRIPSTONE_BLOCK
+    amount: 24
+    reward-xp: 220
+    reward-item: POINTED_DRIPSTONE
+    reward-item-amount: 12
+  break_glow_lichen:
+    name: "&aŚwietlisty ślad"
+    description: "&7Zbierz 32 porosty jaskiniowe"
+    difficulty: EASY
+    type: BREAK
+    target: GLOW_LICHEN
+    amount: 32
+    reward-xp: 160
+    reward-item: GLOW_INK_SAC
+    reward-item-amount: 4
+  break_sea_pickle:
+    name: "&bMorskie ogrody"
+    description: "&7Zbierz 24 ogórki morskie"
+    difficulty: MEDIUM
+    type: BREAK
+    target: SEA_PICKLE
+    amount: 24
+    reward-xp: 210
+    reward-item: PRISMARINE_SHARD
+    reward-item-amount: 12
+  break_lily_pad:
+    name: "&aLiście na tafli"
+    description: "&7Zbierz 20 lilii wodnych"
+    difficulty: EASY
+    type: BREAK
+    target: LILY_PAD
+    amount: 20
+    reward-xp: 150
+    reward-item: SLIME_BALL
+    reward-item-amount: 4
+  break_vine:
+    name: "&2Zielona ściana"
+    description: "&7Zbierz 48 pnączy"
+    difficulty: EASY
+    type: BREAK
+    target: VINE
+    amount: 48
+    reward-xp: 150
+    reward-item: BONE_MEAL
+    reward-item-amount: 16
+  break_mangrove_roots:
+    name: "&6Korzenie bagien"
+    description: "&7Zbierz 32 namorzynowe korzenie"
+    difficulty: MEDIUM
+    type: BREAK
+    target: MANGROVE_ROOTS
+    amount: 32
+    reward-xp: 210
+    reward-item: MUD
+    reward-item-amount: 16
+  break_honeycomb_block:
+    name: "&eMiodowa robota"
+    description: "&7Zbierz 12 bloków plastra miodu"
+    difficulty: MEDIUM
+    type: BREAK
+    target: HONEYCOMB_BLOCK
+    amount: 12
+    reward-xp: 220
+    reward-item: HONEYCOMB
+    reward-item-amount: 16
+  kill_wolf:
+    name: "&7Wilczy trop"
+    description: "&7Pokonaj 4 wilki"
+    difficulty: HARD
+    type: KILL
+    target: WOLF
+    amount: 4
+    reward-xp: 360
+    reward-item: BONE
+    reward-item-amount: 24
+  kill_bee:
+    name: "&eNie drażnij ula"
+    description: "&7Pokonaj 5 pszczół"
+    difficulty: MEDIUM
+    type: KILL
+    target: BEE
+    amount: 5
+    reward-xp: 260
+    reward-item: HONEYCOMB
+    reward-item-amount: 8
+  kill_zombie_villager:
+    name: "&2Powrót do osady"
+    description: "&7Pokonaj 5 zombie-osadników"
+    difficulty: MEDIUM
+    type: KILL
+    target: ZOMBIE_VILLAGER
+    amount: 5
+    reward-xp: 280
+    reward-item: GOLDEN_APPLE
+    reward-item-amount: 1
+  kill_silverfish:
+    name: "&7Srebrny problem"
+    description: "&7Pokonaj 8 rybików cukrowych"
+    difficulty: MEDIUM
+    type: KILL
+    target: SILVERFISH
+    amount: 8
+    reward-xp: 280
+    reward-item: STONE_BRICKS
+    reward-item-amount: 24
+  craft_stonecutter:
+    name: "&6Precyzja kamieniarza"
+    description: "&7Wytwórz 3 kamieniarze"
+    difficulty: EASY
+    type: CRAFT
+    target: STONECUTTER
+    amount: 3
+    reward-xp: 170
+    reward-item: IRON_INGOT
+    reward-item-amount: 6
+  craft_loom:
+    name: "&dTkacki warsztat"
+    description: "&7Wytwórz 4 krosna"
+    difficulty: EASY
+    type: CRAFT
+    target: LOOM
+    amount: 4
+    reward-xp: 170
+    reward-item: WHITE_WOOL
+    reward-item-amount: 16
+  craft_composter:
+    name: "&aKompost dla królestwa"
+    description: "&7Wytwórz 4 kompostowniki"
+    difficulty: EASY
+    type: CRAFT
+    target: COMPOSTER
+    amount: 4
+    reward-xp: 160
+    reward-item: BONE_MEAL
+    reward-item-amount: 16
+  craft_campfire:
+    name: "&6Ognisko wędrowca"
+    description: "&7Wytwórz 3 ogniska"
+    difficulty: MEDIUM
+    type: CRAFT
+    target: CAMPFIRE
+    amount: 3
+    reward-xp: 220
+    reward-item: COOKED_BEEF
+    reward-item-amount: 8
+  craft_crossbow:
+    name: "&cŁowca z kuszą"
+    description: "&7Wytwórz 2 kusze"
+    difficulty: MEDIUM
+    type: CRAFT
+    target: CROSSBOW
+    amount: 2
+    reward-xp: 260
+    reward-item: ARROW
+    reward-item-amount: 24
+  craft_trapdoor:
+    name: "&6Sekretne przejście"
+    description: "&7Wytwórz 16 klap"
+    difficulty: EASY
+    type: CRAFT
+    target: OAK_TRAPDOOR
+    amount: 16
+    reward-xp: 150
+    reward-item: OAK_PLANKS
+    reward-item-amount: 24
+  craft_painting:
+    name: "&aGaleria Steve'a"
+    description: "&7Wytwórz 8 obrazów"
+    difficulty: EASY
+    type: CRAFT
+    target: PAINTING
+    amount: 8
+    reward-xp: 160
+    reward-item: ITEM_FRAME
+    reward-item-amount: 4
+  craft_armor_stand:
+    name: "&7Wystawa zbroi"
+    description: "&7Wytwórz 4 stojaki na zbroję"
+    difficulty: MEDIUM
+    type: CRAFT
+    target: ARMOR_STAND
+    amount: 4
+    reward-xp: 220
+    reward-item: IRON_INGOT
+    reward-item-amount: 8
+  craft_chest_minecart:
+    name: "&6Kolejowy magazyn"
+    description: "&7Wytwórz 2 wagoniki ze skrzynią"
+    difficulty: MEDIUM
+    type: CRAFT
+    target: CHEST_MINECART
+    amount: 2
+    reward-xp: 260
+    reward-item: RAIL
+    reward-item-amount: 24
+  eat_cookie:
+    name: "&6Słodka przerwa"
+    description: "&7Zjedz 16 ciastek"
+    difficulty: EASY
+    type: EAT
+    target: COOKIE
+    amount: 16
+    reward-xp: 160
+    reward-item: WHEAT
+    reward-item-amount: 16
+  eat_pumpkin_pie:
+    name: "&6Jesienny deser"
+    description: "&7Zjedz 8 ciast dyniowych"
+    difficulty: MEDIUM
+    type: EAT
+    target: PUMPKIN_PIE
+    amount: 8
+    reward-xp: 220
+    reward-item: PUMPKIN
+    reward-item-amount: 4
+  eat_melon_slice:
+    name: "&aOwocowy odpoczynek"
+    description: "&7Zjedz 16 kawałków arbuza"
+    difficulty: EASY
+    type: EAT
+    target: MELON_SLICE
+    amount: 16
+    reward-xp: 150
+    reward-item: MELON
+    reward-item-amount: 4
+  eat_beetroot_soup:
+    name: "&cBarszcz Steve'a"
+    description: "&7Zjedz 6 misek zupy buraczanej"
+    difficulty: MEDIUM
+    type: EAT
+    target: BEETROOT_SOUP
+    amount: 6
+    reward-xp: 220
+    reward-item: BEETROOT
+    reward-item-amount: 16
+  breed_pigs:
+    name: "&dChrumkająca hodowla"
+    description: "&7Rozmnóż 8 świń"
+    difficulty: MEDIUM
+    type: BREED
+    target: PIG
+    amount: 8
+    reward-xp: 250
+    reward-item: CARROT
+    reward-item-amount: 24
+  breed_rabbits:
+    name: "&dKrólicza rodzinka"
+    description: "&7Rozmnóż 5 królików"
+    difficulty: MEDIUM
+    type: BREED
+    target: RABBIT
+    amount: 5
+    reward-xp: 240
+    reward-item: CARROT
+    reward-item-amount: 16
+  breed_wolves:
+    name: "&7Wilcza wataha"
+    description: "&7Rozmnóż 3 wilki"
+    difficulty: HARD
+    type: BREED
+    target: WOLF
+    amount: 3
+    reward-xp: 320
+    reward-item: BONE
+    reward-item-amount: 12
+  breed_bees:
+    name: "&ePszczela rodzina"
+    description: "&7Rozmnóż 4 pszczoły"
+    difficulty: HARD
+    type: BREED
+    target: BEE
+    amount: 4
+    reward-xp: 320
+    reward-item: HONEY_BOTTLE
+    reward-item-amount: 4
+  walk_750:
+    name: "&dSzlak odkrywcy"
+    description: "&7Przejdź 750 bloków"
+    difficulty: EASY
+    type: WALK
+    target: ANY
+    amount: 750
+    reward-xp: 140
+    reward-item: BAKED_POTATO
+    reward-item-amount: 8
+  walk_4000:
+    name: "&dDługa droga do domu"
+    description: "&7Przejdź 4000 bloków"
+    difficulty: HARD
+    type: WALK
+    target: ANY
+    amount: 4000
+    reward-xp: 420
+    reward-item: SADDLE
+    reward-item-amount: 1
+  swim_1200:
+    name: "&bMorski maratończyk"
+    description: "&7Przepłyń 1200 bloków"
+    difficulty: HARD
+    type: SWIM
+    target: ANY
+    amount: 1200
+    reward-xp: 380
+    reward-item: TROPICAL_FISH
+    reward-item-amount: 4
+  fish_pufferfish:
+    name: "&eNiebezpieczny połów"
+    description: "&7Złów 4 rozdymki"
+    difficulty: MEDIUM
+    type: FISH
+    target: PUFFERFISH
+    amount: 4
+    reward-xp: 250
+    reward-item: WATER_BUCKET
+    reward-item-amount: 1
+  fish_tropical:
+    name: "&bKolorowa zdobycz"
+    description: "&7Złów 4 ryby tropikalne"
+    difficulty: HARD
+    type: FISH
+    target: TROPICAL_FISH
+    amount: 4
+    reward-xp: 340
+    reward-item: TROPICAL_FISH_BUCKET
+    reward-item-amount: 1
+  trade_emeralds_5:
+    name: "&aMały handel"
+    description: "&7Dokonaj 5 wymian z osadnikami"
+    difficulty: EASY
+    type: TRADE
+    target: ANY
+    amount: 5
+    reward-xp: 180
+    reward-item: EMERALD
+    reward-item-amount: 3
+  anvil_repairs_3:
+    name: "&7Naprawa na medal"
+    description: "&7Użyj kowadła 3 razy"
+    difficulty: EASY
+    type: ANVIL
+    target: ANY
+    amount: 3
+    reward-xp: 180
+    reward-item: IRON_INGOT
+    reward-item-amount: 6
