@@ -42,6 +42,7 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
     private CrateNpcSystem crateNpcSystem;
 
     private record TaskSlot(int slot, String taskId) { }
+    private record CampfireFood(Material result, int amount) { }
 
     private static final class Task {
         String id, name, description, type, target, rewardItem, dimension, difficulty;
@@ -933,28 +934,32 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
 
     @EventHandler
     public void onCampfireTake(PlayerInteractEvent event) {
-        if (event.getAction() != org.bukkit.event.block.Action.RIGHT_CLICK_BLOCK || event.getClickedBlock() == null) return;
+        if (event.isCancelled() || event.getAction() != org.bukkit.event.block.Action.RIGHT_CLICK_BLOCK || event.getClickedBlock() == null) return;
         Material blockType = event.getClickedBlock().getType();
         if (blockType != Material.CAMPFIRE && blockType != Material.SOUL_CAMPFIRE) return;
         if (!(event.getClickedBlock().getState() instanceof org.bukkit.block.Campfire campfire)) return;
 
-        Map<Material, Integer> cooked = new EnumMap<>(Material.class);
+        Map<Integer, CampfireFood> readyFood = new HashMap<>();
         for (int slot = 0; slot < 4; slot++) {
-            ItemStack item = campfire.getItem(slot);
-            if (item == null || item.getType().isAir()) continue;
-            Material result = campfireResult(item.getType());
-            if (result != null) cooked.merge(result, item.getAmount(), Integer::sum);
+            ItemStack input = campfire.getItem(slot);
+            if (input == null || input.getType().isAir()) continue;
+            if (campfire.getCookTime(slot) < campfire.getCookTimeTotal(slot)) continue;
+            Material result = campfireResult(input.getType());
+            if (result != null) readyFood.put(slot, new CampfireFood(result, input.getAmount()));
         }
-        if (cooked.isEmpty()) return;
+        if (readyFood.isEmpty()) return;
 
         Player player = event.getPlayer();
-        Map<Material, Long> before = new EnumMap<>(Material.class);
-        for (Material material : cooked.keySet()) before.put(material, countInventoryItems(player, material));
+        org.bukkit.block.Block campfireBlock = event.getClickedBlock();
         Bukkit.getScheduler().runTask(this, () -> {
-            if (!player.isOnline()) return;
-            for (Material material : cooked.keySet()) {
-                long gained = countInventoryItems(player, material) - before.getOrDefault(material, 0L);
-                if (gained > 0) updateCraftProgress(player, material, (int) Math.min(Integer.MAX_VALUE, gained));
+            if (!player.isOnline() || !campfireBlock.getType().equals(blockType)) return;
+            if (!(campfireBlock.getState() instanceof org.bukkit.block.Campfire after)) return;
+            for (Map.Entry<Integer, CampfireFood> entry : readyFood.entrySet()) {
+                int slot = entry.getKey(); CampfireFood food = entry.getValue();
+                ItemStack remaining = after.getItem(slot);
+                int remainingAmount = remaining != null && remaining.getType() != Material.AIR ? remaining.getAmount() : 0;
+                int removed = Math.max(0, food.amount() - remainingAmount);
+                if (removed > 0) updateCraftProgress(player, food.result(), removed);
             }
         });
     }
@@ -973,15 +978,6 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
             default -> null;
         };
     }
-
-    private long countInventoryItems(Player player, Material material) {
-        long total = 0;
-        for (ItemStack item : player.getInventory().getStorageContents()) {
-            if (item != null && item.getType() == material) total += item.getAmount();
-        }
-        return total;
-    }
-
     @EventHandler public void onFish(PlayerFishEvent e){
         if(e.getState()!=PlayerFishEvent.State.CAUGHT_FISH)return;
         if (!(e.getCaught() instanceof org.bukkit.entity.Item caught)) return;
