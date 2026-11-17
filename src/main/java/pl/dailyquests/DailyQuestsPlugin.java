@@ -246,8 +246,13 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
             actual.progress=Math.min(actual.amount,actual.progress+delta);
             save(p.getUniqueId(),i,actual);
             if(before<actual.amount && actual.progress>=actual.amount){
-                p.playSound(p.getLocation(),Sound.UI_TOAST_CHALLENGE_COMPLETE,0.8f,1.0f);
-                p.sendMessage(ChatColor.GOLD+"★ "+ChatColor.GREEN+"Ukończono zadanie: "+ChatColor.WHITE+ChatColor.stripColor(actual.name)+ChatColor.GRAY+" — nagroda czeka w "+ChatColor.YELLOW+"/zadania");
+                ChatColor difficultyColor = switch (actual.difficulty) {
+                    case "EASY" -> ChatColor.GREEN;
+                    case "HARD" -> ChatColor.RED;
+                    default -> ChatColor.YELLOW;
+                };
+                Bukkit.broadcastMessage(ChatColor.GOLD + "★ " + ChatColor.WHITE + p.getName()
+                        + ChatColor.GRAY + " ukończył zadanie " + difficultyColor + actual.name);
             }
             break;
         }
@@ -579,6 +584,14 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
         if(amount<=0) return;
         WeeklyChallenge c=weeklyChallenge();
         if(!isDimensionEnabled(c.dimension()) || !c.type().equals(type)||(!c.target().equals("ANY")&&!c.target().equals(target))) return;
+        String week = weekKey();
+        int previous = 0;
+        try {
+            int[] before = weeklyProgress(p.getUniqueId(), c);
+            previous = before[0];
+        } catch (SQLException ex) {
+            getLogger().warning("Błąd odczytu postępu weekly: " + ex.getMessage());
+        }
         try(PreparedStatement q=db.prepareStatement(
                 "INSERT INTO weekly_tasks(uuid,week,progress,claimed,challenge_id) VALUES(?,?,?,0,?) " +
                 "ON CONFLICT(uuid,week) DO UPDATE SET " +
@@ -586,7 +599,12 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
                 "claimed=CASE WHEN weekly_tasks.challenge_id=excluded.challenge_id THEN weekly_tasks.claimed ELSE 0 END, " +
                 "challenge_id=excluded.challenge_id " +
                 "WHERE weekly_tasks.claimed=0 OR weekly_tasks.challenge_id<>excluded.challenge_id")) {
-            q.setString(1,p.getUniqueId().toString());q.setString(2,weekKey());q.setInt(3,amount);q.setString(4,weeklyChallengeId(c));q.executeUpdate();
+            q.setString(1,p.getUniqueId().toString());q.setString(2,week);q.setInt(3,amount);q.setString(4,weeklyChallengeId(c));q.executeUpdate();
+            int[] after = weeklyProgress(p.getUniqueId(), c);
+            if (previous < c.amount() && after[0] >= c.amount() && after[1] == 0) {
+                Bukkit.broadcastMessage(ChatColor.GOLD + "✦ " + ChatColor.YELLOW + p.getName()
+                        + ChatColor.GOLD + " ukończył wyzwanie weekendowe: " + ChatColor.YELLOW + c.title());
+            }
         } catch(SQLException e) { getLogger().warning("Błąd postępu weekly: "+e.getMessage()); }
     }
     void openWeeklyPreview(Player player) {
@@ -892,14 +910,59 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
             if (crafted <= 0) return;
 
             int count = (int) Math.min(Integer.MAX_VALUE, crafted);
-            String type = resultType.name();
-            updateWeekly(p, "CRAFT", type, count);
-            for (Task t : ensureTasks(p)) {
-                if (t.type.equals("CRAFT") && (t.target.equals("ANY") || t.target.equals(type))) {
-                    update(p, t, count);
-                }
+            updateCraftProgress(p, resultType, count);
+        });
+    }
+
+
+    private void updateCraftProgress(Player player, Material result, int amount) {
+        if (amount <= 0) return;
+        String type = result.name();
+        updateWeekly(player, "CRAFT", type, amount);
+        for (Task task : ensureTasks(player)) {
+            if (task.type.equals("CRAFT") && (task.target.equals("ANY") || task.target.equals(type))) {
+                update(player, task, amount);
+            }
+        }
+    }
+
+    @EventHandler
+    public void onFurnaceExtract(FurnaceExtractEvent event) {
+        updateCraftProgress(event.getPlayer(), event.getItemType(), event.getItemAmount());
+    }
+
+    @EventHandler
+    public void onCampfireTake(PlayerInteractEvent event) {
+        if (event.getAction() != org.bukkit.event.block.Action.RIGHT_CLICK_BLOCK || event.getClickedBlock() == null) return;
+        Material blockType = event.getClickedBlock().getType();
+        if (blockType != Material.CAMPFIRE && blockType != Material.SOUL_CAMPFIRE) return;
+        if (!(event.getClickedBlock().getState() instanceof org.bukkit.block.Campfire campfire)) return;
+
+        Map<Material, Integer> cooked = new EnumMap<>(Material.class);
+        for (int slot = 0; slot < 4; slot++) {
+            ItemStack item = campfire.getItem(slot);
+            if (item != null && !item.getType().isAir()) cooked.merge(item.getType(), item.getAmount(), Integer::sum);
+        }
+        if (cooked.isEmpty()) return;
+
+        Player player = event.getPlayer();
+        Map<Material, Long> before = new EnumMap<>(Material.class);
+        for (Material material : cooked.keySet()) before.put(material, countInventoryItems(player, material));
+        Bukkit.getScheduler().runTask(this, () -> {
+            if (!player.isOnline()) return;
+            for (Material material : cooked.keySet()) {
+                long gained = countInventoryItems(player, material) - before.getOrDefault(material, 0L);
+                if (gained > 0) updateCraftProgress(player, material, (int) Math.min(Integer.MAX_VALUE, gained));
             }
         });
+    }
+
+    private long countInventoryItems(Player player, Material material) {
+        long total = 0;
+        for (ItemStack item : player.getInventory().getStorageContents()) {
+            if (item != null && item.getType() == material) total += item.getAmount();
+        }
+        return total;
     }
 
     @EventHandler public void onFish(PlayerFishEvent e){
@@ -951,7 +1014,18 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
         e.setCancelled(true);if(!(e.getWhoClicked() instanceof Player p))return;
         int slot=e.getRawSlot();
         if (slot == 31) {
-            openWeeklyPreview(p);
+            WeeklyChallenge challenge = weeklyChallenge();
+            try {
+                int[] state = weeklyProgress(p.getUniqueId(), challenge);
+                if (state[0] >= challenge.amount() && state[1] == 0) {
+                    claimWeeklyReward(p);
+                    open(p);
+                } else {
+                    openWeeklyPreview(p);
+                }
+            } catch (SQLException ex) {
+                p.sendMessage(ChatColor.RED + "Nie udało się odczytać wyzwania tygodnia.");
+            }
             return;
         }
         if(slot==40) {
