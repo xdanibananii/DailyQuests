@@ -98,10 +98,48 @@ public final class CrateNpcSystem implements Listener {
   v.setCustomName(ChatColor.GOLD+"✦ "+ChatColor.LIGHT_PURPLE+ChatColor.translateAlternateColorCodes('&',name)+ChatColor.GOLD+" ✦"); v.setCustomNameVisible(true); v.getPersistentDataContainer().set(key,PersistentDataType.BYTE,(byte)1);
  }
  private void restore() {
-  if(!file.exists()) return; YamlConfiguration y=YamlConfiguration.loadConfiguration(file); World w=Bukkit.getWorld(y.getString("world","")); if(w==null||!y.contains("x")) return;
-  Entity e=null; try { String id=y.getString("uuid",""); if(!id.isBlank()) e=Bukkit.getEntity(UUID.fromString(id)); } catch(IllegalArgumentException ignored) {}
-  if(e instanceof Villager v) { configure(v,y.getString("name","Strażnik Skarbca")); return; }
-  Location l=loc(y,w); w.getChunkAt(l).load(); Villager v=(Villager)w.spawnEntity(l,EntityType.VILLAGER); configure(v,y.getString("name","Strażnik Skarbca")); y.set("uuid",v.getUniqueId().toString()); save(y);
+  if(!file.exists()) return;
+  YamlConfiguration y=YamlConfiguration.loadConfiguration(file);
+  World w=Bukkit.getWorld(y.getString("world",""));
+  if(w==null||!y.contains("x")) return;
+
+  Location location=loc(y,w);
+  w.getChunkAt(location).load();
+  String savedId=y.getString("uuid","");
+  Entity keep=null;
+  try {
+   if(!savedId.isBlank()) keep=Bukkit.getEntity(UUID.fromString(savedId));
+  } catch(IllegalArgumentException ignored) {}
+
+  // Older restarts could leave several tagged villagers at the saved location.
+  // Keep the canonical UUID when possible; otherwise keep the nearest tagged NPC.
+  List<Entity> tagged=new ArrayList<>();
+  for(World world:Bukkit.getWorlds()) {
+   for(Entity entity:world.getEntities()) {
+    if(entity.getPersistentDataContainer().has(key,PersistentDataType.BYTE)) tagged.add(entity);
+   }
+  }
+  if(!(keep instanceof Villager) || !keep.isValid()) {
+   keep=tagged.stream()
+    .filter(entity->entity.getWorld().equals(w))
+    .min(Comparator.comparingDouble(entity->entity.getLocation().distanceSquared(location)))
+    .orElse(null);
+  }
+  for(Entity entity:tagged) {
+   if(keep==null || !entity.getUniqueId().equals(keep.getUniqueId())) entity.remove();
+  }
+
+  if(keep instanceof Villager villager && villager.isValid()) {
+   configure(villager,y.getString("name","Strażnik Skarbca"));
+   y.set("uuid",villager.getUniqueId().toString());
+   save(y);
+   return;
+  }
+
+  Villager villager=(Villager)w.spawnEntity(location,EntityType.VILLAGER);
+  configure(villager,y.getString("name","Strażnik Skarbca"));
+  y.set("uuid",villager.getUniqueId().toString());
+  save(y);
  }
  void spawnAt(Location l) {
   if(l.getWorld()==null) return; remove(); Villager v=(Villager)l.getWorld().spawnEntity(l,EntityType.VILLAGER); YamlConfiguration y=new YamlConfiguration(); y.set("name","Strażnik Skarbca"); configure(v,"Strażnik Skarbca");
