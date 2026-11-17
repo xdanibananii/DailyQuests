@@ -941,7 +941,9 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
         Map<Material, Integer> cooked = new EnumMap<>(Material.class);
         for (int slot = 0; slot < 4; slot++) {
             ItemStack item = campfire.getItem(slot);
-            if (item != null && !item.getType().isAir()) cooked.merge(item.getType(), item.getAmount(), Integer::sum);
+            if (item == null || item.getType().isAir()) continue;
+            Material result = campfireResult(item.getType());
+            if (result != null) cooked.merge(result, item.getAmount(), Integer::sum);
         }
         if (cooked.isEmpty()) return;
 
@@ -955,6 +957,21 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
                 if (gained > 0) updateCraftProgress(player, material, (int) Math.min(Integer.MAX_VALUE, gained));
             }
         });
+    }
+
+    private Material campfireResult(Material input) {
+        return switch (input) {
+            case BEEF -> Material.COOKED_BEEF;
+            case PORKCHOP -> Material.COOKED_PORKCHOP;
+            case CHICKEN -> Material.COOKED_CHICKEN;
+            case MUTTON -> Material.COOKED_MUTTON;
+            case RABBIT -> Material.COOKED_RABBIT;
+            case COD -> Material.COOKED_COD;
+            case SALMON -> Material.COOKED_SALMON;
+            case POTATO -> Material.BAKED_POTATO;
+            case KELP -> Material.DRIED_KELP;
+            default -> null;
+        };
     }
 
     private long countInventoryItems(Player player, Material material) {
