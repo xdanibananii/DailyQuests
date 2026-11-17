@@ -536,6 +536,9 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
                     u.executeUpdate();
                 }
                 p.sendMessage(ChatColor.GOLD + "Seria ukończonych dni: " + ChatColor.YELLOW + streak + " ★");
+                Bukkit.broadcastMessage(ChatColor.GOLD + "✦ " + ChatColor.WHITE + p.getName()
+                        + ChatColor.GRAY + " ukończył wszystkie 5 zadań dziennych! "
+                        + ChatColor.GOLD + "Seria: " + ChatColor.YELLOW + "dzień " + streak + " ★");
                 if (streak % 7 == 0) {
                     p.giveExp(500);
                     p.sendMessage(ChatColor.LIGHT_PURPLE + "7-dniowa seria! Bonus: 500 XP.");
