@@ -10,6 +10,7 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.*;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.inventory.*;
 import org.bukkit.event.player.*;
@@ -75,6 +76,7 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
                 s.executeUpdate("CREATE TABLE IF NOT EXISTS weekly_tasks (uuid TEXT NOT NULL, week TEXT NOT NULL, progress INTEGER NOT NULL DEFAULT 0, claimed INTEGER NOT NULL DEFAULT 0, challenge_id TEXT NOT NULL DEFAULT '', PRIMARY KEY(uuid,week))");
                 try { s.executeUpdate("ALTER TABLE weekly_tasks ADD COLUMN challenge_id TEXT NOT NULL DEFAULT ''"); } catch (SQLException ignored) { }
                 s.executeUpdate("CREATE TABLE IF NOT EXISTS task_history (uuid TEXT NOT NULL, task_id TEXT NOT NULL, assigned_day TEXT NOT NULL, PRIMARY KEY(uuid,task_id,assigned_day))");
+                s.executeUpdate("CREATE TABLE IF NOT EXISTS placed_wood_blocks (world TEXT NOT NULL, x INTEGER NOT NULL, y INTEGER NOT NULL, z INTEGER NOT NULL, material TEXT NOT NULL, PRIMARY KEY(world,x,y,z))");
                 File resetMarker = new File(getDataFolder(), "test-reset-v2.done");
                 if (!resetMarker.exists()) {
                     s.executeUpdate("DELETE FROM player_tasks");
@@ -869,9 +871,63 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
         return type.equals("KELP_PLANT") ? "KELP" : type;
     }
 
+    private boolean isWoodLog(Material material) {
+        String name = material.name();
+        return name.endsWith("_LOG") || name.endsWith("_WOOD")
+                || name.endsWith("_STEM") || name.endsWith("_HYPHAE");
+    }
+
+    @EventHandler public void onWoodPlace(BlockPlaceEvent event) {
+        if (event.isCancelled() || !isWoodLog(event.getBlockPlaced().getType())) return;
+        Location location = event.getBlockPlaced().getLocation();
+        try (PreparedStatement statement = db.prepareStatement(
+                "INSERT OR REPLACE INTO placed_wood_blocks(world,x,y,z,material) VALUES(?,?,?,?,?)")) {
+            statement.setString(1, location.getWorld().getUID().toString());
+            statement.setInt(2, location.getBlockX());
+            statement.setInt(3, location.getBlockY());
+            statement.setInt(4, location.getBlockZ());
+            statement.setString(5, event.getBlockPlaced().getType().name());
+            statement.executeUpdate();
+        } catch (SQLException ex) {
+            getLogger().warning("Nie udało się zapisać postawionego pnia: " + ex.getMessage());
+        }
+    }
+
+    private boolean consumePlacedWoodMarker(Location location, Material brokenType) {
+        String worldId = location.getWorld().getUID().toString();
+        String storedMaterial = null;
+        try (PreparedStatement query = db.prepareStatement(
+                "SELECT material FROM placed_wood_blocks WHERE world=? AND x=? AND y=? AND z=?")) {
+            query.setString(1, worldId);
+            query.setInt(2, location.getBlockX());
+            query.setInt(3, location.getBlockY());
+            query.setInt(4, location.getBlockZ());
+            try (ResultSet result = query.executeQuery()) {
+                if (result.next()) storedMaterial = result.getString(1);
+            }
+            if (storedMaterial == null) return false;
+
+            try (PreparedStatement delete = db.prepareStatement(
+                    "DELETE FROM placed_wood_blocks WHERE world=? AND x=? AND y=? AND z=?")) {
+                delete.setString(1, worldId);
+                delete.setInt(2, location.getBlockX());
+                delete.setInt(3, location.getBlockY());
+                delete.setInt(4, location.getBlockZ());
+                delete.executeUpdate();
+            }
+            return storedMaterial.equals(brokenType.name());
+        } catch (SQLException ex) {
+            getLogger().warning("Nie udało się sprawdzić postawionego pnia: " + ex.getMessage());
+            // Fail closed: do not award progress when the anti-exploit check fails.
+            return true;
+        }
+    }
+
     @EventHandler public void onBreak(BlockBreakEvent e){
         if(e.isCancelled())return;
-        String type=normalizedBlockType(e.getBlock().getType());
+        Material brokenType = e.getBlock().getType();
+        if (isWoodLog(brokenType) && consumePlacedWoodMarker(e.getBlock().getLocation(), brokenType)) return;
+        String type=normalizedBlockType(brokenType);
         updateWeekly(e.getPlayer(),"BREAK",type,1);
         for(Task t:ensureTasks(e.getPlayer()))if(t.type.equals("BREAK")&&dimensionMatches(t,e.getBlock().getWorld())
                 &&(t.target.equals("ANY")||t.target.equals(type)
