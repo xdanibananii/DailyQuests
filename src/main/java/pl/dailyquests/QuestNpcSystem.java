@@ -193,6 +193,7 @@ public final class QuestNpcSystem implements Listener {
         String day = today();
         UUID uuid = player.getUniqueId();
         Map<Integer, Contract> assigned = new TreeMap<>();
+        List<Integer> invalidSlots = new ArrayList<>();
         try (PreparedStatement query = db.prepareStatement(
                 "SELECT slot,quest_id,claimed FROM npc_contracts WHERE uuid=? AND day=? ORDER BY slot")) {
             query.setString(1, uuid.toString());
@@ -205,7 +206,7 @@ public final class QuestNpcSystem implements Listener {
                         contract.slot = slot;
                         contract.claimed = rows.getInt(3) == 1;
                         assigned.put(slot, contract);
-                    }
+                    } else invalidSlots.add(slot);
                 }
             }
         } catch (SQLException ex) {
@@ -213,6 +214,11 @@ public final class QuestNpcSystem implements Listener {
             return new ArrayList<>();
         }
 
+        for (int invalidSlot : invalidSlots) {
+            try (PreparedStatement delete = db.prepareStatement("DELETE FROM npc_contracts WHERE uuid=? AND day=? AND slot=?")) {
+                delete.setString(1, uuid.toString()); delete.setString(2, day); delete.setInt(3, invalidSlot); delete.executeUpdate();
+            } catch (SQLException ex) { plugin.getLogger().warning("Nie udało się usunąć wyłączonego kontraktu: " + ex.getMessage()); }
+        }
         ConfigurationSection pool = quests().getConfigurationSection("contracts");
         if (pool == null || pool.getKeys(false).isEmpty()) return new ArrayList<>(assigned.values());
 
