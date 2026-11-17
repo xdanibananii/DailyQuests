@@ -62,7 +62,7 @@ public final class QuestNpcSystem implements Listener {
 
     private static final class Contract {
         String id, name, description, material, dimension;
-        int amount, stars, xp, delivered;
+        int amount, stars, xp, delivered, slot;
         boolean claimed;
     }
 
@@ -75,6 +75,18 @@ public final class QuestNpcSystem implements Listener {
         this.questsFile = new File(plugin.getDataFolder(), "npc_quests.yml");
         try (Statement st = db.createStatement()) {
             st.executeUpdate("CREATE TABLE IF NOT EXISTS npc_contracts (uuid TEXT NOT NULL, day TEXT NOT NULL, quest_id TEXT NOT NULL, claimed INTEGER NOT NULL DEFAULT 0, PRIMARY KEY(uuid,day))");
+            boolean hasSlot = false;
+            try (ResultSet columns = st.executeQuery("PRAGMA table_info(npc_contracts)")) {
+                while (columns.next()) if ("slot".equalsIgnoreCase(columns.getString("name"))) hasSlot = true;
+            }
+            if (!hasSlot) {
+                st.executeUpdate("ALTER TABLE npc_contracts RENAME TO npc_contracts_legacy");
+                st.executeUpdate("CREATE TABLE npc_contracts (uuid TEXT NOT NULL, day TEXT NOT NULL, slot INTEGER NOT NULL, quest_id TEXT NOT NULL, claimed INTEGER NOT NULL DEFAULT 0, PRIMARY KEY(uuid,day,slot))");
+                st.executeUpdate("INSERT INTO npc_contracts(uuid,day,slot,quest_id,claimed) SELECT uuid,day,0,quest_id,claimed FROM npc_contracts_legacy");
+                st.executeUpdate("DROP TABLE npc_contracts_legacy");
+                plugin.getLogger().info("Zmigrowano kontrakty Michaiła do systemu trzech dziennych zleceń.");
+            }
+            st.executeUpdate("CREATE UNIQUE INDEX IF NOT EXISTS npc_contracts_unique_quest ON npc_contracts(uuid,day,quest_id)");
         } catch (SQLException ex) {
             plugin.getLogger().severe("Nie mozna utworzyc tabeli kontraktow NPC: " + ex.getMessage());
         }
@@ -177,43 +189,39 @@ public final class QuestNpcSystem implements Listener {
         }
     }
 
-    private Contract getContract(Player player) {
+    private List<Contract> getContracts(Player player) {
         String day = today();
-        try (PreparedStatement q = db.prepareStatement("SELECT quest_id,claimed FROM npc_contracts WHERE uuid=? AND day=?")) {
-            q.setString(1, player.getUniqueId().toString());
-            q.setString(2, day);
-            try (ResultSet r = q.executeQuery()) {
-                if (r.next()) {
-                    Contract c = readContract(r.getString(1));
-                    if (c != null && plugin.isDimensionEnabled(c.dimension)) {
-                        c.claimed = r.getInt(2) == 1;
-                        return c;
-                    }
-                    try (PreparedStatement delete = db.prepareStatement(
-                            "DELETE FROM npc_contracts WHERE uuid=? AND day=?")) {
-                        delete.setString(1, player.getUniqueId().toString());
-                        delete.setString(2, day);
-                        delete.executeUpdate();
+        UUID uuid = player.getUniqueId();
+        Map<Integer, Contract> assigned = new TreeMap<>();
+        try (PreparedStatement query = db.prepareStatement(
+                "SELECT slot,quest_id,claimed FROM npc_contracts WHERE uuid=? AND day=? ORDER BY slot")) {
+            query.setString(1, uuid.toString());
+            query.setString(2, day);
+            try (ResultSet rows = query.executeQuery()) {
+                while (rows.next()) {
+                    int slot = rows.getInt(1);
+                    Contract contract = readContract(rows.getString(2));
+                    if (contract != null && plugin.isDimensionEnabled(contract.dimension)) {
+                        contract.slot = slot;
+                        contract.claimed = rows.getInt(3) == 1;
+                        assigned.put(slot, contract);
                     }
                 }
             }
         } catch (SQLException ex) {
-            plugin.getLogger().warning("Blad odczytu kontraktu NPC: " + ex.getMessage());
-            return null;
+            plugin.getLogger().warning("Błąd odczytu kontraktów NPC: " + ex.getMessage());
+            return new ArrayList<>();
         }
 
         ConfigurationSection pool = quests().getConfigurationSection("contracts");
-        if (pool == null || pool.getKeys(false).isEmpty()) return null;
-        List<String> ids = new ArrayList<>(pool.getKeys(false));
-        ids.removeIf(id -> {
-            Contract contract = readContract(id);
-            return contract == null || !plugin.isDimensionEnabled(contract.dimension);
-        });
-        if (ids.isEmpty()) return null;
+        if (pool == null || pool.getKeys(false).isEmpty()) return new ArrayList<>(assigned.values());
+
+        Set<String> assignedIds = new HashSet<>();
+        assigned.values().forEach(contract -> assignedIds.add(contract.id));
         Set<String> recentlyAssigned = new HashSet<>();
         try (PreparedStatement history = db.prepareStatement(
                 "SELECT DISTINCT quest_id FROM npc_contracts WHERE uuid=? AND day>=date(?, '-30 days')")) {
-            history.setString(1, player.getUniqueId().toString());
+            history.setString(1, uuid.toString());
             history.setString(2, day);
             try (ResultSet rows = history.executeQuery()) {
                 while (rows.next()) recentlyAssigned.add(rows.getString(1));
@@ -221,31 +229,48 @@ public final class QuestNpcSystem implements Listener {
         } catch (SQLException ex) {
             plugin.getLogger().warning("Nie udało się odczytać historii kontraktów: " + ex.getMessage());
         }
-        ids.removeIf(recentlyAssigned::contains);
-        if (ids.isEmpty()) {
-            ids = new ArrayList<>(pool.getKeys(false));
-            ids.removeIf(id -> {
+
+        List<String> candidates = new ArrayList<>(pool.getKeys(false));
+        candidates.removeIf(id -> {
+            Contract contract = readContract(id);
+            return contract == null || !plugin.isDimensionEnabled(contract.dimension)
+                    || assignedIds.contains(id) || recentlyAssigned.contains(id);
+        });
+        Collections.shuffle(candidates);
+        if (candidates.size() < 3 - assigned.size()) {
+            candidates = new ArrayList<>(pool.getKeys(false));
+            candidates.removeIf(id -> {
                 Contract contract = readContract(id);
-                return contract == null || !plugin.isDimensionEnabled(contract.dimension);
+                return contract == null || !plugin.isDimensionEnabled(contract.dimension) || assignedIds.contains(id);
             });
+            Collections.shuffle(candidates);
         }
-        Collections.shuffle(ids);
-        for (String id : ids) {
-            Contract c = readContract(id);
-            if (c == null) continue;
+
+        for (int slot = 0; slot < 3; slot++) {
+            if (assigned.containsKey(slot) || candidates.isEmpty()) continue;
+            String id = candidates.remove(0);
             try (PreparedStatement insert = db.prepareStatement(
-                    "INSERT OR IGNORE INTO npc_contracts(uuid,day,quest_id,claimed) VALUES(?,?,?,0)")) {
-                insert.setString(1, player.getUniqueId().toString());
+                    "INSERT OR IGNORE INTO npc_contracts(uuid,day,slot,quest_id,claimed) VALUES(?,?,?, ?,0)")) {
+                insert.setString(1, uuid.toString());
                 insert.setString(2, day);
-                insert.setString(3, id);
-                insert.executeUpdate();
-                return getContract(player);
+                insert.setInt(3, slot);
+                insert.setString(4, id);
+                if (insert.executeUpdate() == 1) {
+                    Contract contract = readContract(id);
+                    if (contract != null) {
+                        contract.slot = slot;
+                        assigned.put(slot, contract);
+                    }
+                }
             } catch (SQLException ex) {
-                plugin.getLogger().warning("Blad przydzielania kontraktu NPC: " + ex.getMessage());
-                return null;
+                plugin.getLogger().warning("Błąd przydzielania kontraktu NPC: " + ex.getMessage());
             }
         }
-        return null;
+        return new ArrayList<>(assigned.values());
+    }
+
+    private Contract contractAt(List<Contract> contracts, int slot) {
+        return contracts.stream().filter(contract -> contract.slot == slot).findFirst().orElse(null);
     }
 
     void spawnAt(Location location, CommandSenderAdapter reply) {
