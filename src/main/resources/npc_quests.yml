@@ -368,7 +368,7 @@ contracts:
     reward-stars: 10
     reward-xp: 420
   ender_pearls_for_portal:
-    dimension: END
+    dimension: OVERWORLD
     name: "&6Perły do portalu"
     description: "&7Badacze próbują ustabilizować portal. Potrzebują pereł Endermana."
     item: ENDER_PEARL
@@ -514,6 +514,7 @@ contracts:
     reward-stars: 5
     reward-xp: 190
   quartz_for_sculptor:
+    dimension: NETHER
     name: "&6Kwarc dla rzeźbiarza"
     description: "&7Rzeźbiarz ozdabia salę rady jasnymi blokami kwarcu."
     item: QUARTZ_BLOCK
