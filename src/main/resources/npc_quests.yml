@@ -428,3 +428,144 @@ contracts:
     amount: 4
     reward-stars: 10
     reward-xp: 450
+
+  cooked_meals:
+    name: "&6Zapasy dla gospody"
+    description: "&7Kucharz przygotowuje wielką ucztę. Potrzebuje porcji dobrze wypieczonego mięsa."
+    item: COOKED_BEEF
+    amount: 24
+    reward-stars: 6
+    reward-xp: 230
+  baked_potatoes:
+    name: "&6Ziemniaki z pieca"
+    description: "&7Karczmarka chce podać pieczone ziemniaki podróżnym. Dostarcz jej gotową partię."
+    item: BAKED_POTATO
+    amount: 32
+    reward-stars: 5
+    reward-xp: 200
+  cooked_chicken:
+    name: "&6Drób na ucztę"
+    description: "&7Kucharzowi brakuje pieczonego drobiu do dzisiejszego menu."
+    item: COOKED_CHICKEN
+    amount: 24
+    reward-stars: 5
+    reward-xp: 190
+  cooked_pork:
+    name: "&6Wieprzowina dla karczmy"
+    description: "&7Karczmarz obiecał gościom solidny posiłek. Przynieś pieczoną wieprzowinę."
+    item: COOKED_PORKCHOP
+    amount: 24
+    reward-stars: 6
+    reward-xp: 220
+  cooked_mutton:
+    name: "&6Jagnięcina dla kupca"
+    description: "&7Kupiec z dalekich stron zamówił zapas pieczonej jagnięciny."
+    item: COOKED_MUTTON
+    amount: 20
+    reward-stars: 6
+    reward-xp: 220
+  cooked_rabbit:
+    name: "&6Królicza pieczeń"
+    description: "&7Kucharz eksperymentuje z nowym menu. Potrzebuje pieczonego królika."
+    item: COOKED_RABBIT
+    amount: 16
+    reward-stars: 6
+    reward-xp: 220
+  baked_cod:
+    name: "&6Dorsz z rusztu"
+    description: "&7Rybak dostarczył świeże ryby, ale kuchnia nie ma czasu ich przygotować."
+    item: COOKED_COD
+    amount: 24
+    reward-stars: 5
+    reward-xp: 190
+  baked_salmon:
+    name: "&6Łosoś z rusztu"
+    description: "&7Na królewską kolację potrzeba pieczonego łososia. Zadbaj o dostawę."
+    item: COOKED_SALMON
+    amount: 20
+    reward-stars: 6
+    reward-xp: 220
+  charcoal_for_forge:
+    name: "&6Węgiel drzewny do kuźni"
+    description: "&7Kowal potrzebuje opału do paleniska. Przynieś mu węgiel drzewny."
+    item: CHARCOAL
+    amount: 32
+    reward-stars: 5
+    reward-xp: 190
+  stone_bricks_for_builder:
+    name: "&6Kamienne cegły"
+    description: "&7Budowniczowie wzmacniają mury osady. Potrzebują kamiennych cegieł."
+    item: STONE_BRICKS
+    amount: 64
+    reward-stars: 6
+    reward-xp: 230
+  moss_for_gardener:
+    name: "&6Mech do ogrodu"
+    description: "&7Ogrodnik planuje zazielenić dziedziniec. Przyda mu się mech."
+    item: MOSS_BLOCK
+    amount: 24
+    reward-stars: 5
+    reward-xp: 190
+  clay_for_potter:
+    name: "&6Glina dla garncarza"
+    description: "&7Garncarz dostał zamówienie na nowe naczynia. Dostarcz mu glinę."
+    item: CLAY_BALL
+    amount: 32
+    reward-stars: 5
+    reward-xp: 190
+  quartz_for_sculptor:
+    name: "&6Kwarc dla rzeźbiarza"
+    description: "&7Rzeźbiarz ozdabia salę rady jasnymi blokami kwarcu."
+    item: QUARTZ_BLOCK
+    amount: 16
+    reward-stars: 7
+    reward-xp: 260
+  sea_lanterns_for_port:
+    name: "&6Światła portowe"
+    description: "&7Latarnie w porcie wymagają nowych morskich lamp. Dostarcz kryształy pryzmarynu."
+    item: SEA_LANTERN
+    amount: 8
+    reward-stars: 8
+    reward-xp: 300
+  honeycomb_for_beekeeper:
+    name: "&6Plastry dla pszczelarza"
+    description: "&7Pszczelarz przygotowuje nowe ule. Potrzebuje świeżych plastrów miodu."
+    item: HONEYCOMB
+    amount: 24
+    reward-stars: 5
+    reward-xp: 200
+  rabbit_hide_for_trader:
+    name: "&6Futra dla kuśnierza"
+    description: "&7Kuśnierz szyje zimowe płaszcze i pilnie potrzebuje króliczych skór."
+    item: RABBIT_HIDE
+    amount: 16
+    reward-stars: 6
+    reward-xp: 220
+  phantom_membranes:
+    name: "&6Błony z nocnego nieba"
+    description: "&7Alchemik prowadzi badania nad eliksirem lotu. Przynieś mu błony fantomów."
+    item: PHANTOM_MEMBRANE
+    amount: 4
+    reward-stars: 8
+    reward-xp: 320
+  turtle_scutes:
+    name: "&6Żółwie tarcze"
+    description: "&7Płatnerz chce zbadać wytrzymałość żółwich skorup. Potrzebuje łusek."
+    item: SCUTE
+    amount: 8
+    reward-stars: 8
+    reward-xp: 300
+  nautilus_shells:
+    name: "&6Muszle z głębin"
+    description: "&7Kolekcjoner z portu szuka rzadkich muszli na swoją wystawę."
+    item: NAUTILUS_SHELL
+    amount: 3
+    reward-stars: 9
+    reward-xp: 350
+  firework_rockets:
+    name: "&6Fajerwerki na festyn"
+    description: "&7Organizator święta chce zakończyć wieczór pokazem fajerwerków."
+    item: FIREWORK_ROCKET
+    amount: 32
+    reward-stars: 6
+    reward-xp: 230
