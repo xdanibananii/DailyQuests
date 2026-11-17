@@ -1013,6 +1013,7 @@ tasks:
     reward-item: REDSTONE
     reward-item-amount: 16
   craft_observer:
+    requires-nether: true
     name: "&cOko mechanizmu"
     description: "&7Wytwórz 4 obserwatory"
     difficulty: HARD
