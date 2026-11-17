@@ -49,6 +49,7 @@ public final class CrateSystem implements Listener {
         plugin.saveResource("rewards.yml", false);
         balanceExistingRewards();
         if (hadValidRewards) reduceExistingLowTierRewards();
+        fixExistingRewardLanguage();
         this.db = plugin.database();
         try (Statement st = db.createStatement()) {
             st.executeUpdate("CREATE TABLE IF NOT EXISTS dq_wallet (uuid TEXT PRIMARY KEY, stars INTEGER NOT NULL DEFAULT 0)");
@@ -58,6 +59,45 @@ public final class CrateSystem implements Listener {
         }
     }
 
+
+    private void fixExistingRewardLanguage() {
+        File marker = new File(plugin.getDataFolder(), "crate-language-v1.done");
+        if (marker.exists()) return;
+        File file = new File(plugin.getDataFolder(), "rewards.yml");
+        YamlConfiguration yaml = YamlConfiguration.loadConfiguration(file);
+        int changed = 0;
+        for (int i = 0; i < yaml.getMapList("rewards").size(); i++) {
+            String base = "rewards." + i + ".";
+            String material = yaml.getString(base + "material", "");
+            int amount = yaml.getInt(base + "amount", 1);
+            String name = ChatColor.stripColor(color(yaml.getString(base + "name", "")));
+            if ("GOLDEN_APPLE".equalsIgnoreCase(material) && amount == 1
+                    && "Złote jabłka".equalsIgnoreCase(name)) {
+                yaml.set(base + "name", "&7Złote jabłko");
+                changed++;
+            }
+            if ("DIAMOND".equalsIgnoreCase(material) && amount == 2) {
+                List<String> lore = yaml.getStringList(base + "lore");
+                for (int line = 0; line < lore.size(); line++) {
+                    if (lore.get(line).equalsIgnoreCase("&7Trzy błyszczące diamenty")) {
+                        lore.set(line, "&7Dwa błyszczące diamenty");
+                        changed++;
+                    } else if (lore.get(line).equalsIgnoreCase("&7Trzy diamenty")) {
+                        lore.set(line, "&7Dwa diamenty");
+                        changed++;
+                    }
+                }
+                yaml.set(base + "lore", lore);
+            }
+        }
+        try {
+            if (changed > 0) yaml.save(file);
+            marker.createNewFile();
+            if (changed > 0) plugin.getLogger().info("Poprawiono nazwy i opisy nagród w rewards.yml (" + changed + " zmian).");
+        } catch (java.io.IOException ex) {
+            plugin.getLogger().warning("Nie udało się poprawić języka nagród w rewards.yml: " + ex.getMessage());
+        }
+    }
 
     private void reduceExistingLowTierRewards() {
         File marker = new File(plugin.getDataFolder(), "crate-low-tier-quantities-v1.done");
