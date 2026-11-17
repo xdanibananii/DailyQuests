@@ -79,11 +79,13 @@ public final class CrateSystem implements Listener {
             if ("DIAMOND".equalsIgnoreCase(material) && amount == 2) {
                 List<String> lore = yaml.getStringList(base + "lore");
                 for (int line = 0; line < lore.size(); line++) {
-                    if (lore.get(line).equalsIgnoreCase("&7Trzy błyszczące diamenty")) {
-                        lore.set(line, "&7Dwa błyszczące diamenty");
+                    if (lore.get(line).equalsIgnoreCase("&7Trzy błyszczące diamenty")
+                            || lore.get(line).equalsIgnoreCase("&7Dwa błyszczące diamenty")) {
+                        lore.set(line, amount == 1 ? "&7Jeden błyszczący diament" : "&7Dwa błyszczące diamenty");
                         changed++;
-                    } else if (lore.get(line).equalsIgnoreCase("&7Trzy diamenty")) {
-                        lore.set(line, "&7Dwa diamenty");
+                    } else if (lore.get(line).equalsIgnoreCase("&7Trzy diamenty")
+                            || lore.get(line).equalsIgnoreCase("&7Dwa diamenty")) {
+                        lore.set(line, amount == 1 ? "&7Jeden diament" : "&7Dwa diamenty");
                         changed++;
                     }
                 }
