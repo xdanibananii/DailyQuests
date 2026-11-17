@@ -48,13 +48,13 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
     private static final class Task {
         String id, name, description, type, target, rewardItem, dimension, difficulty;
         int amount, xp, itemAmount, progress;
-        boolean claimed;
+        boolean claimed, requiresNether;
     }
 
     @Override public void onEnable() {
         saveDefaultConfig();
         saveResource("tasks.yml", false);
-        File poolMarker = new File(getDataFolder(), "quest-pool-v5.done");
+        File poolMarker = new File(getDataFolder(), "quest-pool-v6.done");
         if (!poolMarker.exists()) {
             mergeDefaultTasks();
             try { poolMarker.createNewFile(); } catch (java.io.IOException ex) { getLogger().warning("Nie zapisano znacznika aktualizacji puli zadan: " + ex.getMessage()); }
@@ -230,7 +230,7 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
         t.id=id;t.name=color(c.getString("name",id));t.description=color(c.getString("description",""));
         t.type=c.getString("type","").toUpperCase(Locale.ROOT);t.target=c.getString("target","ANY").toUpperCase(Locale.ROOT);t.dimension=c.getString("dimension","OVERWORLD").toUpperCase(Locale.ROOT);t.difficulty=c.getString("difficulty","MEDIUM").toUpperCase(Locale.ROOT);
         t.amount=Math.max(1,c.getInt("amount",1));t.xp=Math.max(0,c.getInt("reward-xp",0));
-        t.rewardItem=c.getString("reward-item","").toUpperCase(Locale.ROOT);t.itemAmount=Math.max(1,c.getInt("reward-item-amount",1));return t;
+        t.rewardItem=c.getString("reward-item","").toUpperCase(Locale.ROOT);t.itemAmount=Math.max(1,c.getInt("reward-item-amount",1));t.requiresNether=c.getBoolean("requires-nether",false);return t;
     }
 
     private String color(String s){return ChatColor.translateAlternateColorCodes('&',s==null?"":s);}
@@ -505,7 +505,8 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
     }
 
     private boolean isTaskEnabled(Task task) {
-        return task != null && isDimensionEnabled(task.dimension);
+        return task != null && isDimensionEnabled(task.dimension)
+                && (!task.requiresNether || isDimensionEnabled("NETHER"));
     }
 
     private boolean dimensionMatches(Task t, World world) {
