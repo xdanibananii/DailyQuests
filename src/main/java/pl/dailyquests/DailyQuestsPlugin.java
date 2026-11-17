@@ -174,7 +174,10 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
                 }
             }
         } catch(SQLException e) { getLogger().warning(e.getMessage()); }
-        if(found.size()==5) { cache.put(uuid,found); cacheDay.put(uuid,day); return found; }
+        if(found.size()==5) {
+            for(Task task:found) recordTaskHistory(uuid,task.id,day);
+            cache.put(uuid,found); cacheDay.put(uuid,day); return found;
+        }
 
         ConfigurationSection sec=pool();
         if(sec==null || sec.getKeys(false).isEmpty()) return found;
@@ -278,8 +281,28 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
     }
 
     private void rerollAll(CommandSender sender) {
+        String day=today();
+        // Preserve every task already assigned today, including for offline players.
+        try (PreparedStatement existing=db.prepareStatement("SELECT uuid,task_id FROM player_tasks WHERE day=?")) {
+            existing.setString(1,day);
+            try(ResultSet rows=existing.executeQuery()) {
+                while(rows.next()) {
+                    try(PreparedStatement history=db.prepareStatement(
+                            "INSERT OR IGNORE INTO task_history(uuid,task_id,assigned_day) VALUES(?,?,?)")) {
+                        history.setString(1,rows.getString(1));
+                        history.setString(2,rows.getString(2));
+                        history.setString(3,day);
+                        history.executeUpdate();
+                    }
+                }
+            }
+        } catch(SQLException ex) {
+            sender.sendMessage(ChatColor.RED+"Nie udalo sie zabezpieczyc historii zadan: "+ex.getMessage());
+            getLogger().warning("Blad zapisu historii przed /dq roll: "+ex.getMessage());
+            return;
+        }
         try (PreparedStatement st=db.prepareStatement("DELETE FROM player_tasks WHERE day=?")) {
-            st.setString(1,today());
+            st.setString(1,day);
             st.executeUpdate();
         } catch (SQLException ex) {
             sender.sendMessage(ChatColor.RED+"Nie udalo sie przerolowac zadan: "+ex.getMessage());
