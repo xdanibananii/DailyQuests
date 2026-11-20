@@ -39,6 +39,7 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
     private final Map<UUID, Location> lastWalk = new ConcurrentHashMap<>();
     private final Random random = new Random();
     private final Set<UUID> rerollMode = ConcurrentHashMap.newKeySet();
+    private final Map<UUID, PendingMapHint> pendingMapHints = new ConcurrentHashMap<>();
     private static final String TITLE = ChatColor.DARK_GRAY + "Codzienne zadania";
     private CrateSystem crateSystem;
     private QuestNpcSystem npcSystem;
@@ -49,6 +50,7 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
 
     private record TaskSlot(int slot, String taskId) { }
     private record CampfireFood(Material result, int amount) { }
+    private record PendingMapHint(String mapId, long expiresAt) { }
 
     private static final class Task {
         String id, name, description, type, target, rewardItem, dimension, difficulty;
@@ -392,6 +394,102 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
         return suggestions;
     }
 
+
+    private void requestMapHint(Player player) {
+        UUID uuid=player.getUniqueId();
+        List<String> mapIds=new ArrayList<>();
+        String selectedId=null;
+        double nearestDistance=Double.MAX_VALUE;
+        try(PreparedStatement query=db.prepareStatement(
+                "SELECT map_id,world,x,z FROM dq_treasure_maps WHERE owner_uuid=? AND claimed=0")) {
+            query.setString(1,uuid.toString());
+            try(ResultSet rows=query.executeQuery()) {
+                while(rows.next()) {
+                    String worldName=rows.getString("world");
+                    mapIds.add(worldName);
+                    if(!player.getWorld().getName().equals(worldName)) continue;
+                    double distance=Math.hypot(player.getLocation().getX()-rows.getInt("x"),
+                            player.getLocation().getZ()-rows.getInt("z"));
+                    if(distance<nearestDistance) {
+                        nearestDistance=distance;
+                        selectedId=rows.getString("map_id");
+                    }
+                }
+            }
+        } catch(SQLException ex) {
+            getLogger().warning("Nie udało się znaleźć najbliższej mapy gracza: "+ex.getMessage());
+            player.sendMessage(ChatColor.RED+"Nie udało się odczytać Twoich map skarbów. Spróbuj później.");
+            return;
+        }
+        if(selectedId==null) {
+            if(mapIds.isEmpty()) {
+                player.sendMessage(ChatColor.RED+"Nie masz żadnej aktywnej mapy skarbów.");
+            } else {
+                player.sendMessage(ChatColor.YELLOW+"Twoje aktywne skarby znajdują się w innym świecie. Wróć do świata, w którym kupiłeś mapę, aby uzyskać wskazówkę.");
+            }
+            return;
+        }
+        long expires=System.currentTimeMillis()+30_000L;
+        pendingMapHints.put(uuid,new PendingMapHint(selectedId,expires));
+        player.sendMessage(ChatColor.GOLD+"✦ KRZUSŁAW WĘDROWNY — WSKAZÓWKA ✦");
+        player.sendMessage(ChatColor.YELLOW+"Mogę wskazać kierunek do najbliższej Twojej skrzyni.");
+        player.sendMessage(ChatColor.GRAY+"Koszt: "+ChatColor.GOLD+"5 poziomów doświadczenia");
+        player.sendMessage(ChatColor.GRAY+"Aby potwierdzić, wpisz "+ChatColor.YELLOW+"/dq mapa potwierdz");
+        player.sendMessage(ChatColor.DARK_GRAY+"Potwierdzenie wygaśnie za 30 sekund.");
+    }
+
+    private void confirmMapHint(Player player) {
+        UUID uuid=player.getUniqueId();
+        PendingMapHint pending=pendingMapHints.remove(uuid);
+        if(pending==null || System.currentTimeMillis()>pending.expiresAt()) {
+            player.sendMessage(ChatColor.RED+"Nie masz aktywnej prośby o wskazówkę. Użyj /dq mapa pomoc.");
+            return;
+        }
+        if(player.getLevel()<5) {
+            player.sendMessage(ChatColor.RED+"Potrzebujesz 5 poziomów doświadczenia, aby kupić wskazówkę.");
+            return;
+        }
+        String worldName=null;
+        int x=0,z=0;
+        try(PreparedStatement query=db.prepareStatement(
+                "SELECT world,x,z FROM dq_treasure_maps WHERE map_id=? AND owner_uuid=? AND claimed=0")) {
+            query.setString(1,pending.mapId());
+            query.setString(2,uuid.toString());
+            try(ResultSet row=query.executeQuery()) {
+                if(!row.next()) {
+                    player.sendMessage(ChatColor.RED+"Ta mapa nie jest już aktywna. Poproś o nową wskazówkę.");
+                    return;
+                }
+                worldName=row.getString("world");
+                x=row.getInt("x");
+                z=row.getInt("z");
+            }
+        } catch(SQLException ex) {
+            getLogger().warning("Nie udało się odczytać celu wskazówki: "+ex.getMessage());
+            player.sendMessage(ChatColor.RED+"Nie udało się pobrać wskazówki. Nie pobrano poziomów.");
+            return;
+        }
+        if(!player.getWorld().getName().equals(worldName)) {
+            player.sendMessage(ChatColor.YELLOW+"Musisz znajdować się w świecie, w którym ukryto tę skrzynię. Nie pobrano poziomów.");
+            return;
+        }
+        player.setLevel(player.getLevel()-5);
+        double dx=x-player.getLocation().getX();
+        double dz=z-player.getLocation().getZ();
+        double bearing=(Math.toDegrees(Math.atan2(dx,-dz))+360.0)%360.0;
+        String[] directions={"północ","północny wschód","wschód","południowy wschód",
+                "południe","południowy zachód","zachód","północny zachód"};
+        String direction=directions[(int)Math.floor((bearing+22.5)/45.0)%8];
+        int distance=(int)Math.round(Math.hypot(dx,dz));
+        player.sendMessage(ChatColor.GOLD+"✦ KRZUSŁAW WĘDROWNY — WSKAZÓWKA ✦");
+        player.sendMessage(ChatColor.YELLOW+"Skarb znajduje się na "+ChatColor.GOLD+direction
+                +ChatColor.YELLOW+" od Ciebie.");
+        player.sendMessage(ChatColor.YELLOW+"Do skrzyni pozostało około "+ChatColor.GOLD+distance
+                +ChatColor.YELLOW+" bloków w linii prostej.");
+        player.sendMessage(ChatColor.DARK_GRAY+"Wskazówka kosztowała 5 poziomów doświadczenia.");
+        player.playSound(player.getLocation(),Sound.BLOCK_NOTE_BLOCK_CHIME,0.8f,1.2f);
+    }
+
     @Override public boolean onCommand(CommandSender sender,Command command,String label,String[] args) {
         // /zadania ma otwierać GUI; aliasy /dq i /dailyquest bez argumentów pokazują pomoc.
         if(command.getName().equalsIgnoreCase("zadania") && args.length==0) {
@@ -400,6 +498,20 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
             return true;
         }
         if(label.equalsIgnoreCase("dailyquest") && args.length==0) { showHelp(sender); return true; }
+        if(args.length>0 && args[0].equalsIgnoreCase("mapa")) {
+            if(!(sender instanceof Player player)) {
+                sender.sendMessage(ChatColor.YELLOW+"Tej komendy użyj w grze.");
+                return true;
+            }
+            if(args.length==2 && args[1].equalsIgnoreCase("pomoc")) {
+                requestMapHint(player);
+            } else if(args.length==2 && args[1].equalsIgnoreCase("potwierdz")) {
+                confirmMapHint(player);
+            } else {
+                player.sendMessage(ChatColor.YELLOW+"Użycie: /dq mapa pomoc lub /dq mapa potwierdz");
+            }
+            return true;
+        }
         if(args.length>0 && args[0].equalsIgnoreCase("kartograf")) {
             if(!sender.hasPermission("dailyquests.admin")) { sender.sendMessage(ChatColor.RED+"Brak uprawnień."); return true; }
             if(args.length==2 && args[1].equalsIgnoreCase("list")) {
