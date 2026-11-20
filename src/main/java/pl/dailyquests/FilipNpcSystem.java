@@ -121,6 +121,7 @@ public final class FilipNpcSystem implements Listener {
 
     @EventHandler
     public void onNpcClick(PlayerInteractEntityEvent event) {
+        if (event.getHand() != EquipmentSlot.HAND) return;
         if (!(event.getRightClicked() instanceof Villager villager)
                 || !villager.getPersistentDataContainer().has(npcKey, PersistentDataType.BYTE)) return;
         event.setCancelled(true);
