@@ -154,24 +154,37 @@ public final class CrateSystem implements Listener {
             }
         }
 
-        File oddsMarker = new File(plugin.getDataFolder(), "crate-odds-v6.done");
+        File oddsMarker = new File(plugin.getDataFolder(), "crate-odds-v7.done");
         if (!oddsMarker.exists()) {
+            Map<String, Integer> tierTotals = Map.of(
+                    "COMMON", 6000,
+                    "UNCOMMON", 2500,
+                    "RARE", 1000,
+                    "EPIC", 400,
+                    "LEGENDARY", 100
+            );
+            Map<String, Integer> tierCounts = new HashMap<>();
+            Map<String, Integer> tierIndexes = new HashMap<>();
+            for (Map<?, ?> row : yaml.getMapList("rewards")) {
+                String tier = String.valueOf(row.getOrDefault("tier", "COMMON")).toUpperCase(Locale.ROOT);
+                if (!tierTotals.containsKey(tier)) tier = "COMMON";
+                tierCounts.merge(tier, 1, Integer::sum);
+            }
+
             for (int i = 0; i < yaml.getMapList("rewards").size(); i++) {
                 String base = "rewards." + i + ".";
                 String tier = yaml.getString(base + "tier", "COMMON").toUpperCase(Locale.ROOT);
-                int weight = switch (tier) {
-                    case "UNCOMMON" -> 3200;
-                    case "RARE" -> 600;
-                    case "EPIC" -> 390;
-                    case "LEGENDARY" -> 105;
-                    default -> 12000;
-                };
+                if (!tierTotals.containsKey(tier)) tier = "COMMON";
+                int count = tierCounts.getOrDefault(tier, 1);
+                int index = tierIndexes.merge(tier, 1, Integer::sum) - 1;
+                int target = tierTotals.get(tier);
+                int weight = target / count + (index < target % count ? 1 : 0);
                 yaml.set(base + "weight", weight);
             }
             try {
                 yaml.save(file);
                 if (oddsMarker.createNewFile()) {
-                    plugin.getLogger().info("Zastosowano nowe szanse skrzynki: COMMON 12000, UNCOMMON 3200, RARE 600, EPIC 390, LEGENDARY 105.");
+                    plugin.getLogger().info("Zastosowano nowe szanse skrzynki: COMMON 60%, UNCOMMON 25%, RARE 10%, EPIC 4%, LEGENDARY 1%.");
                 }
             } catch (java.io.IOException ex) {
                 plugin.getLogger().warning("Nie udało się zapisać nowych szans nagród: " + ex.getMessage());
