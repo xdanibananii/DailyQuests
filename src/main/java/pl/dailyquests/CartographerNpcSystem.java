@@ -231,6 +231,7 @@ public final class CartographerNpcSystem implements Listener {
     }
 
     @EventHandler public void onNpcInteract(PlayerInteractEntityEvent event) {
+        if (event.getHand() != org.bukkit.inventory.EquipmentSlot.HAND) return;
         if (!event.getRightClicked().getPersistentDataContainer().has(npcKey, PersistentDataType.BYTE)) return;
         event.setCancelled(true);
         Player player = event.getPlayer();
@@ -545,6 +546,7 @@ public final class CartographerNpcSystem implements Listener {
     }
 
     @EventHandler public void onTreasureInteract(PlayerInteractEvent event) {
+        if (event.getHand() != org.bukkit.inventory.EquipmentSlot.HAND) return;
         if (event.getClickedBlock() == null || event.getAction().isLeftClick()) return;
         if (!(event.getClickedBlock().getState() instanceof Chest chest)) return;
         String mapId = chest.getPersistentDataContainer().get(chestIdKey, PersistentDataType.STRING);
