@@ -54,7 +54,7 @@ public final class CartographerNpcSystem implements Listener {
         private final Set<UUID> renderedPlayers = new HashSet<>();
         @Override public void render(MapView map, org.bukkit.map.MapCanvas canvas, Player viewer) {
             if (renderedPlayers.add(viewer.getUniqueId())) {
-                canvas.getCursors().addCursor(0, 0, (byte) 8, MapCursor.Type.RED_MARKER);
+                canvas.getCursors().addCursor(new MapCursor((byte) 0, (byte) 0, (byte) 8, MapCursor.Type.RED_MARKER, true));
             }
         }
     }
