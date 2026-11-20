@@ -353,9 +353,15 @@ public final class CartographerNpcSystem implements Listener {
         MapView view = Bukkit.createMap(treasure.getWorld());
         view.setCenterX(treasure.getBlockX());
         view.setCenterZ(treasure.getBlockZ());
-        view.setScale(MapView.Scale.NORMAL);
-        view.setTrackingPosition(false);
-        view.setUnlimitedTracking(false);
+        view.setScale(switch (offer.tier()) {
+            case "UNCOMMON" -> MapView.Scale.CLOSE;
+            case "RARE" -> MapView.Scale.NORMAL;
+            case "EPIC" -> MapView.Scale.FAR;
+            case "LEGENDARY" -> MapView.Scale.FARTHEST;
+            default -> MapView.Scale.CLOSEST;
+        });
+        view.setTrackingPosition(true);
+        view.setUnlimitedTracking(true);
         addMarkerRenderer(view);
         ItemStack stack = new ItemStack(Material.FILLED_MAP);
         MapMeta meta = (MapMeta) stack.getItemMeta();
@@ -405,7 +411,7 @@ public final class CartographerNpcSystem implements Listener {
                 "SELECT DISTINCT map_view_id FROM dq_treasure_maps WHERE claimed=0 AND map_view_id>=0");
              ResultSet rows = query.executeQuery()) {
             while (rows.next()) {
-                MapView view = Bukkit.getMap((short) rows.getInt(1));
+                MapView view = Bukkit.getMap(rows.getInt(1));
                 if (view != null) addMarkerRenderer(view);
             }
         } catch (SQLException ex) {
