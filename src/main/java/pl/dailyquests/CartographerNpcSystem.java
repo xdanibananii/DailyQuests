@@ -299,6 +299,10 @@ public final class CartographerNpcSystem implements Listener {
     }
 
     private void purchase(Player player, MapOffer offer) {
+        if (player.getWorld().getEnvironment() != World.Environment.NORMAL) {
+            say(player, "Moje mapy prowadzą przez ziemie Nadziemia. Wróć do zwykłego świata, a znajdziemy ci wyprawę.");
+            return;
+        }
         if (!hasMapSpace(player)) {
             say(player, "Zrób nieco miejsca w plecaku. Nie chcę, żeby cenna mapa wylądowała w błocie.");
             openShop(player);
