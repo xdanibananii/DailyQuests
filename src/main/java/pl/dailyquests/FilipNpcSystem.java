@@ -144,7 +144,9 @@ public final class FilipNpcSystem implements Listener {
         for (int i = 0; i < items.size() && i < PAGE_SIZE; i++) inventory.setItem(i, items.get(i).item());
         inventory.setItem(45, item(Material.HOPPER, ChatColor.GREEN + "Jak zdeponować?",
                 List.of(ChatColor.GRAY + "Przenieś przedmiot ze swojego ekwipunku",
-                        ChatColor.GRAY + "do tego okna, używając SHIFT + klik.")));
+                        ChatColor.GRAY + "do tego okna, używając SHIFT + klik.",
+                        ChatColor.GRAY + "Lewy klik: odbierz cały stos.",
+                        ChatColor.GRAY + "Prawy klik: odbierz 1 sztukę.")));
         inventory.setItem(48, item(Material.ARROW, ChatColor.YELLOW + "Poprzednia strona", List.of()));
         inventory.setItem(49, item(Material.BOOK, ChatColor.AQUA + "WSPÓLNY MAGAZYN",
                 List.of(ChatColor.GRAY + "Strona " + (safePage + 1) + " / " + pagesCount,
@@ -211,7 +213,10 @@ public final class FilipNpcSystem implements Listener {
         List<StoredItem> visible = loadPage(page);
         if (raw >= visible.size()) return;
         StoredItem selected = visible.get(raw);
-        ItemStack simulated = displayed.clone();
+        ItemStack original = selected.item().clone();
+        int amountToTake = event.isRightClick() ? 1 : original.getAmount();
+        ItemStack simulated = original.clone();
+        simulated.setAmount(amountToTake);
         Inventory preview = Bukkit.createInventory(null, 36);
         ItemStack[] currentContents = player.getInventory().getStorageContents();
         for (int slot = 0; slot < Math.min(currentContents.length, preview.getSize()); slot++) {
@@ -220,17 +225,27 @@ public final class FilipNpcSystem implements Listener {
         }
         Map<Integer, ItemStack> overflow = preview.addItem(simulated.clone());
         if (!overflow.isEmpty()) {
-            player.sendMessage(ChatColor.RED + "Zwolnij miejsce w ekwipunku, aby odebrać ten stos.");
+            player.sendMessage(ChatColor.RED + "Zwolnij miejsce w ekwipunku, aby odebrać ten przedmiot.");
             return;
         }
-        try (PreparedStatement delete = db.prepareStatement("DELETE FROM filip_shared_items WHERE id=?")) {
-            delete.setLong(1, selected.id());
-            if (delete.executeUpdate() == 1) {
-                player.getInventory().addItem(simulated);
-                player.playSound(player.getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.7f, 0.9f);
-                open(player, page);
+        try {
+            if (amountToTake >= original.getAmount()) {
+                try (PreparedStatement delete = db.prepareStatement("DELETE FROM filip_shared_items WHERE id=?")) {
+                    delete.setLong(1, selected.id());
+                    if (delete.executeUpdate() != 1) return;
+                }
+            } else {
+                original.setAmount(original.getAmount() - amountToTake);
+                try (PreparedStatement update = db.prepareStatement("UPDATE filip_shared_items SET item_data=? WHERE id=?")) {
+                    update.setString(1, serialize(original));
+                    update.setLong(2, selected.id());
+                    if (update.executeUpdate() != 1) return;
+                }
             }
-        } catch (SQLException ex) {
+            player.getInventory().addItem(simulated);
+            player.playSound(player.getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.7f, 0.9f);
+            open(player, page);
+        } catch (Exception ex) {
             plugin.getLogger().warning("Nie udało się wypłacić przedmiotu z magazynu Filipa: " + ex.getMessage());
             player.sendMessage(ChatColor.RED + "Nie udało się wypłacić przedmiotu.");
         }
