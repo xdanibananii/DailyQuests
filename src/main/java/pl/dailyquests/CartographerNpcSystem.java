@@ -431,7 +431,7 @@ public final class CartographerNpcSystem implements Listener {
             case "UNCOMMON" -> 4;
             case "RARE" -> 5;
             case "EPIC" -> 6;
-            case "MYTHIC" -> 8;
+            case "MYTHIC" -> 7;
             default -> 7;
         };
         List<Material> pool = switch (tier) {
@@ -446,7 +446,7 @@ public final class CartographerNpcSystem implements Listener {
             case "LEGENDARY" -> List.of(Material.DIAMOND, Material.NETHERITE_SCRAP, Material.HEART_OF_THE_SEA,
                     Material.ENCHANTED_GOLDEN_APPLE, Material.DIAMOND_BLOCK, Material.ECHO_SHARD);
             default -> List.of(Material.NETHERITE_INGOT, Material.TOTEM_OF_UNDYING, Material.NETHER_STAR,
-                    Material.SHULKER_SHELL, Material.DIAMOND_BLOCK, Material.ENCHANTED_GOLDEN_APPLE, Material.ELYTRA);
+                    Material.SHULKER_SHELL, Material.DIAMOND_BLOCK, Material.ENCHANTED_GOLDEN_APPLE, Material.DRAGON_HEAD);
         };
         for (int i = 0; i < stacks; i++) {
             Material material = pool.get(random.nextInt(pool.size()));
