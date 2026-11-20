@@ -96,6 +96,8 @@ public final class SnafNpcSystem implements Listener {
     void removeNpc() {
         if (npcFile.exists()) {
             YamlConfiguration yaml = YamlConfiguration.loadConfiguration(npcFile);
+            World savedWorld = Bukkit.getWorld(yaml.getString("world", ""));
+            if (savedWorld != null && yaml.contains("x")) savedWorld.getChunkAt((int) Math.floor(yaml.getDouble("x")) >> 4, (int) Math.floor(yaml.getDouble("z")) >> 4).load();
             String saved = yaml.getString("uuid", "");
             try {
                 Entity entity = saved.isBlank() ? null : Bukkit.getEntity(UUID.fromString(saved));
@@ -126,6 +128,8 @@ public final class SnafNpcSystem implements Listener {
     }
 
     private Entity findNpc(YamlConfiguration yaml) {
+        World world = Bukkit.getWorld(yaml.getString("world", ""));
+        if (world != null && yaml.contains("x")) world.getChunkAt((int) Math.floor(yaml.getDouble("x")) >> 4, (int) Math.floor(yaml.getDouble("z")) >> 4).load();
         try {
             String saved = yaml.getString("uuid", "");
             return saved.isBlank() ? null : Bukkit.getEntity(UUID.fromString(saved));
