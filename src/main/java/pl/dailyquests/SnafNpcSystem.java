@@ -16,6 +16,9 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.NamespacedKey;
 import org.bukkit.util.Vector;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
+import org.bukkit.inventory.meta.SuspiciousStewMeta;
 
 import java.io.File;
 import java.sql.*;
@@ -292,7 +295,7 @@ public final class SnafNpcSystem implements Listener {
                         : List.of(ChatColor.GRAY + "Dostaniesz łącznie 3 zupki.",
                         ChatColor.YELLOW + "Każda jest losowana osobno:",
                         ChatColor.WHITE + "80% — zupa grzybowa",
-                        ChatColor.LIGHT_PURPLE + "20% — podejrzana potrawka",
+                        ChatColor.LIGHT_PURPLE + "20% — potrawka z losowym efektem",
                         ChatColor.DARK_GRAY + "Limit odnawia się o północy.")));
         inventory.setItem(22, item(Material.CLOCK, ChatColor.YELLOW + "Codzienny limit",
                 List.of(ChatColor.GRAY + "3 sztuki na gracza, każdego dnia.")));
@@ -323,20 +326,59 @@ public final class SnafNpcSystem implements Listener {
 
         int soups = 0, stews = 0;
         for (int i = 0; i < 3; i++) {
-            if (random.nextDouble() < 0.20) stews++; else soups++;
+            if (random.nextDouble() < 0.20) {
+                giveEffectStew(player);
+                stews++;
+            } else {
+                soups++;
+            }
         }
         if (soups > 0) give(player, Material.MUSHROOM_STEW, soups);
-        if (stews > 0) give(player, Material.SUSPICIOUS_STEW, stews);
         player.sendMessage(ChatColor.GREEN + "Snaf wręcza ci dzisiejszą porcję: "
                 + ChatColor.WHITE + soups + "× zupa grzybowa"
-                + ChatColor.GRAY + " oraz " + ChatColor.LIGHT_PURPLE + stews + "× podejrzana potrawka"
+                + ChatColor.GRAY + " oraz " + ChatColor.LIGHT_PURPLE + stews + "× potrawka z losowym efektem"
                 + ChatColor.GRAY + ".");
         player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_YES, 0.8f, 1.2f);
         open(player);
     }
 
+    private record StewEffect(String name, PotionEffectType type, int durationTicks) { }
+
+    // Wszystkie warianty efektów podejrzanej potrawki dostępne w vanilla Minecraft.
+    private static final List<StewEffect> STEW_EFFECTS = List.of(
+            new StewEffect("Odporność na ogień", PotionEffectType.FIRE_RESISTANCE, 80),
+            new StewEffect("Ślepota", PotionEffectType.BLINDNESS, 120),
+            new StewEffect("Nasycenie", PotionEffectType.SATURATION, 7),
+            new StewEffect("Podskok", PotionEffectType.JUMP_BOOST, 120),
+            new StewEffect("Zatrucie", PotionEffectType.POISON, 240),
+            new StewEffect("Regeneracja", PotionEffectType.REGENERATION, 160),
+            new StewEffect("Osłabienie", PotionEffectType.WEAKNESS, 180),
+            new StewEffect("Wither", PotionEffectType.WITHER, 160)
+    );
+
+    private void giveEffectStew(Player player) {
+        StewEffect effect = STEW_EFFECTS.get(random.nextInt(STEW_EFFECTS.size()));
+        ItemStack stew = new ItemStack(Material.SUSPICIOUS_STEW);
+        if (stew.getItemMeta() instanceof SuspiciousStewMeta meta) {
+            meta.addCustomEffect(new PotionEffect(effect.type(), effect.durationTicks(), 0), true);
+            meta.setDisplayName(ChatColor.LIGHT_PURPLE + "Podejrzana potrawka");
+            meta.setLore(List.of(
+                    ChatColor.GRAY + "Efekt: " + ChatColor.WHITE + effect.name(),
+                    ChatColor.GRAY + "Czas działania: " + ChatColor.WHITE + formatDuration(effect.durationTicks())
+            ));
+            stew.setItemMeta(meta);
+        }
+        Map<Integer, ItemStack> overflow = player.getInventory().addItem(stew);
+        overflow.values().forEach(stack -> player.getWorld().dropItemNaturally(player.getLocation(), stack));
+    }
+
+    private String formatDuration(int ticks) {
+        if (ticks < 20) return "0,35 s";
+        return (ticks / 20) + " s";
+    }
+
     private void give(Player player, Material material, int amount) {
-        // Both stew items have a maximum stack size of one; deliver each bowl separately.
+        // Zupy mają maksymalny rozmiar stosu 1; dostarczaj każdą miskę osobno.
         for (int i = 0; i < amount; i++) {
             Map<Integer, ItemStack> overflow = player.getInventory().addItem(new ItemStack(material, 1));
             overflow.values().forEach(stack -> player.getWorld().dropItemNaturally(player.getLocation(), stack));
