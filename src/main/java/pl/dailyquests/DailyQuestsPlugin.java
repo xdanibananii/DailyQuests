@@ -1,6 +1,7 @@
 package pl.dailyquests;
 
 import org.bukkit.*;
+import org.bukkit.block.Block;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
