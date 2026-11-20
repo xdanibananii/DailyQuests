@@ -680,6 +680,51 @@ public final class CartographerNpcSystem implements Listener {
         }
     }
 
+    void listPurchasedMaps(CommandSender sender) {
+        String sql = "SELECT owner_uuid, world, x, y, z, tier FROM dq_treasure_maps WHERE claimed=0 ORDER BY created_at ASC";
+        try (PreparedStatement query = db.prepareStatement(sql);
+             ResultSet rows = query.executeQuery()) {
+            List<String> entries = new ArrayList<>();
+            while (rows.next()) {
+                UUID ownerId;
+                try {
+                    ownerId = UUID.fromString(rows.getString("owner_uuid"));
+                } catch (IllegalArgumentException ex) {
+                    ownerId = null;
+                }
+                String playerName = ownerId == null ? "Nieznany gracz" : Bukkit.getOfflinePlayer(ownerId).getName();
+                if (playerName == null || playerName.isBlank()) {
+                    playerName = ownerId == null ? "Nieznany gracz" : ownerId.toString().substring(0, 8);
+                }
+                String mapName = switch (rows.getString("tier")) {
+                    case "COMMON" -> "Mapa włóczęgi";
+                    case "UNCOMMON" -> "Mapa poszukiwacza";
+                    case "RARE" -> "Mapa odkrywcy";
+                    case "EPIC" -> "Mapa zapomniana";
+                    case "LEGENDARY" -> "Mapa pradawna";
+                    case "MYTHIC" -> "Mapa legendarna";
+                    default -> "Nieznana mapa";
+                };
+                entries.add(ChatColor.YELLOW + playerName + ChatColor.DARK_GRAY + " — "
+                        + tierColor(rows.getString("tier")) + mapName + ChatColor.DARK_GRAY + " — "
+                        + ChatColor.GRAY + rows.getString("world") + " "
+                        + ChatColor.WHITE + rows.getInt("x") + " "
+                        + rows.getInt("y") + " " + rows.getInt("z"));
+            }
+            sender.sendMessage(ChatColor.GOLD + "━━ AKTYWNE MAPY KRZUSŁAWA (" + entries.size() + ") ━━");
+            if (entries.isEmpty()) {
+                sender.sendMessage(ChatColor.GRAY + "Brak aktywnych, nieodebranych map skarbów.");
+                return;
+            }
+            for (int i = 0; i < entries.size(); i++) {
+                sender.sendMessage(ChatColor.DARK_GRAY + "" + (i + 1) + ". " + entries.get(i));
+            }
+        } catch (SQLException ex) {
+            plugin.getLogger().warning("Nie udało się wyświetlić listy map kartografa: " + ex.getMessage());
+            sender.sendMessage(ChatColor.RED + "Nie udało się pobrać listy map skarbów z bazy danych.");
+        }
+    }
+
     void renameNpc(String name, java.util.function.Consumer<String> reply) {
         if (!npcFile.exists()) { reply.accept(ChatColor.RED + "Krzusław nie został jeszcze postawiony."); return; }
         org.bukkit.configuration.file.YamlConfiguration yaml =
