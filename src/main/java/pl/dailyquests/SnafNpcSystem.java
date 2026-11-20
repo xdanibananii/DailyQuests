@@ -221,8 +221,11 @@ public final class SnafNpcSystem implements Listener {
     }
 
     private void give(Player player, Material material, int amount) {
-        Map<Integer, ItemStack> overflow = player.getInventory().addItem(new ItemStack(material, amount));
-        overflow.values().forEach(stack -> player.getWorld().dropItemNaturally(player.getLocation(), stack));
+        // Both stew items have a maximum stack size of one; deliver each bowl separately.
+        for (int i = 0; i < amount; i++) {
+            Map<Integer, ItemStack> overflow = player.getInventory().addItem(new ItemStack(material, 1));
+            overflow.values().forEach(stack -> player.getWorld().dropItemNaturally(player.getLocation(), stack));
+        }
     }
 
     @EventHandler
