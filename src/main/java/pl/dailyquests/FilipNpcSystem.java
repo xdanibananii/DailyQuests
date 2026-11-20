@@ -209,7 +209,13 @@ public final class FilipNpcSystem implements Listener {
         if (raw >= visible.size()) return;
         StoredItem selected = visible.get(raw);
         ItemStack simulated = displayed.clone();
-        Map<Integer, ItemStack> overflow = player.getInventory().addItem(simulated.clone());
+        Inventory preview = Bukkit.createInventory(null, 36);
+        ItemStack[] currentContents = player.getInventory().getStorageContents();
+        for (int slot = 0; slot < Math.min(currentContents.length, preview.getSize()); slot++) {
+            ItemStack content = currentContents[slot];
+            if (content != null && !content.getType().isAir()) preview.setItem(slot, content.clone());
+        }
+        Map<Integer, ItemStack> overflow = preview.addItem(simulated.clone());
         if (!overflow.isEmpty()) {
             player.sendMessage(ChatColor.RED + "Zwolnij miejsce w ekwipunku, aby odebrać ten stos.");
             return;
