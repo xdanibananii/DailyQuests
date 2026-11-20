@@ -966,15 +966,32 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
         }
     }
 
+    private int countKelpSegments(Block brokenBlock) {
+        int count = 0;
+        int maxY = brokenBlock.getWorld().getMaxHeight();
+        for (int y = brokenBlock.getY(); y < maxY; y++) {
+            Material type = brokenBlock.getWorld().getBlockAt(
+                    brokenBlock.getX(), y, brokenBlock.getZ()).getType();
+            if (type != Material.KELP && type != Material.KELP_PLANT) break;
+            count++;
+        }
+        return Math.max(1, count);
+    }
+
     @EventHandler public void onBreak(BlockBreakEvent e){
         if(e.isCancelled())return;
         Material brokenType = e.getBlock().getType();
         if (isWoodLog(brokenType) && consumePlacedWoodMarker(e.getBlock().getLocation(), brokenType)) return;
         String type=normalizedBlockType(brokenType);
-        updateWeekly(e.getPlayer(),"BREAK",type,1);
+        // Breaking one kelp segment causes the whole column above it to collapse.
+        // Bukkit fires one BlockBreakEvent for the player-broken block, so count
+        // every kelp segment that is about to be harvested.
+        int amount = (brokenType == Material.KELP || brokenType == Material.KELP_PLANT)
+                ? countKelpSegments(e.getBlock()) : 1;
+        updateWeekly(e.getPlayer(),"BREAK",type,amount);
         for(Task t:ensureTasks(e.getPlayer()))if(t.type.equals("BREAK")&&dimensionMatches(t,e.getBlock().getWorld())
                 &&(t.target.equals("ANY")||t.target.equals(type)
-                ||(t.target.equals("KELP_PLANT")&&type.equals("KELP"))))update(e.getPlayer(),t,1);
+                ||(t.target.equals("KELP_PLANT")&&type.equals("KELP"))))update(e.getPlayer(),t,amount);
     }
     @EventHandler public void onKill(EntityDeathEvent e){
         Player p=e.getEntity().getKiller();if(p==null)return;
