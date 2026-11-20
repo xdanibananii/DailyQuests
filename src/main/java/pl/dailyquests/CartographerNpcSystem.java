@@ -505,6 +505,10 @@ public final class CartographerNpcSystem implements Listener {
             Block chestBlock = surface.getRelative(0, -1, 0);
             if (!naturalGround(chestBlock.getType()) || !naturalSurface(surface.getType())) continue;
             if (chestBlock.getType().isAir() || chestBlock.getState() instanceof Chest) continue;
+            if (chestBlock.getRelative(1, 0, 0).getType() == Material.CHEST
+                    || chestBlock.getRelative(-1, 0, 0).getType() == Material.CHEST
+                    || chestBlock.getRelative(0, 0, 1).getType() == Material.CHEST
+                    || chestBlock.getRelative(0, 0, -1).getType() == Material.CHEST) continue;
             boolean clear = true;
             // The burial column must be natural terrain; avoid overwriting obvious underground builds.
             for (int y = surface.getY() - 5; y < surface.getY() && clear; y++) {
