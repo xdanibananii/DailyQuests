@@ -50,6 +50,15 @@ public final class CartographerNpcSystem implements Listener {
     private final Map<UUID, Long> lastWarning = new HashMap<>();
     private final Set<String> greetedTreasures = new HashSet<>();
 
+    private static final class TreasureMarkerRenderer extends MapRenderer {
+        private final Set<UUID> renderedPlayers = new HashSet<>();
+        @Override public void render(MapView map, org.bukkit.map.MapCanvas canvas, Player viewer) {
+            if (renderedPlayers.add(viewer.getUniqueId())) {
+                canvas.getCursors().addCursor(0, 0, (byte) 8, MapCursor.Type.RED_MARKER);
+            }
+        }
+    }
+
     private record MapOffer(String id, String name, Material icon, Material currency,
                             int itemCost, int starCost, String tier, String description) { }
 
@@ -107,10 +116,14 @@ public final class CartographerNpcSystem implements Listener {
         this.chestOwnerKey = new NamespacedKey(plugin, "dq_treasure_owner");
         this.npcFile = new File(plugin.getDataFolder(), "cartographer_npc.yml");
         try (Statement st = db.createStatement()) {
-            st.executeUpdate("CREATE TABLE IF NOT EXISTS dq_treasure_maps (map_id TEXT PRIMARY KEY, owner_uuid TEXT NOT NULL, world TEXT NOT NULL, x INTEGER NOT NULL, y INTEGER NOT NULL, z INTEGER NOT NULL, tier TEXT NOT NULL, claimed INTEGER NOT NULL DEFAULT 0, created_at INTEGER NOT NULL)");
+            st.executeUpdate("CREATE TABLE IF NOT EXISTS dq_treasure_maps (map_id TEXT PRIMARY KEY, owner_uuid TEXT NOT NULL, world TEXT NOT NULL, x INTEGER NOT NULL, y INTEGER NOT NULL, z INTEGER NOT NULL, tier TEXT NOT NULL, claimed INTEGER NOT NULL DEFAULT 0, created_at INTEGER NOT NULL, map_view_id INTEGER NOT NULL DEFAULT -1)");
         } catch (SQLException ex) {
             plugin.getLogger().severe("Nie można utworzyć tabeli map skarbów: " + ex.getMessage());
         }
+        try (Statement migration = db.createStatement()) {
+            migration.executeUpdate("ALTER TABLE dq_treasure_maps ADD COLUMN map_view_id INTEGER NOT NULL DEFAULT -1");
+        } catch (SQLException ignored) { }
+        restoreMapRenderers();
         restoreNpc();
         startAmbientTask();
     }
@@ -290,6 +303,17 @@ public final class CartographerNpcSystem implements Listener {
             openShop(player);
             return;
         }
+        if (offer.starCost() > 0 && crates.getStars(player.getUniqueId()) < offer.starCost()) {
+            say(player, "Brakuje ci gwiazdek, wędrowcze. Ta mapa kosztuje " + offer.starCost() + " ★.");
+            openShop(player);
+            return;
+        }
+        if (offer.starCost() == 0 && count(player, offer.currency()) < offer.itemCost()) {
+            say(player, "Nie masz przy sobie wymaganej zapłaty. Potrzebuję " + offer.itemCost()
+                    + " szt. " + pretty(offer.currency()) + ".");
+            openShop(player);
+            return;
+        }
         Location treasure = findTreasureLocation(player, offer);
         if (treasure == null) {
             say(player, "Dziś szlaki są wyjątkowo kapryśne. Nie znalazłem bezpiecznego miejsca na skarb — spróbuj za chwilę.");
@@ -303,18 +327,13 @@ public final class CartographerNpcSystem implements Listener {
                 return;
             }
         } else {
-            if (count(player, offer.currency()) < offer.itemCost()) {
-                say(player, "Nie masz przy sobie wymaganej zapłaty. Potrzebuję " + offer.itemCost()
-                        + " szt. " + pretty(offer.currency()) + ".");
-                openShop(player);
-                return;
-            }
             remove(player, offer.currency(), offer.itemCost());
         }
 
         try {
-            placeTreasure(mapId, player.getUniqueId(), treasure, offer);
             ItemStack map = createTreasureMap(mapId, treasure, offer);
+            int mapViewId = ((MapMeta) map.getItemMeta()).getMapView().getId();
+            placeTreasure(mapId, player.getUniqueId(), treasure, offer, mapViewId);
             Map<Integer, ItemStack> overflow = player.getInventory().addItem(map);
             overflow.values().forEach(item -> player.getWorld().dropItemNaturally(player.getLocation(), item));
             player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 0.8f, 1.25f);
@@ -337,15 +356,7 @@ public final class CartographerNpcSystem implements Listener {
         view.setScale(MapView.Scale.NORMAL);
         view.setTrackingPosition(false);
         view.setUnlimitedTracking(false);
-        view.addRenderer(new MapRenderer() {
-            private boolean markerAdded;
-            @Override public void render(MapView map, org.bukkit.map.MapCanvas canvas, Player viewer) {
-                if (!markerAdded) {
-                    canvas.getCursors().addCursor(0, 0, (byte) 8, MapCursor.Type.RED_MARKER);
-                    markerAdded = true;
-                }
-            }
-        });
+        addMarkerRenderer(view);
         ItemStack stack = new ItemStack(Material.FILLED_MAP);
         MapMeta meta = (MapMeta) stack.getItemMeta();
         meta.setMapView(view);
@@ -360,9 +371,9 @@ public final class CartographerNpcSystem implements Listener {
         return stack;
     }
 
-    private void placeTreasure(String mapId, UUID owner, Location location, MapOffer offer) throws SQLException {
+    private void placeTreasure(String mapId, UUID owner, Location location, MapOffer offer, int mapViewId) throws SQLException {
         try (PreparedStatement insert = db.prepareStatement(
-                "INSERT INTO dq_treasure_maps(map_id,owner_uuid,world,x,y,z,tier,claimed,created_at) VALUES(?,?,?,?,?,?,?,0,?)")) {
+                "INSERT INTO dq_treasure_maps(map_id,owner_uuid,world,x,y,z,tier,claimed,created_at,map_view_id) VALUES(?,?,?,?,?,?,?,0,?,?)")) {
             insert.setString(1, mapId);
             insert.setString(2, owner.toString());
             insert.setString(3, location.getWorld().getName());
@@ -371,6 +382,7 @@ public final class CartographerNpcSystem implements Listener {
             insert.setInt(6, location.getBlockZ());
             insert.setString(7, offer.tier());
             insert.setLong(8, System.currentTimeMillis());
+            insert.setInt(9, mapViewId);
             insert.executeUpdate();
         }
         Block block = location.getBlock();
@@ -380,6 +392,25 @@ public final class CartographerNpcSystem implements Listener {
         chest.getPersistentDataContainer().set(chestOwnerKey, PersistentDataType.STRING, owner.toString());
         chest.update(true, false);
         fillTreasure(chest.getBlockInventory(), offer.tier());
+    }
+
+    private void addMarkerRenderer(MapView view) {
+        if (view.getRenderers().stream().noneMatch(TreasureMarkerRenderer.class::isInstance)) {
+            view.addRenderer(new TreasureMarkerRenderer());
+        }
+    }
+
+    private void restoreMapRenderers() {
+        try (PreparedStatement query = db.prepareStatement(
+                "SELECT DISTINCT map_view_id FROM dq_treasure_maps WHERE claimed=0 AND map_view_id>=0");
+             ResultSet rows = query.executeQuery()) {
+            while (rows.next()) {
+                MapView view = Bukkit.getMap((short) rows.getInt(1));
+                if (view != null) addMarkerRenderer(view);
+            }
+        } catch (SQLException ex) {
+            plugin.getLogger().warning("Nie udało się odtworzyć znaczników map skarbów: " + ex.getMessage());
+        }
     }
 
     private void fillTreasure(Inventory inventory, String tier) {
