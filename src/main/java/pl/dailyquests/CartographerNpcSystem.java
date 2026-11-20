@@ -359,10 +359,10 @@ public final class CartographerNpcSystem implements Listener {
         view.setCenterX(treasure.getBlockX());
         view.setCenterZ(treasure.getBlockZ());
         view.setScale(switch (offer.tier()) {
-            case "UNCOMMON" -> MapView.Scale.CLOSE;
-            case "RARE" -> MapView.Scale.NORMAL;
-            case "EPIC" -> MapView.Scale.FAR;
-            case "LEGENDARY", "MYTHIC" -> MapView.Scale.FARTHEST;
+            case "UNCOMMON" -> MapView.Scale.CLOSEST;
+            case "RARE" -> MapView.Scale.CLOSE;
+            case "EPIC" -> MapView.Scale.NORMAL;
+            case "LEGENDARY", "MYTHIC" -> MapView.Scale.FAR;
             default -> MapView.Scale.CLOSEST;
         });
         view.setTrackingPosition(true);
