@@ -44,6 +44,8 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
     private QuestNpcSystem npcSystem;
     private CrateNpcSystem crateNpcSystem;
     private CartographerNpcSystem cartographerNpcSystem;
+    private FilipNpcSystem filipNpcSystem;
+    private SnafNpcSystem snafNpcSystem;
 
     private record TaskSlot(int slot, String taskId) { }
     private record CampfireFood(Material result, int amount) { }
@@ -94,9 +96,13 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
         npcSystem = new QuestNpcSystem(this, crateSystem);
         crateNpcSystem = new CrateNpcSystem(this, crateSystem);
         cartographerNpcSystem = new CartographerNpcSystem(this, crateSystem);
+        filipNpcSystem = new FilipNpcSystem(this);
+        snafNpcSystem = new SnafNpcSystem(this);
         getServer().getPluginManager().registerEvents(npcSystem, this);
         getServer().getPluginManager().registerEvents(crateNpcSystem, this);
         getServer().getPluginManager().registerEvents(cartographerNpcSystem, this);
+        getServer().getPluginManager().registerEvents(filipNpcSystem, this);
+        getServer().getPluginManager().registerEvents(snafNpcSystem, this);
         getServer().getPluginManager().registerEvents(this, this);
         getServer().getPluginManager().registerEvents(crateSystem, this);
         for (Player p : Bukkit.getOnlinePlayers()) ensureTasks(p);
@@ -346,6 +352,8 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
             sender.sendMessage(ChatColor.YELLOW + "/dq npc quest [postaw|usun|tp|rename <nazwa>]" + ChatColor.GRAY + " — zarządzanie Michaiłem");
             sender.sendMessage(ChatColor.YELLOW + "/dq npc skarbiec [postaw|usun|tp|rename <nazwa>]" + ChatColor.GRAY + " — zarządzanie Strażnikiem Skarbca");
             sender.sendMessage(ChatColor.YELLOW + "/dq npc kartograf [postaw|usun|tp|rename <nazwa>]" + ChatColor.GRAY + " — zarządzanie Krzusławem Wędrownym");
+            sender.sendMessage(ChatColor.YELLOW + "/dq npc filip [postaw|usun|tp|rename <nazwa>]" + ChatColor.GRAY + " — zarządzanie Filipem Sznupaczem");
+            sender.sendMessage(ChatColor.YELLOW + "/dq npc snaf [postaw|usun|tp|rename <nazwa>]" + ChatColor.GRAY + " — zarządzanie Snafem");
             sender.sendMessage(ChatColor.YELLOW + "/dq gwiazdki <dodaj|usun|ustaw> <gracz> <ilość>" + ChatColor.GRAY + " — zarządzanie saldem");
             sender.sendMessage(ChatColor.YELLOW + "/dq gwiazdki sprawdz <gracz>" + ChatColor.GRAY + " — sprawdza saldo gracza");
             sender.sendMessage(ChatColor.YELLOW + "/dq roll" + ChatColor.GRAY + " — losuje ponownie zadania wszystkim graczom");
@@ -362,9 +370,9 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
             suggestions.addAll(List.of("help", "top", "weekly", "gwiazdki"));
             if (admin) suggestions.addAll(List.of("npc", "roll", "nether", "end", "reload"));
         } else if (args.length == 2 && args[0].equalsIgnoreCase("npc") && admin) {
-            suggestions.addAll(List.of("quest", "skarbiec", "kartograf"));
+            suggestions.addAll(List.of("quest", "skarbiec", "kartograf", "filip", "snaf"));
         } else if (args.length == 3 && args[0].equalsIgnoreCase("npc") && admin
-                && Set.of("quest", "skarbiec", "kartograf").contains(args[1].toLowerCase(Locale.ROOT))) {
+                && Set.of("quest", "skarbiec", "kartograf", "filip", "snaf").contains(args[1].toLowerCase(Locale.ROOT))) {
             suggestions.addAll(List.of("postaw", "usun", "tp", "rename"));
         } else if (args.length == 2 && args[0].equalsIgnoreCase("gwiazdki") && admin) {
             suggestions.addAll(List.of("dodaj", "usun", "ustaw", "sprawdz"));
@@ -389,8 +397,8 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
         if(label.equalsIgnoreCase("dailyquest") && args.length==0) { showHelp(sender); return true; }
         if(args.length>0 && args[0].equalsIgnoreCase("npc")) {
             if(!sender.hasPermission("dailyquests.admin")) { sender.sendMessage(ChatColor.RED+"Brak uprawnień."); return true; }
-            if(args.length<2 || !Set.of("quest","skarbiec","kartograf").contains(args[1].toLowerCase(Locale.ROOT))) {
-                sender.sendMessage(ChatColor.YELLOW+"Użycie: /dq npc <quest|skarbiec|kartograf> [postaw|usun|tp|rename <nazwa>]"); return true;
+            if(args.length<2 || !Set.of("quest","skarbiec","kartograf","filip","snaf").contains(args[1].toLowerCase(Locale.ROOT))) {
+                sender.sendMessage(ChatColor.YELLOW+"Użycie: /dq npc <quest|skarbiec|kartograf|filip|snaf> [postaw|usun|tp|rename <nazwa>]"); return true;
             }
             String npcType=args[1].toLowerCase(Locale.ROOT);
             String action=args.length>=3?args[2].toLowerCase(Locale.ROOT):"postaw";
@@ -400,21 +408,29 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
                 if(npcName.isBlank()) { sender.sendMessage(ChatColor.RED+"Nazwa nie może być pusta."); return true; }
                 if(npcType.equals("quest")) npcSystem.renameNpc(npcName,sender::sendMessage);
                 else if(npcType.equals("skarbiec")) crateNpcSystem.renameNpc(npcName,sender::sendMessage);
-                else cartographerNpcSystem.renameNpc(npcName,sender::sendMessage);
+                else if(npcType.equals("kartograf")) cartographerNpcSystem.renameNpc(npcName,sender::sendMessage);
+                else if(npcType.equals("filip")) filipNpcSystem.renameNpc(npcName,sender::sendMessage);
+                else snafNpcSystem.renameNpc(npcName,sender::sendMessage);
             } else if(action.equals("postaw")) {
                 if(!(sender instanceof Player p)) { sender.sendMessage("Tej komendy użyj w grze."); return true; }
                 if(npcType.equals("quest")) npcSystem.spawnAt(p.getLocation(), sender::sendMessage);
                 else if(npcType.equals("skarbiec")) { crateNpcSystem.spawnAt(p.getLocation()); sender.sendMessage(ChatColor.GREEN+"Postawiono Strażnika Skarbca."); }
-                else cartographerNpcSystem.spawnAt(p.getLocation(), sender::sendMessage);
+                else if(npcType.equals("kartograf")) cartographerNpcSystem.spawnAt(p.getLocation(), sender::sendMessage);
+                else if(npcType.equals("filip")) filipNpcSystem.spawnAt(p.getLocation(), sender::sendMessage);
+                else snafNpcSystem.spawnAt(p.getLocation(), sender::sendMessage);
             } else if(action.equals("usun")) {
                 if(npcType.equals("quest")) { npcSystem.removeNpc(); sender.sendMessage(ChatColor.GREEN+"Usunięto Michaiła Łomonosowa."); }
                 else if(npcType.equals("skarbiec")) { crateNpcSystem.remove(); sender.sendMessage(ChatColor.GREEN+"Usunięto Strażnika Skarbca."); }
-                else { cartographerNpcSystem.removeNpc(); sender.sendMessage(ChatColor.GREEN+"Usunięto Krzusława Wędrownego."); }
+                else if(npcType.equals("kartograf")) { cartographerNpcSystem.removeNpc(); sender.sendMessage(ChatColor.GREEN+"Usunięto Krzusława Wędrownego."); }
+                else if(npcType.equals("filip")) { filipNpcSystem.removeNpc(); sender.sendMessage(ChatColor.GREEN+"Usunięto Filipa Sznupacza."); }
+                else { snafNpcSystem.removeNpc(); sender.sendMessage(ChatColor.GREEN+"Usunięto Snafa."); }
             } else if(action.equals("tp")) {
                 if(!(sender instanceof Player p)) { sender.sendMessage("Tej komendy użyj w grze."); return true; }
                 if(npcType.equals("quest")) npcSystem.teleportToNpc(p);
                 else if(npcType.equals("skarbiec")) crateNpcSystem.teleport(p);
-                else cartographerNpcSystem.teleport(p);
+                else if(npcType.equals("kartograf")) cartographerNpcSystem.teleport(p);
+                else if(npcType.equals("filip")) filipNpcSystem.teleport(p);
+                else snafNpcSystem.teleport(p);
             } else sender.sendMessage(ChatColor.YELLOW+"Użycie: /dq npc "+npcType+" [postaw|usun|tp|rename <nazwa>]");
             return true;
         }
