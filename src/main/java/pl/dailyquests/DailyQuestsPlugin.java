@@ -346,6 +346,8 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
         sender.sendMessage(ChatColor.YELLOW + "/dq weekly" + ChatColor.GRAY + " — pokazuje wyzwanie tygodnia i postęp");
         sender.sendMessage(ChatColor.YELLOW + "/dq top" + ChatColor.GRAY + " — wyświetla ranking graczy");
         sender.sendMessage(ChatColor.YELLOW + "/dq gwiazdki" + ChatColor.GRAY + " — sprawdza własne saldo gwiazdek");
+        sender.sendMessage(ChatColor.YELLOW + "/dq mapa pomoc" + ChatColor.GRAY + " — prosi Krzusława o wskazówkę do najbliższej skrzyni (5 poziomów XP)");
+        sender.sendMessage(ChatColor.YELLOW + "/dq mapa potwierdz" + ChatColor.GRAY + " — potwierdza zakup wskazówki");
         sender.sendMessage(ChatColor.GRAY + "Kontrakty dzienne znajdziesz u Michaiła Łomonosowa.");
         sender.sendMessage(ChatColor.GRAY + "Losowanie nagród za gwiazdki znajdziesz u Strażnika Skarbca.");
         sender.sendMessage(ChatColor.GRAY + "Mapy skarbów i wyprawy znajdziesz u Krzusława Wędrownego.");
@@ -372,8 +374,10 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
         List<String> suggestions = new ArrayList<>();
         boolean admin = sender.hasPermission("dailyquests.admin");
         if (args.length == 1) {
-            suggestions.addAll(List.of("help", "top", "weekly", "gwiazdki"));
+            suggestions.addAll(List.of("help", "top", "weekly", "gwiazdki", "mapa"));
             if (admin) suggestions.addAll(List.of("npc", "kartograf", "roll", "nether", "end", "reload"));
+        } else if (args.length == 2 && args[0].equalsIgnoreCase("mapa")) {
+            suggestions.addAll(List.of("pomoc", "potwierdz"));
         } else if (args.length == 2 && args[0].equalsIgnoreCase("kartograf") && admin) {
             suggestions.add("list");
         } else if (args.length == 2 && args[0].equalsIgnoreCase("npc") && admin) {
