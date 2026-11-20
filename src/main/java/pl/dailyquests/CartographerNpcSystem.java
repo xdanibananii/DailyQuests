@@ -124,6 +124,9 @@ public final class CartographerNpcSystem implements Listener {
         try (Statement migration = db.createStatement()) {
             migration.executeUpdate("ALTER TABLE dq_treasure_maps ADD COLUMN map_view_id INTEGER NOT NULL DEFAULT -1");
         } catch (SQLException ignored) { }
+        try (Statement migration = db.createStatement()) {
+            migration.executeUpdate("ALTER TABLE dq_treasure_maps ADD COLUMN discovered INTEGER NOT NULL DEFAULT 0");
+        } catch (SQLException ignored) { }
         restoreMapRenderers();
         restoreNpc();
         startAmbientTask();
@@ -586,6 +589,13 @@ public final class CartographerNpcSystem implements Listener {
             say(event.getPlayer(), "Ta skrzynia należy do innego odkrywcy. Każda wyprawa ma swojego właściciela.");
             return;
         }
+        try (PreparedStatement discovered = db.prepareStatement(
+                "UPDATE dq_treasure_maps SET discovered=1 WHERE map_id=? AND claimed=0")) {
+            discovered.setString(1, mapId);
+            discovered.executeUpdate();
+        } catch (SQLException ex) {
+            plugin.getLogger().warning("Nie udało się oznaczyć znalezionej mapy: " + ex.getMessage());
+        }
         if (greetedTreasures.add(mapId)) {
             say(event.getPlayer(), "A więc jednak! Znalazłeś ją! Niech twoje znalezisko przejdzie do legend.");
             event.getPlayer().playSound(event.getPlayer().getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 0.8f, 1.15f);
@@ -682,7 +692,7 @@ public final class CartographerNpcSystem implements Listener {
     }
 
     void listPurchasedMaps(CommandSender sender) {
-        String sql = "SELECT owner_uuid, world, x, y, z, tier FROM dq_treasure_maps WHERE claimed=0 ORDER BY created_at ASC";
+        String sql = "SELECT owner_uuid, world, x, y, z, tier FROM dq_treasure_maps WHERE claimed=0 AND discovered=0 ORDER BY created_at ASC";
         try (PreparedStatement query = db.prepareStatement(sql);
              ResultSet rows = query.executeQuery()) {
             List<String> entries = new ArrayList<>();
