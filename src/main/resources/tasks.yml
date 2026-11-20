@@ -217,6 +217,152 @@ tasks:
     reward-item: NAME_TAG
     reward-item-amount: 2
 
+
+  # Midgame — zadania Overworld bez wymagań Netheru i Endu
+  mid_deepslate_diamond:
+    name: "&bGłębinowa gorączka"
+    description: "&7Wydobądź 4 rudy diamentu w łupku"
+    difficulty: HARD
+    type: BREAK
+    dimension: OVERWORLD
+    target: DEEPSLATE_DIAMOND_ORE
+    amount: 4
+    reward-xp: 420
+    reward-item: DIAMOND
+    reward-item-amount: 2
+  mid_deepslate_gold:
+    name: "&6Złoto spod skał"
+    description: "&7Wydobądź 12 rud złota w łupku"
+    difficulty: MEDIUM
+    type: BREAK
+    dimension: OVERWORLD
+    target: DEEPSLATE_GOLD_ORE
+    amount: 12
+    reward-xp: 320
+    reward-item: GOLD_INGOT
+    reward-item-amount: 8
+  mid_sculk_sensors:
+    name: "&5Cichy sygnał"
+    description: "&7Zbierz 6 czujników sculku"
+    difficulty: HARD
+    type: BREAK
+    dimension: OVERWORLD
+    target: SCULK_SENSOR
+    amount: 6
+    reward-xp: 450
+    reward-item: AMETHYST_SHARD
+    reward-item-amount: 16
+  mid_elder_guardian:
+    name: "&3Oko głębin"
+    description: "&7Pokonaj pradawnego strażnika"
+    difficulty: HARD
+    type: KILL
+    dimension: OVERWORLD
+    target: ELDER_GUARDIAN
+    amount: 1
+    reward-xp: 600
+    reward-item: SPONGE
+    reward-item-amount: 4
+  mid_enchanting_table:
+    name: "&5Wiedza ma swoją cenę"
+    description: "&7Wytwórz stół do zaklinania"
+    difficulty: MEDIUM
+    type: CRAFT
+    dimension: OVERWORLD
+    target: ENCHANTING_TABLE
+    amount: 1
+    reward-xp: 320
+    reward-item: LAPIS_LAZULI
+    reward-item-amount: 16
+  mid_diamond_pickaxe:
+    name: "&bNarzędzie mistrza"
+    description: "&7Wytwórz diamentowy kilof"
+    difficulty: MEDIUM
+    type: CRAFT
+    dimension: OVERWORLD
+    target: DIAMOND_PICKAXE
+    amount: 1
+    reward-xp: 400
+    reward-item: DIAMOND
+    reward-item-amount: 1
+  mid_diamond_chestplate:
+    name: "&bPancerz bohatera"
+    description: "&7Wytwórz diamentowy napierśnik"
+    difficulty: HARD
+    type: CRAFT
+    dimension: OVERWORLD
+    target: DIAMOND_CHESTPLATE
+    amount: 1
+    reward-xp: 520
+    reward-item: GOLDEN_APPLE
+    reward-item-amount: 1
+  mid_conduit:
+    name: "&3Serce oceanu"
+    description: "&7Wytwórz kanał"
+    difficulty: HARD
+    type: CRAFT
+    dimension: OVERWORLD
+    target: CONDUIT
+    amount: 1
+    reward-xp: 550
+    reward-item: NAUTILUS_SHELL
+    reward-item-amount: 4
+  mid_hopper:
+    name: "&6Automatyzacja królestwa"
+    description: "&7Wytwórz 16 lejów"
+    difficulty: MEDIUM
+    type: CRAFT
+    dimension: OVERWORLD
+    target: HOPPER
+    amount: 16
+    reward-xp: 340
+    reward-item: REDSTONE
+    reward-item-amount: 16
+  mid_comparator:
+    name: "&cSygnał pod kontrolą"
+    description: "&7Wytwórz 4 komparatory"
+    difficulty: MEDIUM
+    type: CRAFT
+    dimension: OVERWORLD
+    target: REDSTONE_COMPARATOR
+    amount: 4
+    reward-xp: 360
+    reward-item: REDSTONE
+    reward-item-amount: 12
+  mid_sticky_piston:
+    name: "&aLepka sprawa"
+    description: "&7Wytwórz 8 lepkich tłoków"
+    difficulty: HARD
+    type: CRAFT
+    dimension: OVERWORLD
+    target: STICKY_PISTON
+    amount: 8
+    reward-xp: 420
+    reward-item: SLIME_BALL
+    reward-item-amount: 8
+  mid_turtle_helmet:
+    name: "&3Żółwi rycerz"
+    description: "&7Wytwórz hełm żółwia"
+    difficulty: HARD
+    type: CRAFT
+    dimension: OVERWORLD
+    target: TURTLE_HELMET
+    amount: 1
+    reward-xp: 430
+    reward-item: SCUTE
+    reward-item-amount: 2
+  mid_fish_enchanted_book:
+    name: "&dWiedza z dna"
+    description: "&7Wyłów 2 zaklęte księgi"
+    difficulty: HARD
+    type: FISH
+    dimension: OVERWORLD
+    target: ENCHANTED_BOOK
+    amount: 2
+    reward-xp: 450
+    reward-item: EMERALD
+    reward-item-amount: 4
+
   # Nether — dostępne po /dq nether
   nether_quartz:
     name: "&fBiały pył"
