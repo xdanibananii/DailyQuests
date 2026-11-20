@@ -613,12 +613,13 @@ public final class CartographerNpcSystem implements Listener {
     }
 
     private void removeMapItem(Player player, String mapId) {
-        for (ItemStack stack : player.getInventory().getContents()) {
+        for (int slot = 0; slot < player.getInventory().getSize(); slot++) {
+            ItemStack stack = player.getInventory().getItem(slot);
             if (stack == null || !(stack.getItemMeta() instanceof MapMeta meta)) continue;
-            if (mapId.equals(meta.getPersistentDataContainer().get(mapIdKey, PersistentDataType.STRING))) {
-                stack.setAmount(stack.getAmount() - 1);
-                break;
-            }
+            if (!mapId.equals(meta.getPersistentDataContainer().get(mapIdKey, PersistentDataType.STRING))) continue;
+            if (stack.getAmount() <= 1) player.getInventory().setItem(slot, null);
+            else stack.setAmount(stack.getAmount() - 1);
+            break;
         }
     }
 
