@@ -6,6 +6,8 @@ import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityMountEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
@@ -13,6 +15,7 @@ import org.bukkit.inventory.*;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.NamespacedKey;
+import org.bukkit.util.Vector;
 
 import java.io.File;
 import java.sql.*;
@@ -27,6 +30,26 @@ public final class SnafNpcSystem implements Listener {
     private final NamespacedKey npcKey;
     private final File npcFile;
     private final Random random = new Random();
+
+    private final Set<UUID> playersInNpcRange = new HashSet<>();
+    private final Map<UUID, Long> lastAmbientMessage = new HashMap<>();
+    private final Map<UUID, Long> lastWarning = new HashMap<>();
+    private static final long AMBIENT_COOLDOWN_MS = 20_000L;
+    private static final String[] AMBIENT_LINES = {
+            "Pssst! Czujesz ten zapach? Coś dobrego właśnie się gotuje.",
+            "Podejdź bliżej, wędrowcze. Zupa najlepiej smakuje po ciężkiej pracy.",
+            "Nie oceniaj potrawki po wyglądzie... czasem jest podejrzanie dobra.",
+            "Każdy bohater potrzebuje ciepłego posiłku.",
+            "Garnek nigdy nie kłamie. No, prawie nigdy.",
+            "Wróć jutro, może wymyślę coś jeszcze smaczniejszego."
+    };
+    private static final String[] WARNING_LINES = {
+            "Ej! Uważaj, bo rozlejesz cały garnek!",
+            "Nie bij kucharza, bo zostaniesz bez obiadu!",
+            "Spokojnie! Tą chochlą potrafię się bronić!",
+            "Zamiast mnie szturchać, lepiej spróbuj dzisiejszej zupy."
+    };
+
     private static final String[] GREETINGS = {
             "Oho! Gość! Właśnie dochodzi świeża zupka.",
             "Witaj, głodomorze! Trzy porcje dziennie — taka jest moja zasada.",
@@ -46,6 +69,7 @@ public final class SnafNpcSystem implements Listener {
             plugin.getLogger().severe("Nie można utworzyć tabeli dziennych odbiorów Snafa: " + ex.getMessage());
         }
         restoreNpc();
+        startAmbientTask();
     }
 
     private String today() {
@@ -162,8 +186,84 @@ public final class SnafNpcSystem implements Listener {
 
     @EventHandler
     public void onMount(EntityMountEvent event) {
-        if (event.getMount() instanceof Villager villager
-                && villager.getPersistentDataContainer().has(npcKey, PersistentDataType.BYTE)) event.setCancelled(true);
+        if (!event.getEntity().getPersistentDataContainer().has(npcKey, PersistentDataType.BYTE)) return;
+        event.setCancelled(true);
+        if (event.getEntity().isInsideVehicle()) event.getEntity().leaveVehicle();
+    }
+
+    @EventHandler
+    public void onNpcDamage(EntityDamageEvent event) {
+        if (!event.getEntity().getPersistentDataContainer().has(npcKey, PersistentDataType.BYTE)) return;
+        event.setCancelled(true);
+        if (event instanceof EntityDamageByEntityEvent hit && hit.getDamager() instanceof Player player) {
+            long now = System.currentTimeMillis();
+            if (now - lastWarning.getOrDefault(player.getUniqueId(), 0L) >= 2500L) {
+                lastWarning.put(player.getUniqueId(), now);
+                say(player, WARNING_LINES[random.nextInt(WARNING_LINES.length)]);
+                player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 0.65f, 0.85f);
+            }
+        }
+    }
+
+    private void startAmbientTask() {
+        Bukkit.getScheduler().runTaskTimer(plugin, () -> {
+            if (!npcFile.exists()) return;
+            YamlConfiguration yaml = YamlConfiguration.loadConfiguration(npcFile);
+            String savedUuid = yaml.getString("uuid", "");
+            if (savedUuid.isBlank()) return;
+            Entity entity;
+            try { entity = Bukkit.getEntity(UUID.fromString(savedUuid)); }
+            catch (IllegalArgumentException ex) { return; }
+            if (!(entity instanceof Villager villager) || !villager.isValid()) return;
+            World savedWorld = Bukkit.getWorld(yaml.getString("world", ""));
+            if (savedWorld == null || villager.getWorld() != savedWorld) return;
+
+            Location anchor = new Location(savedWorld, yaml.getDouble("x"), yaml.getDouble("y"),
+                    yaml.getDouble("z"), (float) yaml.getDouble("yaw"), 0.0f);
+            villager.setAI(false);
+            villager.setVelocity(new Vector(0, 0, 0));
+            if (villager.getLocation().distanceSquared(anchor) > 0.0025) villager.teleport(anchor);
+
+            Player nearest = null;
+            double nearestDistance = Double.MAX_VALUE;
+            for (Player player : savedWorld.getPlayers()) {
+                double distance = player.getLocation().distanceSquared(villager.getLocation());
+                if (distance < nearestDistance) { nearest = player; nearestDistance = distance; }
+            }
+            if (nearest != null) {
+                Location npcLocation = villager.getLocation();
+                Location playerLocation = nearest.getLocation();
+                double dx = playerLocation.getX() - npcLocation.getX();
+                double dz = playerLocation.getZ() - npcLocation.getZ();
+                if (dx * dx + dz * dz > 0.0001) {
+                    villager.setRotation((float) Math.toDegrees(Math.atan2(-dx, dz)), 0.0f);
+                }
+            }
+
+            Set<UUID> nearbyNow = new HashSet<>();
+            for (Player player : savedWorld.getPlayers()) {
+                UUID playerId = player.getUniqueId();
+                if (player.getLocation().distanceSquared(villager.getLocation()) > 25.0) continue;
+                nearbyNow.add(playerId);
+                if (playersInNpcRange.add(playerId)) {
+                    long now = System.currentTimeMillis();
+                    if (now - lastAmbientMessage.getOrDefault(playerId, 0L) >= AMBIENT_COOLDOWN_MS) {
+                        lastAmbientMessage.put(playerId, now);
+                        say(player, AMBIENT_LINES[random.nextInt(AMBIENT_LINES.length)]);
+                        player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 0.55f, 1.35f);
+                    }
+                }
+            }
+            playersInNpcRange.retainAll(nearbyNow);
+        }, 20L, 10L);
+    }
+
+    @EventHandler
+    public void onQuit(org.bukkit.event.player.PlayerQuitEvent event) {
+        UUID uuid = event.getPlayer().getUniqueId();
+        playersInNpcRange.remove(uuid);
+        lastAmbientMessage.remove(uuid);
+        lastWarning.remove(uuid);
     }
 
     private void say(Player player, String message) {
