@@ -458,17 +458,31 @@ public final class CartographerNpcSystem implements Listener {
                 ? player.getWorld() : Bukkit.getWorlds().stream()
                 .filter(w -> w.getEnvironment() == World.Environment.NORMAL).findFirst().orElse(null);
         if (world == null) return null;
-        int minRadius = offer.tier().equals("LEGENDARY") ? 700 : offer.tier().equals("EPIC") ? 550 : 350;
-        int maxRadius = offer.tier().equals("LEGENDARY") ? 1800 : 1400;
+        int minRadius = switch (offer.tier()) {
+            case "UNCOMMON" -> 160;
+            case "RARE" -> 220;
+            case "EPIC" -> 300;
+            case "LEGENDARY" -> 400;
+            default -> 120;
+        };
+        int maxRadius = switch (offer.tier()) {
+            case "EPIC" -> 1200;
+            case "LEGENDARY" -> 1600;
+            default -> 900;
+        };
         Location origin = player.getWorld().getEnvironment() == World.Environment.NORMAL
                 ? player.getLocation() : world.getSpawnLocation();
-        for (int attempt = 0; attempt < 120; attempt++) {
+        for (int attempt = 0; attempt < 124; attempt++) {
             double angle = random.nextDouble() * Math.PI * 2.0;
             int radius = minRadius + random.nextInt(Math.max(1, maxRadius - minRadius + 1));
             int x = origin.getBlockX() + (int) Math.round(Math.cos(angle) * radius);
             int z = origin.getBlockZ() + (int) Math.round(Math.sin(angle) * radius);
             int chunkX = x >> 4, chunkZ = z >> 4;
-            if (!world.isChunkGenerated(chunkX, chunkZ)) continue;
+            if (!world.isChunkGenerated(chunkX, chunkZ)) {
+                // In a fresh world, allow at most four new wilderness chunks to be generated.
+                if (attempt < 120) continue;
+                world.getChunkAt(chunkX, chunkZ);
+            }
             Block surface = world.getHighestBlockAt(x, z);
             if (!surface.getType().isSolid() || surface.isLiquid()) continue;
             if (surface.getY() < world.getMinHeight() + 8 || surface.getY() > world.getMaxHeight() - 8) continue;
@@ -482,7 +496,7 @@ public final class CartographerNpcSystem implements Listener {
             }
             if (!clear || tooCloseToOtherTreasure(world, x, z)) continue;
             Location spawn = world.getSpawnLocation();
-            if (Math.hypot(x - spawn.getX(), z - spawn.getZ()) < 600) continue;
+            if (Math.hypot(x - spawn.getX(), z - spawn.getZ()) < 96) continue;
             return chestBlock.getLocation();
         }
         return null;
