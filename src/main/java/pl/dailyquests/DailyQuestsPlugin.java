@@ -273,8 +273,15 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
                     case "HARD" -> ChatColor.RED;
                     default -> ChatColor.YELLOW;
                 };
-                Bukkit.broadcastMessage(ChatColor.GOLD + "★ " + ChatColor.WHITE + p.getName()
-                        + ChatColor.GRAY + " ukończył zadanie " + difficultyColor + actual.name);
+                Component announcement = Component.text("★ ", NamedTextColor.GOLD)
+                        .append(Component.text(p.getName(), NamedTextColor.WHITE))
+                        .append(Component.text(" ukończył zadanie ", NamedTextColor.GRAY))
+                        .append(LegacyComponentSerializer.legacySection().deserialize(actual.name)
+                                .hoverEvent(net.kyori.adventure.text.event.HoverEvent.showText(
+                                        LegacyComponentSerializer.legacySection().deserialize(
+                                                actual.description == null || actual.description.isBlank()
+                                                        ? "Brak opisu zadania." : actual.description))));
+                Bukkit.broadcast(announcement);
             }
             break;
         }
