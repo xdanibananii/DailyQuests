@@ -2501,3 +2501,137 @@ tasks:
     reward-xp: 180
     reward-item: IRON_INGOT
     reward-item-amount: 6
+
+  # Codzienne zadania — rozszerzenie lekkiej puli 1.1.3
+  easy_harvest_carrots:
+    name: "&6Marchewkowe pole"
+    description: "&7Zbierz 24 marchewki z upraw"
+    difficulty: EASY
+    type: BREAK
+    dimension: OVERWORLD
+    target: CARROTS
+    amount: 24
+    reward-xp: 130
+    reward-item: BREAD
+    reward-item-amount: 4
+  easy_harvest_potatoes:
+    name: "&eZiemniaczana gorączka"
+    description: "&7Zbierz 24 ziemniaki z upraw"
+    difficulty: EASY
+    type: BREAK
+    dimension: OVERWORLD
+    target: POTATOES
+    amount: 24
+    reward-xp: 130
+    reward-item: BAKED_POTATO
+    reward-item-amount: 6
+  easy_harvest_beetroots:
+    name: "&cCzerwone zbiory"
+    description: "&7Zbierz 16 buraków z upraw"
+    difficulty: EASY
+    type: BREAK
+    dimension: OVERWORLD
+    target: BEETROOTS
+    amount: 16
+    reward-xp: 140
+    reward-item: BEETROOT_SOUP
+    reward-item-amount: 2
+  easy_harvest_wheat:
+    name: "&eChleb powszedni"
+    description: "&7Zbierz 16 dojrzałych zbóż"
+    difficulty: EASY
+    type: BREAK
+    dimension: OVERWORLD
+    target: WHEAT
+    amount: 16
+    reward-xp: 130
+    reward-item: BREAD
+    reward-item-amount: 5
+  easy_craft_ladders:
+    name: "&6Drabina do nieba"
+    description: "&7Wytwórz 12 drabin"
+    difficulty: EASY
+    type: CRAFT
+    dimension: OVERWORLD
+    target: LADDER
+    amount: 12
+    reward-xp: 140
+    reward-item: STICK
+    reward-item-amount: 16
+  easy_craft_signs:
+    name: "&eTabliczkowy szyfr"
+    description: "&7Wytwórz 8 tabliczek"
+    difficulty: EASY
+    type: CRAFT
+    dimension: OVERWORLD
+    target: OAK_SIGN
+    amount: 8
+    reward-xp: 130
+    reward-item: OAK_PLANKS
+    reward-item-amount: 12
+  easy_craft_boat:
+    name: "&bRejs po przygodę"
+    description: "&7Wytwórz 2 dębowe łódki"
+    difficulty: EASY
+    type: CRAFT
+    dimension: OVERWORLD
+    target: OAK_BOAT
+    amount: 2
+    reward-xp: 140
+    reward-item: COOKED_COD
+    reward-item-amount: 3
+  medium_craft_books:
+    name: "&5Biblioteka Aleksandryjska"
+    description: "&7Wytwórz 6 książek"
+    difficulty: MEDIUM
+    type: CRAFT
+    dimension: OVERWORLD
+    target: BOOK
+    amount: 6
+    reward-xp: 190
+    reward-item: PAPER
+    reward-item-amount: 12
+  medium_craft_fence:
+    name: "&6Granice królestwa"
+    description: "&7Wytwórz 16 dębowych płotków"
+    difficulty: MEDIUM
+    type: CRAFT
+    dimension: OVERWORLD
+    target: OAK_FENCE
+    amount: 16
+    reward-xp: 190
+    reward-item: OAK_PLANKS
+    reward-item-amount: 16
+  easy_eat_chicken:
+    name: "&6Kolacja u Steve'a"
+    description: "&7Zjedz 8 pieczonych kurczaków"
+    difficulty: EASY
+    type: EAT
+    dimension: OVERWORLD
+    target: COOKED_CHICKEN
+    amount: 8
+    reward-xp: 140
+    reward-item: BAKED_POTATO
+    reward-item-amount: 6
+  easy_eat_apple:
+    name: "&cJabłko dziennie"
+    description: "&7Zjedz 6 jabłek"
+    difficulty: EASY
+    type: EAT
+    dimension: OVERWORLD
+    target: APPLE
+    amount: 6
+    reward-xp: 130
+    reward-item: GOLDEN_CARROT
+    reward-item-amount: 2
+  medium_eat_mutton:
+    name: "&6Uczta wędrowca"
+    description: "&7Zjedz 8 pieczonych baranin"
+    difficulty: MEDIUM
+    type: EAT
+    dimension: OVERWORLD
+    target: COOKED_MUTTON
+    amount: 8
+    reward-xp: 190
+    reward-item: COOKED_BEEF
+    reward-item-amount: 4
