@@ -13,6 +13,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityMountEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
@@ -316,6 +317,7 @@ public final class QuestNpcSystem implements Listener {
     }
 
     private void configure(Villager villager, String name) {
+        if (villager.isInsideVehicle()) villager.leaveVehicle();
         villager.setAI(false);
         villager.setInvulnerable(true);
         villager.setSilent(false);
@@ -566,6 +568,12 @@ public final class QuestNpcSystem implements Listener {
     }
     @EventHandler public void onContractDrag(InventoryDragEvent event) {
         if (TITLE.equals(event.getView().getTitle())) event.setCancelled(true);
+    }
+
+    @EventHandler public void onNpcMount(EntityMountEvent event) {
+        if (!event.getEntity().getPersistentDataContainer().has(npcKey, PersistentDataType.BYTE)) return;
+        event.setCancelled(true);
+        if (event.getEntity().isInsideVehicle()) event.getEntity().leaveVehicle();
     }
 
     @EventHandler public void onNpcDamage(EntityDamageEvent event) {
