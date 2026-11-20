@@ -38,7 +38,7 @@ import java.util.*;
 
 public final class CartographerNpcSystem implements Listener {
     private static final String TITLE = ChatColor.DARK_GRAY + "✦ KRZUSŁAW WĘDROWNY — KRAM KARTOGRAFA ✦";
-    private static final int[] SHOP_SLOTS = {19, 21, 23, 28, 30, 32};
+    private static final int[] SHOP_SLOTS = {20, 22, 24, 29, 31, 33};
     private final DailyQuestsPlugin plugin;
     private final CrateSystem crates;
     private final Connection db;
@@ -275,11 +275,11 @@ public final class CartographerNpcSystem implements Listener {
             lore.add(ChatColor.YELLOW + "Kliknij, aby kupić mapę.");
             inv.setItem(SHOP_SLOTS[i], item(offer.icon(), tierColor + "✦ " + offer.name(), lore));
         }
-        inv.setItem(49, item(Material.NETHER_STAR, ChatColor.GOLD + "TWOJE GWIAZDKI",
+        inv.setItem(48, item(Material.NETHER_STAR, ChatColor.GOLD + "TWOJE GWIAZDKI",
                 List.of(ChatColor.YELLOW.toString() + crates.getStars(player.getUniqueId()) + " ★",
                         ChatColor.GRAY + "Lepsze mapy kupisz za gwiazdki",
                         ChatColor.DARK_GRAY + "Zdobywaj je za codzienne zadania.")));
-        inv.setItem(53, item(Material.BARRIER, ChatColor.RED + "ZAMKNIJ KRAM", List.of(ChatColor.GRAY + "Do zobaczenia na szlaku!")));
+        inv.setItem(50, item(Material.BARRIER, ChatColor.RED + "ZAMKNIJ KRAM", List.of(ChatColor.GRAY + "Do zobaczenia na szlaku!")));
         player.openInventory(inv);
     }
 
@@ -288,7 +288,7 @@ public final class CartographerNpcSystem implements Listener {
         event.setCancelled(true);
         if (!(event.getWhoClicked() instanceof Player player)) return;
         int raw = event.getRawSlot();
-        if (raw == 53) { player.closeInventory(); return; }
+        if (raw == 50) { player.closeInventory(); return; }
         for (int i = 0; i < SHOP_SLOTS.length; i++) {
             if (raw == SHOP_SLOTS[i]) { purchase(player, OFFERS.get(i)); return; }
         }
@@ -427,34 +427,33 @@ public final class CartographerNpcSystem implements Listener {
     private void fillTreasure(Inventory inventory, String tier) {
         List<ItemStack> loot = new ArrayList<>();
         int stacks = switch (tier) {
-            case "COMMON" -> 3;
-            case "UNCOMMON" -> 4;
-            case "RARE" -> 5;
-            case "EPIC" -> 6;
-            case "MYTHIC" -> 7;
-            default -> 7;
+            case "COMMON" -> 2;
+            case "UNCOMMON" -> 3;
+            case "RARE" -> 3;
+            case "EPIC" -> 4;
+            case "LEGENDARY" -> 4;
+            default -> 5;
         };
         List<Material> pool = switch (tier) {
-            case "COMMON" -> List.of(Material.COAL, Material.IRON_INGOT, Material.COPPER_INGOT, Material.BREAD,
+            case "COMMON" -> List.of(Material.COAL, Material.COPPER_INGOT, Material.BREAD,
                     Material.GOLD_NUGGET, Material.LAPIS_LAZULI, Material.ARROW);
-            case "UNCOMMON" -> List.of(Material.IRON_INGOT, Material.GOLD_INGOT, Material.EMERALD,
+            case "UNCOMMON" -> List.of(Material.IRON_INGOT, Material.GOLD_NUGGET, Material.GOLD_INGOT,
                     Material.COOKED_BEEF, Material.LAPIS_LAZULI, Material.EXPERIENCE_BOTTLE);
             case "RARE" -> List.of(Material.DIAMOND, Material.EMERALD, Material.GOLDEN_APPLE,
-                    Material.OBSIDIAN, Material.EXPERIENCE_BOTTLE, Material.AMETHYST_SHARD);
-            case "EPIC" -> List.of(Material.DIAMOND, Material.DIAMOND, Material.HEART_OF_THE_SEA,
+                    Material.OBSIDIAN, Material.AMETHYST_SHARD);
+            case "EPIC" -> List.of(Material.DIAMOND, Material.HEART_OF_THE_SEA,
                     Material.ECHO_SHARD, Material.ANCIENT_DEBRIS, Material.GOLDEN_APPLE);
-            case "LEGENDARY" -> List.of(Material.DIAMOND, Material.NETHERITE_SCRAP, Material.HEART_OF_THE_SEA,
-                    Material.ENCHANTED_GOLDEN_APPLE, Material.DIAMOND_BLOCK, Material.ECHO_SHARD);
-            default -> List.of(Material.NETHERITE_INGOT, Material.TOTEM_OF_UNDYING, Material.NETHER_STAR,
-                    Material.SHULKER_SHELL, Material.DIAMOND_BLOCK, Material.ENCHANTED_GOLDEN_APPLE, Material.DRAGON_HEAD);
+            case "LEGENDARY" -> List.of(Material.DIAMOND, Material.NETHERITE_SCRAP,
+                    Material.HEART_OF_THE_SEA, Material.ECHO_SHARD, Material.GOLDEN_APPLE);
+            default -> List.of(Material.NETHERITE_SCRAP, Material.TOTEM_OF_UNDYING,
+                    Material.SHULKER_SHELL, Material.DIAMOND, Material.ECHO_SHARD, Material.GOLD_INGOT);
         };
         for (int i = 0; i < stacks; i++) {
             Material material = pool.get(random.nextInt(pool.size()));
             int amount = switch (tier) {
-                case "COMMON" -> 3 + random.nextInt(8);
-                case "UNCOMMON" -> 2 + random.nextInt(5);
-                case "RARE" -> 1 + random.nextInt(3);
-                case "EPIC" -> 1 + random.nextInt(2);
+                case "COMMON" -> 2 + random.nextInt(4);
+                case "UNCOMMON" -> 1 + random.nextInt(3);
+                case "RARE" -> 1 + random.nextInt(2);
                 default -> 1;
             };
             loot.add(new ItemStack(material, Math.min(amount, material.getMaxStackSize())));
