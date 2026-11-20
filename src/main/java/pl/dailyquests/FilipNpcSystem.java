@@ -23,6 +23,14 @@ import java.util.*;
 public final class FilipNpcSystem implements Listener {
     private static final String TITLE = ChatColor.DARK_AQUA + "FILIP SZNUPACZ — WSPÓLNY MAGAZYN";
     private static final int PAGE_SIZE = 45;
+    private static final String[] GREETINGS = {
+            "Witaj, wędrowcze! Masz coś, czym chciałbyś się podzielić?",
+            "U mnie nic się nie zmarnuje. Wspólny magazyn stoi otworem!",
+            "Szukasz zapasów? Rozejrzyj się, może ktoś zostawił coś przydatnego.",
+            "Razem możemy zgromadzić całkiem pokaźne zapasy!",
+            "Witaj! Pamiętaj, że z magazynu może korzystać każdy."
+    };
+    private final Random random = new Random();
     private final DailyQuestsPlugin plugin;
     private final Connection db;
     private final NamespacedKey npcKey;
@@ -125,13 +133,21 @@ public final class FilipNpcSystem implements Listener {
         if (!(event.getRightClicked() instanceof Villager villager)
                 || !villager.getPersistentDataContainer().has(npcKey, PersistentDataType.BYTE)) return;
         event.setCancelled(true);
-        open(event.getPlayer(), 0);
+        Player player = event.getPlayer();
+        player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_TRADE, 0.8f, 1.05f);
+        say(player, GREETINGS[random.nextInt(GREETINGS.length)]);
+        open(player, 0);
     }
 
     @EventHandler
     public void onMount(EntityMountEvent event) {
         if (event.getMount() instanceof Villager villager
                 && villager.getPersistentDataContainer().has(npcKey, PersistentDataType.BYTE)) event.setCancelled(true);
+    }
+
+    private void say(Player player, String message) {
+        player.sendMessage(ChatColor.AQUA + "Filip Sznupacz" + ChatColor.DARK_GRAY + " » "
+                + ChatColor.WHITE + message);
     }
 
     private void open(Player player, int page) {
