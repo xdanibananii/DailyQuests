@@ -347,6 +347,8 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
         sender.sendMessage(ChatColor.GRAY + "Kontrakty dzienne znajdziesz u Michaiła Łomonosowa.");
         sender.sendMessage(ChatColor.GRAY + "Losowanie nagród za gwiazdki znajdziesz u Strażnika Skarbca.");
         sender.sendMessage(ChatColor.GRAY + "Mapy skarbów i wyprawy znajdziesz u Krzusława Wędrownego.");
+        sender.sendMessage(ChatColor.GRAY + "Wspólny magazyn znajdziesz u Filipa Sznupacza.");
+        sender.sendMessage(ChatColor.GRAY + "Dzienną porcję zupy odbierzesz u Snafa.");
         if (sender.hasPermission("dailyquests.admin")) {
             sender.sendMessage(ChatColor.DARK_AQUA + "━━ KOMENDY ADMINISTRATORA ━━");
             sender.sendMessage(ChatColor.YELLOW + "/dq npc quest [postaw|usun|tp|rename <nazwa>]" + ChatColor.GRAY + " — zarządzanie Michaiłem");
