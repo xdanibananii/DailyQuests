@@ -95,6 +95,7 @@ public final class CrateNpcSystem implements Listener {
   },20L,10L);
  }
  private void configure(Villager v, String name) {
+  if(v.isInsideVehicle()) v.leaveVehicle();
   v.setAI(false); v.setInvulnerable(true); v.setPersistent(true); v.setRemoveWhenFarAway(false); v.setCollidable(false); v.setCanPickupItems(false); v.setProfession(Villager.Profession.CLERIC);
   v.setCustomName(ChatColor.GOLD+"✦ "+ChatColor.LIGHT_PURPLE+ChatColor.translateAlternateColorCodes('&',name)+ChatColor.GOLD+" ✦"); v.setCustomNameVisible(true); v.getPersistentDataContainer().set(key,PersistentDataType.BYTE,(byte)1);
  }
