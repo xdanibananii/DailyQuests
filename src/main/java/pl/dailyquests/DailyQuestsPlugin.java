@@ -354,6 +354,7 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
             sender.sendMessage(ChatColor.YELLOW + "/dq npc quest [postaw|usun|tp|rename <nazwa>]" + ChatColor.GRAY + " — zarządzanie Michaiłem");
             sender.sendMessage(ChatColor.YELLOW + "/dq npc skarbiec [postaw|usun|tp|rename <nazwa>]" + ChatColor.GRAY + " — zarządzanie Strażnikiem Skarbca");
             sender.sendMessage(ChatColor.YELLOW + "/dq npc kartograf [postaw|usun|tp|rename <nazwa>]" + ChatColor.GRAY + " — zarządzanie Krzusławem Wędrownym");
+            sender.sendMessage(ChatColor.YELLOW + "/dq kartograf list" + ChatColor.GRAY + " — lista aktywnych map i współrzędnych skrzyń");
             sender.sendMessage(ChatColor.YELLOW + "/dq npc filip [postaw|usun|tp|rename <nazwa>]" + ChatColor.GRAY + " — zarządzanie Filipem Sznupaczem");
             sender.sendMessage(ChatColor.YELLOW + "/dq npc snaf [postaw|usun|tp|rename <nazwa>]" + ChatColor.GRAY + " — zarządzanie Snafem");
             sender.sendMessage(ChatColor.YELLOW + "/dq gwiazdki <dodaj|usun|ustaw> <gracz> <ilość>" + ChatColor.GRAY + " — zarządzanie saldem");
@@ -370,7 +371,9 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
         boolean admin = sender.hasPermission("dailyquests.admin");
         if (args.length == 1) {
             suggestions.addAll(List.of("help", "top", "weekly", "gwiazdki"));
-            if (admin) suggestions.addAll(List.of("npc", "roll", "nether", "end", "reload"));
+            if (admin) suggestions.addAll(List.of("npc", "kartograf", "roll", "nether", "end", "reload"));
+        } else if (args.length == 2 && args[0].equalsIgnoreCase("kartograf") && admin) {
+            suggestions.add("list");
         } else if (args.length == 2 && args[0].equalsIgnoreCase("npc") && admin) {
             suggestions.addAll(List.of("quest", "skarbiec", "kartograf", "filip", "snaf"));
         } else if (args.length == 3 && args[0].equalsIgnoreCase("npc") && admin
@@ -397,6 +400,15 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
             return true;
         }
         if(label.equalsIgnoreCase("dailyquest") && args.length==0) { showHelp(sender); return true; }
+        if(args.length>0 && args[0].equalsIgnoreCase("kartograf")) {
+            if(!sender.hasPermission("dailyquests.admin")) { sender.sendMessage(ChatColor.RED+"Brak uprawnień."); return true; }
+            if(args.length==2 && args[1].equalsIgnoreCase("list")) {
+                cartographerNpcSystem.listPurchasedMaps(sender);
+            } else {
+                sender.sendMessage(ChatColor.YELLOW+"Użycie: /dq kartograf list");
+            }
+            return true;
+        }
         if(args.length>0 && args[0].equalsIgnoreCase("npc")) {
             if(!sender.hasPermission("dailyquests.admin")) { sender.sendMessage(ChatColor.RED+"Brak uprawnień."); return true; }
             if(args.length<2 || !Set.of("quest","skarbiec","kartograf","filip","snaf").contains(args[1].toLowerCase(Locale.ROOT))) {
