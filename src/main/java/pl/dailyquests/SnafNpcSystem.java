@@ -53,6 +53,7 @@ public final class SnafNpcSystem implements Listener {
         if (world == null || !yaml.contains("x")) return;
         Location location = new Location(world, yaml.getDouble("x"), yaml.getDouble("y"), yaml.getDouble("z"),
                 (float) yaml.getDouble("yaw"), (float) yaml.getDouble("pitch"));
+        world.getChunkAt(location).load();
         String saved = yaml.getString("uuid", "");
         Entity existing = null;
         try { if (!saved.isBlank()) existing = Bukkit.getEntity(UUID.fromString(saved)); }
