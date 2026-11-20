@@ -276,7 +276,7 @@ public final class CartographerNpcSystem implements Listener {
             inv.setItem(SHOP_SLOTS[i], item(offer.icon(), tierColor + "✦ " + offer.name(), lore));
         }
         inv.setItem(49, item(Material.NETHER_STAR, ChatColor.GOLD + "TWOJE GWIAZDKI",
-                List.of(ChatColor.YELLOW + crates.getStars(player.getUniqueId()) + " ★",
+                List.of(ChatColor.YELLOW.toString() + crates.getStars(player.getUniqueId()) + " ★",
                         ChatColor.GRAY + "Lepsze mapy kupisz za gwiazdki",
                         ChatColor.DARK_GRAY + "Zdobywaj je za codzienne zadania.")));
         inv.setItem(53, item(Material.BARRIER, ChatColor.RED + "ZAMKNIJ KRAM", List.of(ChatColor.GRAY + "Do zobaczenia na szlaku!")));
@@ -738,22 +738,6 @@ public final class CartographerNpcSystem implements Listener {
     private void saveNpc(org.bukkit.configuration.file.YamlConfiguration yaml) {
         try { yaml.save(npcFile); }
         catch (Exception ex) { plugin.getLogger().warning("Nie zapisano lokalizacji Krzusława: " + ex.getMessage()); }
-    }
-
-    private boolean naturalGround(Material material) {
-        return switch (material) {
-            case DIRT, GRASS_BLOCK, COARSE_DIRT, ROOTED_DIRT, PODZOL, MYCELIUM, SAND, RED_SAND,
-                    GRAVEL, STONE, ANDESITE, DIORITE, GRANITE, TUFF, DEEPSLATE, CLAY -> true;
-            default -> false;
-        };
-    }
-
-    private boolean naturalSurface(Material material) {
-        return switch (material) {
-            case GRASS_BLOCK, DIRT, COARSE_DIRT, ROOTED_DIRT, PODZOL, MYCELIUM, SAND, RED_SAND,
-                    GRAVEL, STONE, ANDESITE, DIORITE, GRANITE, TUFF, DEEPSLATE, SNOW_BLOCK -> true;
-            default -> false;
-        };
     }
 
     private ItemStack item(Material material, String name, List<String> lore) {
