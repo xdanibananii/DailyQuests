@@ -108,6 +108,8 @@ public final class FilipNpcSystem implements Listener {
     }
 
     private Entity findNpc(YamlConfiguration yaml) {
+        World world = Bukkit.getWorld(yaml.getString("world", ""));
+        if (world != null && yaml.contains("x")) world.getChunkAt((int) Math.floor(yaml.getDouble("x")) >> 4, (int) Math.floor(yaml.getDouble("z")) >> 4).load();
         try { String id = yaml.getString("uuid", ""); return id.isBlank() ? null : Bukkit.getEntity(UUID.fromString(id)); }
         catch (IllegalArgumentException ex) { return null; }
     }
