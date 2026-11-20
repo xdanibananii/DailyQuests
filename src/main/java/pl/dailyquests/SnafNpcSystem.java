@@ -27,6 +27,13 @@ public final class SnafNpcSystem implements Listener {
     private final NamespacedKey npcKey;
     private final File npcFile;
     private final Random random = new Random();
+    private static final String[] GREETINGS = {
+            "Oho! Gość! Właśnie dochodzi świeża zupka.",
+            "Witaj, głodomorze! Trzy porcje dziennie — taka jest moja zasada.",
+            "Dziś polecam grzybową. Chociaż czasem trafi się coś... podejrzanego.",
+            "Nie stój tak, podejdź bliżej! Mam dla ciebie coś ciepłego.",
+            "Pamiętaj: kto je zupę, ten ma siłę na kolejne przygody!"
+    };
 
     SnafNpcSystem(DailyQuestsPlugin plugin) {
         this.plugin = plugin;
@@ -147,13 +154,21 @@ public final class SnafNpcSystem implements Listener {
         if (!(event.getRightClicked() instanceof Villager villager)
                 || !villager.getPersistentDataContainer().has(npcKey, PersistentDataType.BYTE)) return;
         event.setCancelled(true);
-        open(event.getPlayer());
+        Player player = event.getPlayer();
+        player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_TRADE, 0.8f, 1.15f);
+        say(player, GREETINGS[random.nextInt(GREETINGS.length)]);
+        open(player);
     }
 
     @EventHandler
     public void onMount(EntityMountEvent event) {
         if (event.getMount() instanceof Villager villager
                 && villager.getPersistentDataContainer().has(npcKey, PersistentDataType.BYTE)) event.setCancelled(true);
+    }
+
+    private void say(Player player, String message) {
+        player.sendMessage(ChatColor.GREEN + "Snaf" + ChatColor.DARK_GRAY + " » "
+                + ChatColor.WHITE + message);
     }
 
     private boolean alreadyClaimed(UUID uuid) {
