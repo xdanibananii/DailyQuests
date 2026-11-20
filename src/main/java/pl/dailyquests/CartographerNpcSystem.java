@@ -71,9 +71,9 @@ public final class CartographerNpcSystem implements Listener {
                     "Dla tych, którzy nie boją się zejść z utartego szlaku."),
             new MapOffer("forgotten", "Mapa zapomniana", Material.PAPER, null, 0, 5, "EPIC",
                     "Stare pergaminy wspominają o skarbach, o których świat dawno zapomniał."),
-            new MapOffer("ancient", "Mapa pradawna", Material.MAP, null, 0, 10, "EPIC",
+            new MapOffer("ancient", "Mapa pradawna", Material.MAP, null, 0, 10, "LEGENDARY",
                     "Jej znaki pochodzą z czasów, gdy królestwa dopiero powstawały."),
-            new MapOffer("legendary", "Mapa legendarna", Material.FILLED_MAP, null, 0, 20, "LEGENDARY",
+            new MapOffer("legendary", "Mapa legendarna", Material.FILLED_MAP, null, 0, 20, "MYTHIC",
                     "Niewielu widziało taką mapę. Jeszcze mniej wróciło z jej wyprawy.")
     );
 
@@ -362,7 +362,7 @@ public final class CartographerNpcSystem implements Listener {
             case "UNCOMMON" -> MapView.Scale.CLOSE;
             case "RARE" -> MapView.Scale.NORMAL;
             case "EPIC" -> MapView.Scale.FAR;
-            case "LEGENDARY" -> MapView.Scale.FARTHEST;
+            case "LEGENDARY", "MYTHIC" -> MapView.Scale.FARTHEST;
             default -> MapView.Scale.CLOSEST;
         });
         view.setTrackingPosition(true);
@@ -431,6 +431,7 @@ public final class CartographerNpcSystem implements Listener {
             case "UNCOMMON" -> 4;
             case "RARE" -> 5;
             case "EPIC" -> 6;
+            case "MYTHIC" -> 8;
             default -> 7;
         };
         List<Material> pool = switch (tier) {
@@ -442,8 +443,10 @@ public final class CartographerNpcSystem implements Listener {
                     Material.OBSIDIAN, Material.EXPERIENCE_BOTTLE, Material.AMETHYST_SHARD);
             case "EPIC" -> List.of(Material.DIAMOND, Material.DIAMOND, Material.HEART_OF_THE_SEA,
                     Material.ECHO_SHARD, Material.ANCIENT_DEBRIS, Material.GOLDEN_APPLE);
-            default -> List.of(Material.DIAMOND, Material.NETHERITE_SCRAP, Material.HEART_OF_THE_SEA,
+            case "LEGENDARY" -> List.of(Material.DIAMOND, Material.NETHERITE_SCRAP, Material.HEART_OF_THE_SEA,
                     Material.ENCHANTED_GOLDEN_APPLE, Material.DIAMOND_BLOCK, Material.ECHO_SHARD);
+            default -> List.of(Material.NETHERITE_INGOT, Material.TOTEM_OF_UNDYING, Material.NETHER_STAR,
+                    Material.SHULKER_SHELL, Material.DIAMOND_BLOCK, Material.ENCHANTED_GOLDEN_APPLE, Material.ELYTRA);
         };
         for (int i = 0; i < stacks; i++) {
             Material material = pool.get(random.nextInt(pool.size()));
@@ -474,11 +477,13 @@ public final class CartographerNpcSystem implements Listener {
             case "RARE" -> 220;
             case "EPIC" -> 300;
             case "LEGENDARY" -> 400;
+            case "MYTHIC" -> 500;
             default -> 120;
         };
         int maxRadius = switch (offer.tier()) {
             case "EPIC" -> 1200;
             case "LEGENDARY" -> 1600;
+            case "MYTHIC" -> 1800;
             default -> 900;
         };
         Location origin = player.getWorld().getEnvironment() == World.Environment.NORMAL
@@ -762,6 +767,7 @@ public final class CartographerNpcSystem implements Listener {
             case "RARE" -> ChatColor.AQUA;
             case "EPIC" -> ChatColor.LIGHT_PURPLE;
             case "LEGENDARY" -> ChatColor.GOLD;
+            case "MYTHIC" -> ChatColor.DARK_PURPLE;
             default -> ChatColor.WHITE;
         };
     }
