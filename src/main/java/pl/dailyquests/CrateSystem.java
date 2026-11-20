@@ -166,7 +166,8 @@ public final class CrateSystem implements Listener {
             Map<String, Integer> tierCounts = new HashMap<>();
             Map<String, Integer> tierIndexes = new HashMap<>();
             for (Map<?, ?> row : yaml.getMapList("rewards")) {
-                String tier = String.valueOf(row.getOrDefault("tier", "COMMON")).toUpperCase(Locale.ROOT);
+                Object tierValue = row.get("tier");
+                String tier = (tierValue == null ? "COMMON" : String.valueOf(tierValue)).toUpperCase(Locale.ROOT);
                 if (!tierTotals.containsKey(tier)) tier = "COMMON";
                 tierCounts.merge(tier, 1, Integer::sum);
             }
