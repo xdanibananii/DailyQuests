@@ -405,7 +405,7 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
         String selectedId=null;
         double nearestDistance=Double.MAX_VALUE;
         try(PreparedStatement query=db.prepareStatement(
-                "SELECT map_id,world,x,z FROM dq_treasure_maps WHERE owner_uuid=? AND claimed=0")) {
+                "SELECT map_id,world,x,z FROM dq_treasure_maps WHERE owner_uuid=? AND claimed=0 AND discovered=0")) {
             query.setString(1,uuid.toString());
             try(ResultSet rows=query.executeQuery()) {
                 while(rows.next()) {
@@ -456,7 +456,7 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
         String worldName=null;
         int x=0,z=0;
         try(PreparedStatement query=db.prepareStatement(
-                "SELECT world,x,z FROM dq_treasure_maps WHERE map_id=? AND owner_uuid=? AND claimed=0")) {
+                "SELECT world,x,z FROM dq_treasure_maps WHERE map_id=? AND owner_uuid=? AND claimed=0 AND discovered=0")) {
             query.setString(1,pending.mapId());
             query.setString(2,uuid.toString());
             try(ResultSet row=query.executeQuery()) {
