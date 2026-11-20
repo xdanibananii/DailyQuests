@@ -426,38 +426,54 @@ public final class CartographerNpcSystem implements Listener {
 
     private void fillTreasure(Inventory inventory, String tier) {
         List<ItemStack> loot = new ArrayList<>();
-        int stacks = switch (tier) {
-            case "COMMON" -> 2;
-            case "UNCOMMON" -> 3;
-            case "RARE" -> 3;
-            case "EPIC" -> 4;
-            case "LEGENDARY" -> 4;
-            default -> 5;
-        };
-        List<Material> pool = switch (tier) {
-            case "COMMON" -> List.of(Material.COAL, Material.COPPER_INGOT, Material.BREAD,
-                    Material.GOLD_NUGGET, Material.LAPIS_LAZULI, Material.ARROW);
-            case "UNCOMMON" -> List.of(Material.IRON_INGOT, Material.GOLD_NUGGET, Material.GOLD_INGOT,
-                    Material.COOKED_BEEF, Material.LAPIS_LAZULI, Material.EXPERIENCE_BOTTLE);
-            case "RARE" -> List.of(Material.DIAMOND, Material.EMERALD, Material.GOLDEN_APPLE,
-                    Material.OBSIDIAN, Material.AMETHYST_SHARD);
-            case "EPIC" -> List.of(Material.DIAMOND, Material.HEART_OF_THE_SEA,
-                    Material.ECHO_SHARD, Material.ANCIENT_DEBRIS, Material.GOLDEN_APPLE);
-            case "LEGENDARY" -> List.of(Material.DIAMOND, Material.NETHERITE_SCRAP,
-                    Material.HEART_OF_THE_SEA, Material.ECHO_SHARD, Material.GOLDEN_APPLE);
-            default -> List.of(Material.NETHERITE_SCRAP, Material.TOTEM_OF_UNDYING,
-                    Material.SHULKER_SHELL, Material.DIAMOND, Material.ECHO_SHARD, Material.GOLD_INGOT);
-        };
-        for (int i = 0; i < stacks; i++) {
-            Material material = pool.get(random.nextInt(pool.size()));
-            int amount = switch (tier) {
-                case "COMMON" -> 2 + random.nextInt(4);
-                case "UNCOMMON" -> 1 + random.nextInt(3);
-                case "RARE" -> 1 + random.nextInt(2);
-                default -> 1;
+
+        // Najtańsze mapy zwracają minimum 80% ceny w tym samym surowcu,
+        // a losowe bonusy sprawiają, że skrzynia może zwrócić jeszcze więcej.
+        if ("COMMON".equals(tier)) {
+            loot.add(new ItemStack(Material.IRON_INGOT, 26 + random.nextInt(7))); // 26–32 z 32
+            List<Material> bonusPool = List.of(Material.COPPER_INGOT, Material.BREAD,
+                    Material.GOLD_NUGGET, Material.LAPIS_LAZULI, Material.IRON_INGOT);
+            int bonusStacks = 1 + random.nextInt(2);
+            for (int i = 0; i < bonusStacks; i++) {
+                Material material = bonusPool.get(random.nextInt(bonusPool.size()));
+                int amount = 2 + random.nextInt(5);
+                loot.add(new ItemStack(material, Math.min(amount, material.getMaxStackSize())));
+            }
+        } else if ("UNCOMMON".equals(tier)) {
+            loot.add(new ItemStack(Material.GOLD_INGOT, 13 + random.nextInt(4))); // 13–16 z 16
+            List<Material> bonusPool = List.of(Material.IRON_INGOT, Material.GOLD_NUGGET,
+                    Material.COOKED_BEEF, Material.LAPIS_LAZULI, Material.EXPERIENCE_BOTTLE,
+                    Material.EMERALD);
+            int bonusStacks = 2 + random.nextInt(2);
+            for (int i = 0; i < bonusStacks; i++) {
+                Material material = bonusPool.get(random.nextInt(bonusPool.size()));
+                int amount = material == Material.EXPERIENCE_BOTTLE
+                        ? 1 + random.nextInt(3) : 2 + random.nextInt(4);
+                loot.add(new ItemStack(material, Math.min(amount, material.getMaxStackSize())));
+            }
+        } else {
+            int stacks = switch (tier) {
+                case "RARE" -> 3;
+                case "EPIC", "LEGENDARY" -> 4;
+                default -> 5;
             };
-            loot.add(new ItemStack(material, Math.min(amount, material.getMaxStackSize())));
+            List<Material> pool = switch (tier) {
+                case "RARE" -> List.of(Material.DIAMOND, Material.EMERALD, Material.GOLDEN_APPLE,
+                        Material.OBSIDIAN, Material.AMETHYST_SHARD);
+                case "EPIC" -> List.of(Material.DIAMOND, Material.HEART_OF_THE_SEA,
+                        Material.ECHO_SHARD, Material.ANCIENT_DEBRIS, Material.GOLDEN_APPLE);
+                case "LEGENDARY" -> List.of(Material.DIAMOND, Material.NETHERITE_SCRAP,
+                        Material.HEART_OF_THE_SEA, Material.ECHO_SHARD, Material.GOLDEN_APPLE);
+                default -> List.of(Material.NETHERITE_SCRAP, Material.TOTEM_OF_UNDYING,
+                        Material.SHULKER_SHELL, Material.DIAMOND, Material.ECHO_SHARD, Material.GOLD_INGOT);
+            };
+            for (int i = 0; i < stacks; i++) {
+                Material material = pool.get(random.nextInt(pool.size()));
+                int amount = "RARE".equals(tier) ? 1 + random.nextInt(2) : 1;
+                loot.add(new ItemStack(material, Math.min(amount, material.getMaxStackSize())));
+            }
         }
+
         Collections.shuffle(loot);
         for (ItemStack stack : loot) {
             int slot;
