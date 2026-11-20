@@ -5,6 +5,7 @@ import org.bukkit.entity.*;
 import org.bukkit.event.*;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityMountEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.NamespacedKey;
@@ -174,6 +175,11 @@ public final class CrateNpcSystem implements Listener {
   p.sendMessage(ChatColor.LIGHT_PURPLE+"Strażnik Skarbca"+ChatColor.DARK_GRAY+" » "+ChatColor.YELLOW+greeting);
   p.sendMessage(ChatColor.GRAY+"» "+ChatColor.YELLOW+"Skrzynia zwykła: 10 ★ | Premium: 20 ★. "+ChatColor.GRAY+"Sprawdź szanse w skrzynce!");
   crates.open(p);
+ }
+ @EventHandler public void onNpcMount(EntityMountEvent e) {
+  if(!e.getEntity().getPersistentDataContainer().has(key,PersistentDataType.BYTE)) return;
+  e.setCancelled(true);
+  if(e.getEntity().isInsideVehicle()) e.getEntity().leaveVehicle();
  }
  @EventHandler public void onDamage(EntityDamageEvent e) {
   if(!e.getEntity().getPersistentDataContainer().has(key,PersistentDataType.BYTE)) return;
