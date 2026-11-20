@@ -58,9 +58,9 @@ public final class CartographerNpcSystem implements Listener {
                     "Pierwszy krok ku przygodzie. Podobno nawet zwykłe wzgórza skrywają sekrety."),
             new MapOffer("seeker", "Mapa poszukiwacza", Material.FILLED_MAP, Material.GOLD_INGOT, 16, 0, "UNCOMMON",
                     "Prowadzi do miejsca, w którym można znaleźć coś więcej niż stare kości."),
-            new MapOffer("explorer", "Mapa odkrywcy", Material.EXPLORER_MAP, Material.EMERALD, 12, 0, "RARE",
+            new MapOffer("explorer", "Mapa odkrywcy", Material.COMPASS, Material.EMERALD, 12, 0, "RARE",
                     "Dla tych, którzy nie boją się zejść z utartego szlaku."),
-            new MapOffer("forgotten", "Mapa zapomniana", Material.OLD_MAP, null, 0, 5, "EPIC",
+            new MapOffer("forgotten", "Mapa zapomniana", Material.PAPER, null, 0, 5, "EPIC",
                     "Stare pergaminy wspominają o skarbach, o których świat dawno zapomniał."),
             new MapOffer("ancient", "Mapa pradawna", Material.MAP, null, 0, 10, "EPIC",
                     "Jej znaki pochodzą z czasów, gdy królestwa dopiero powstawały."),
@@ -683,24 +683,6 @@ public final class CartographerNpcSystem implements Listener {
                     GRAVEL, STONE, ANDESITE, DIORITE, GRANITE, TUFF, DEEPSLATE, SNOW_BLOCK -> true;
             default -> false;
         };
-    }
-
-    private int count(Player player, Material material) {
-        int amount = 0;
-        for (ItemStack stack : player.getInventory().getStorageContents())
-            if (stack != null && stack.getType() == material) amount += stack.getAmount();
-        return amount;
-    }
-
-    private void remove(Player player, Material material, int amount) {
-        int left = amount;
-        for (ItemStack stack : player.getInventory().getStorageContents()) {
-            if (stack == null || stack.getType() != material) continue;
-            int take = Math.min(left, stack.getAmount());
-            stack.setAmount(stack.getAmount() - take);
-            left -= take;
-            if (left <= 0) break;
-        }
     }
 
     private ItemStack item(Material material, String name, List<String> lore) {
