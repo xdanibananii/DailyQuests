@@ -2505,7 +2505,7 @@ tasks:
   # Codzienne zadania — rozszerzenie lekkiej puli 1.1.3
   easy_harvest_carrots:
     name: "&6Marchewkowe pole"
-    description: "&7Zbierz 24 marchewki z upraw"
+    description: "&7Zbierz 24 dojrzałe uprawy marchwi"
     difficulty: EASY
     type: BREAK
     dimension: OVERWORLD
@@ -2516,7 +2516,7 @@ tasks:
     reward-item-amount: 4
   easy_harvest_potatoes:
     name: "&eZiemniaczana gorączka"
-    description: "&7Zbierz 24 ziemniaki z upraw"
+    description: "&7Zbierz 24 dojrzałe uprawy ziemniaków"
     difficulty: EASY
     type: BREAK
     dimension: OVERWORLD
@@ -2527,7 +2527,7 @@ tasks:
     reward-item-amount: 6
   easy_harvest_beetroots:
     name: "&cCzerwone zbiory"
-    description: "&7Zbierz 16 buraków z upraw"
+    description: "&7Zbierz 16 dojrzałych upraw buraków"
     difficulty: EASY
     type: BREAK
     dimension: OVERWORLD
@@ -2538,7 +2538,7 @@ tasks:
     reward-item-amount: 2
   easy_harvest_wheat:
     name: "&eChleb powszedni"
-    description: "&7Zbierz 16 dojrzałych zbóż"
+    description: "&7Zbierz 16 dojrzałych kłosów pszenicy"
     difficulty: EASY
     type: BREAK
     dimension: OVERWORLD
