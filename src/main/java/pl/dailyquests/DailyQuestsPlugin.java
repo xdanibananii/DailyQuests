@@ -276,7 +276,7 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
                 Component announcement = Component.text("★ ", NamedTextColor.GOLD)
                         .append(Component.text(p.getName(), NamedTextColor.WHITE))
                         .append(Component.text(" ukończył zadanie ", NamedTextColor.GRAY))
-                        .append(LegacyComponentSerializer.legacySection().deserialize(actual.name)
+                        .append(LegacyComponentSerializer.legacySection().deserialize(difficultyColor + actual.name)
                                 .hoverEvent(net.kyori.adventure.text.event.HoverEvent.showText(
                                         LegacyComponentSerializer.legacySection().deserialize(
                                                 actual.description == null || actual.description.isBlank()
