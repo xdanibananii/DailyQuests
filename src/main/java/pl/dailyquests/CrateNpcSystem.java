@@ -5,6 +5,7 @@ import org.bukkit.entity.*;
 import org.bukkit.event.*;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityMountEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.NamespacedKey;
@@ -94,14 +95,53 @@ public final class CrateNpcSystem implements Listener {
   },20L,10L);
  }
  private void configure(Villager v, String name) {
+  if(v.isInsideVehicle()) v.leaveVehicle();
   v.setAI(false); v.setInvulnerable(true); v.setPersistent(true); v.setRemoveWhenFarAway(false); v.setCollidable(false); v.setCanPickupItems(false); v.setProfession(Villager.Profession.CLERIC);
   v.setCustomName(ChatColor.GOLD+"✦ "+ChatColor.LIGHT_PURPLE+ChatColor.translateAlternateColorCodes('&',name)+ChatColor.GOLD+" ✦"); v.setCustomNameVisible(true); v.getPersistentDataContainer().set(key,PersistentDataType.BYTE,(byte)1);
  }
  private void restore() {
-  if(!file.exists()) return; YamlConfiguration y=YamlConfiguration.loadConfiguration(file); World w=Bukkit.getWorld(y.getString("world","")); if(w==null||!y.contains("x")) return;
-  Entity e=null; try { String id=y.getString("uuid",""); if(!id.isBlank()) e=Bukkit.getEntity(UUID.fromString(id)); } catch(IllegalArgumentException ignored) {}
-  if(e instanceof Villager v) { configure(v,y.getString("name","Strażnik Skarbca")); return; }
-  Location l=loc(y,w); w.getChunkAt(l).load(); Villager v=(Villager)w.spawnEntity(l,EntityType.VILLAGER); configure(v,y.getString("name","Strażnik Skarbca")); y.set("uuid",v.getUniqueId().toString()); save(y);
+  if(!file.exists()) return;
+  YamlConfiguration y=YamlConfiguration.loadConfiguration(file);
+  World w=Bukkit.getWorld(y.getString("world",""));
+  if(w==null||!y.contains("x")) return;
+
+  Location location=loc(y,w);
+  w.getChunkAt(location).load();
+  String savedId=y.getString("uuid","");
+  Entity keep=null;
+  try {
+   if(!savedId.isBlank()) keep=Bukkit.getEntity(UUID.fromString(savedId));
+  } catch(IllegalArgumentException ignored) {}
+
+  // Older restarts could leave several tagged villagers at the saved location.
+  // Keep the canonical UUID when possible; otherwise keep the nearest tagged NPC.
+  List<Entity> tagged=new ArrayList<>();
+  for(World world:Bukkit.getWorlds()) {
+   for(Entity entity:world.getEntities()) {
+    if(entity.getPersistentDataContainer().has(key,PersistentDataType.BYTE)) tagged.add(entity);
+   }
+  }
+  if(!(keep instanceof Villager) || !keep.isValid()) {
+   keep=tagged.stream()
+    .filter(entity->entity.getWorld().equals(w))
+    .min(Comparator.comparingDouble(entity->entity.getLocation().distanceSquared(location)))
+    .orElse(null);
+  }
+  for(Entity entity:tagged) {
+   if(keep==null || !entity.getUniqueId().equals(keep.getUniqueId())) entity.remove();
+  }
+
+  if(keep instanceof Villager villager && villager.isValid()) {
+   configure(villager,y.getString("name","Strażnik Skarbca"));
+   y.set("uuid",villager.getUniqueId().toString());
+   save(y);
+   return;
+  }
+
+  Villager villager=(Villager)w.spawnEntity(location,EntityType.VILLAGER);
+  configure(villager,y.getString("name","Strażnik Skarbca"));
+  y.set("uuid",villager.getUniqueId().toString());
+  save(y);
  }
  void spawnAt(Location l) {
   if(l.getWorld()==null) return; remove(); Villager v=(Villager)l.getWorld().spawnEntity(l,EntityType.VILLAGER); YamlConfiguration y=new YamlConfiguration(); y.set("name","Strażnik Skarbca"); configure(v,"Strażnik Skarbca");
@@ -136,6 +176,11 @@ public final class CrateNpcSystem implements Listener {
   p.sendMessage(ChatColor.LIGHT_PURPLE+"Strażnik Skarbca"+ChatColor.DARK_GRAY+" » "+ChatColor.YELLOW+greeting);
   p.sendMessage(ChatColor.GRAY+"» "+ChatColor.YELLOW+"Skrzynia zwykła: 10 ★ | Premium: 20 ★. "+ChatColor.GRAY+"Sprawdź szanse w skrzynce!");
   crates.open(p);
+ }
+ @EventHandler public void onNpcMount(EntityMountEvent e) {
+  if(!e.getEntity().getPersistentDataContainer().has(key,PersistentDataType.BYTE)) return;
+  e.setCancelled(true);
+  if(e.getEntity().isInsideVehicle()) e.getEntity().leaveVehicle();
  }
  @EventHandler public void onDamage(EntityDamageEvent e) {
   if(!e.getEntity().getPersistentDataContainer().has(key,PersistentDataType.BYTE)) return;

@@ -217,6 +217,152 @@ tasks:
     reward-item: NAME_TAG
     reward-item-amount: 2
 
+
+  # Midgame — zadania Overworld bez wymagań Netheru i Endu
+  mid_deepslate_diamond:
+    name: "&bGłębinowa gorączka"
+    description: "&7Wydobądź 4 rudy diamentu w łupku"
+    difficulty: HARD
+    type: BREAK
+    dimension: OVERWORLD
+    target: DEEPSLATE_DIAMOND_ORE
+    amount: 4
+    reward-xp: 420
+    reward-item: DIAMOND
+    reward-item-amount: 2
+  mid_deepslate_gold:
+    name: "&6Złoto spod skał"
+    description: "&7Wydobądź 12 rud złota w łupku"
+    difficulty: MEDIUM
+    type: BREAK
+    dimension: OVERWORLD
+    target: DEEPSLATE_GOLD_ORE
+    amount: 12
+    reward-xp: 320
+    reward-item: GOLD_INGOT
+    reward-item-amount: 8
+  mid_sculk_sensors:
+    name: "&5Cichy sygnał"
+    description: "&7Zbierz 6 czujników sculku"
+    difficulty: HARD
+    type: BREAK
+    dimension: OVERWORLD
+    target: SCULK_SENSOR
+    amount: 6
+    reward-xp: 450
+    reward-item: AMETHYST_SHARD
+    reward-item-amount: 16
+  mid_elder_guardian:
+    name: "&3Oko głębin"
+    description: "&7Pokonaj pradawnego strażnika"
+    difficulty: HARD
+    type: KILL
+    dimension: OVERWORLD
+    target: ELDER_GUARDIAN
+    amount: 1
+    reward-xp: 600
+    reward-item: SPONGE
+    reward-item-amount: 4
+  mid_enchanting_table:
+    name: "&5Wiedza ma swoją cenę"
+    description: "&7Wytwórz stół do zaklinania"
+    difficulty: MEDIUM
+    type: CRAFT
+    dimension: OVERWORLD
+    target: ENCHANTING_TABLE
+    amount: 1
+    reward-xp: 320
+    reward-item: LAPIS_LAZULI
+    reward-item-amount: 16
+  mid_diamond_pickaxe:
+    name: "&bNarzędzie mistrza"
+    description: "&7Wytwórz diamentowy kilof"
+    difficulty: MEDIUM
+    type: CRAFT
+    dimension: OVERWORLD
+    target: DIAMOND_PICKAXE
+    amount: 1
+    reward-xp: 400
+    reward-item: DIAMOND
+    reward-item-amount: 1
+  mid_diamond_chestplate:
+    name: "&bPancerz bohatera"
+    description: "&7Wytwórz diamentowy napierśnik"
+    difficulty: HARD
+    type: CRAFT
+    dimension: OVERWORLD
+    target: DIAMOND_CHESTPLATE
+    amount: 1
+    reward-xp: 520
+    reward-item: GOLDEN_APPLE
+    reward-item-amount: 1
+  mid_conduit:
+    name: "&3Serce oceanu"
+    description: "&7Wytwórz kanał"
+    difficulty: HARD
+    type: CRAFT
+    dimension: OVERWORLD
+    target: CONDUIT
+    amount: 1
+    reward-xp: 550
+    reward-item: NAUTILUS_SHELL
+    reward-item-amount: 4
+  mid_hopper:
+    name: "&6Automatyzacja królestwa"
+    description: "&7Wytwórz 16 lejów"
+    difficulty: MEDIUM
+    type: CRAFT
+    dimension: OVERWORLD
+    target: HOPPER
+    amount: 16
+    reward-xp: 340
+    reward-item: REDSTONE
+    reward-item-amount: 16
+  mid_comparator:
+    name: "&cSygnał pod kontrolą"
+    description: "&7Wytwórz 4 komparatory"
+    difficulty: MEDIUM
+    type: CRAFT
+    dimension: OVERWORLD
+    target: REDSTONE_COMPARATOR
+    amount: 4
+    reward-xp: 360
+    reward-item: REDSTONE
+    reward-item-amount: 12
+  mid_sticky_piston:
+    name: "&aLepka sprawa"
+    description: "&7Wytwórz 8 lepkich tłoków"
+    difficulty: HARD
+    type: CRAFT
+    dimension: OVERWORLD
+    target: STICKY_PISTON
+    amount: 8
+    reward-xp: 420
+    reward-item: SLIME_BALL
+    reward-item-amount: 8
+  mid_turtle_helmet:
+    name: "&3Żółwi rycerz"
+    description: "&7Wytwórz hełm żółwia"
+    difficulty: HARD
+    type: CRAFT
+    dimension: OVERWORLD
+    target: TURTLE_HELMET
+    amount: 1
+    reward-xp: 430
+    reward-item: SCUTE
+    reward-item-amount: 2
+  mid_fish_enchanted_book:
+    name: "&dWiedza z dna"
+    description: "&7Wyłów 2 zaklęte księgi"
+    difficulty: HARD
+    type: FISH
+    dimension: OVERWORLD
+    target: ENCHANTED_BOOK
+    amount: 2
+    reward-xp: 450
+    reward-item: EMERALD
+    reward-item-amount: 4
+
   # Nether — dostępne po /dq nether
   nether_quartz:
     name: "&fBiały pył"
@@ -375,6 +521,7 @@ tasks:
     reward-item: DRAGON_BREATH
     reward-item-amount: 2
   end_crystal:
+    requires-nether: true
     name: "&dSmocza technologia"
     description: "&7Wytwórz 4 kryształy Endu"
     difficulty: HARD
@@ -1012,6 +1159,7 @@ tasks:
     reward-item: REDSTONE
     reward-item-amount: 16
   craft_observer:
+    requires-nether: true
     name: "&cOko mechanizmu"
     description: "&7Wytwórz 4 obserwatory"
     difficulty: HARD
@@ -1092,6 +1240,7 @@ tasks:
     reward-item: GUNPOWDER
     reward-item-amount: 16
   craft_ender_chest:
+    requires-nether: true
     name: "&cSkarbiec podróżnika"
     description: "&7Wytwórz 1 skrzynię Endu"
     difficulty: HARD
@@ -1112,6 +1261,7 @@ tasks:
     reward-item: IRON_INGOT
     reward-item-amount: 12
   craft_brewing_stand:
+    requires-nether: true
     name: "&eLaboratorium alchemika"
     description: "&7Wytwórz 2 statywy alchemiczne"
     difficulty: MEDIUM
@@ -1499,6 +1649,7 @@ tasks:
     reward-item: PURPUR_BLOCK
     reward-item-amount: 16
   end_end_rod:
+    requires-nether: true
     name: "&eŚwiatło krańca"
     description: "&7Wytwórz 16 prętów Endu"
     difficulty: MEDIUM
@@ -1576,6 +1727,7 @@ tasks:
     reward-item: GLASS_BOTTLE
     reward-item-amount: 16
   end_crystal_craft:
+    requires-nether: true
     name: "&cKryształowa moc"
     description: "&7Wytwórz 8 kryształów Endu"
     difficulty: HARD
@@ -2047,3 +2199,439 @@ tasks:
     reward-xp: 150
     reward-item: KELP
     reward-item-amount: 32
+
+  # Dodatkowe zadania Overworld — rozszerzenie puli 1.0.23
+  break_oak_leaves:
+    name: "&2Jesienny ogrodnik"
+    description: "&7Zbierz 48 bloków liści dębu"
+    difficulty: EASY
+    type: BREAK
+    target: OAK_LEAVES
+    amount: 48
+    reward-xp: 140
+    reward-item: OAK_SAPLING
+    reward-item-amount: 8
+  break_dripstone:
+    name: "&6Jaskiniowy stalaktyt"
+    description: "&7Zbierz 24 bloki naciekowe"
+    difficulty: MEDIUM
+    type: BREAK
+    target: DRIPSTONE_BLOCK
+    amount: 24
+    reward-xp: 220
+    reward-item: POINTED_DRIPSTONE
+    reward-item-amount: 12
+  break_glow_lichen:
+    name: "&aŚwietlisty ślad"
+    description: "&7Zbierz 32 porosty jaskiniowe"
+    difficulty: EASY
+    type: BREAK
+    target: GLOW_LICHEN
+    amount: 32
+    reward-xp: 160
+    reward-item: GLOW_INK_SAC
+    reward-item-amount: 4
+  break_sea_pickle:
+    name: "&bMorskie ogrody"
+    description: "&7Zbierz 24 ogórki morskie"
+    difficulty: MEDIUM
+    type: BREAK
+    target: SEA_PICKLE
+    amount: 24
+    reward-xp: 210
+    reward-item: PRISMARINE_SHARD
+    reward-item-amount: 12
+  break_mangrove_roots:
+    name: "&6Korzenie bagien"
+    description: "&7Zbierz 32 namorzynowe korzenie"
+    difficulty: MEDIUM
+    type: BREAK
+    target: MANGROVE_ROOTS
+    amount: 32
+    reward-xp: 210
+    reward-item: MUD
+    reward-item-amount: 16
+  break_honeycomb_block:
+    name: "&eMiodowa robota"
+    description: "&7Zbierz 12 bloków plastra miodu"
+    difficulty: MEDIUM
+    type: BREAK
+    target: HONEYCOMB_BLOCK
+    amount: 12
+    reward-xp: 220
+    reward-item: HONEYCOMB
+    reward-item-amount: 16
+  kill_wolf:
+    name: "&7Wilczy trop"
+    description: "&7Pokonaj 4 wilki"
+    difficulty: HARD
+    type: KILL
+    target: WOLF
+    amount: 4
+    reward-xp: 360
+    reward-item: BONE
+    reward-item-amount: 24
+  kill_bee:
+    name: "&eNie drażnij ula"
+    description: "&7Pokonaj 5 pszczół"
+    difficulty: MEDIUM
+    type: KILL
+    target: BEE
+    amount: 5
+    reward-xp: 260
+    reward-item: HONEYCOMB
+    reward-item-amount: 8
+  craft_stonecutter:
+    name: "&6Precyzja kamieniarza"
+    description: "&7Wytwórz 3 kamieniarze"
+    difficulty: EASY
+    type: CRAFT
+    target: STONECUTTER
+    amount: 3
+    reward-xp: 170
+    reward-item: IRON_INGOT
+    reward-item-amount: 6
+  craft_loom:
+    name: "&dTkacki warsztat"
+    description: "&7Wytwórz 4 krosna"
+    difficulty: EASY
+    type: CRAFT
+    target: LOOM
+    amount: 4
+    reward-xp: 170
+    reward-item: WHITE_WOOL
+    reward-item-amount: 16
+  craft_composter:
+    name: "&aKompost dla królestwa"
+    description: "&7Wytwórz 4 kompostowniki"
+    difficulty: EASY
+    type: CRAFT
+    target: COMPOSTER
+    amount: 4
+    reward-xp: 160
+    reward-item: BONE_MEAL
+    reward-item-amount: 16
+  craft_campfire:
+    name: "&6Ognisko wędrowca"
+    description: "&7Wytwórz 3 ogniska"
+    difficulty: MEDIUM
+    type: CRAFT
+    target: CAMPFIRE
+    amount: 3
+    reward-xp: 220
+    reward-item: COOKED_BEEF
+    reward-item-amount: 8
+  craft_crossbow:
+    name: "&cŁowca z kuszą"
+    description: "&7Wytwórz 2 kusze"
+    difficulty: MEDIUM
+    type: CRAFT
+    target: CROSSBOW
+    amount: 2
+    reward-xp: 260
+    reward-item: ARROW
+    reward-item-amount: 24
+  craft_trapdoor:
+    name: "&6Sekretne przejście"
+    description: "&7Wytwórz 16 klap"
+    difficulty: EASY
+    type: CRAFT
+    target: OAK_TRAPDOOR
+    amount: 16
+    reward-xp: 150
+    reward-item: OAK_PLANKS
+    reward-item-amount: 24
+  craft_painting:
+    name: "&aGaleria Steve'a"
+    description: "&7Wytwórz 8 obrazów"
+    difficulty: EASY
+    type: CRAFT
+    target: PAINTING
+    amount: 8
+    reward-xp: 160
+    reward-item: ITEM_FRAME
+    reward-item-amount: 4
+  craft_armor_stand:
+    name: "&7Wystawa zbroi"
+    description: "&7Wytwórz 4 stojaki na zbroję"
+    difficulty: MEDIUM
+    type: CRAFT
+    target: ARMOR_STAND
+    amount: 4
+    reward-xp: 220
+    reward-item: IRON_INGOT
+    reward-item-amount: 8
+  craft_chest_minecart:
+    name: "&6Kolejowy magazyn"
+    description: "&7Wytwórz 2 wagoniki ze skrzynią"
+    difficulty: MEDIUM
+    type: CRAFT
+    target: CHEST_MINECART
+    amount: 2
+    reward-xp: 260
+    reward-item: RAIL
+    reward-item-amount: 24
+  eat_cookie:
+    name: "&6Słodka przerwa"
+    description: "&7Zjedz 16 ciastek"
+    difficulty: EASY
+    type: EAT
+    target: COOKIE
+    amount: 16
+    reward-xp: 160
+    reward-item: WHEAT
+    reward-item-amount: 16
+  eat_pumpkin_pie:
+    name: "&6Jesienny deser"
+    description: "&7Zjedz 8 ciast dyniowych"
+    difficulty: MEDIUM
+    type: EAT
+    target: PUMPKIN_PIE
+    amount: 8
+    reward-xp: 220
+    reward-item: PUMPKIN
+    reward-item-amount: 4
+  eat_melon_slice:
+    name: "&aOwocowy odpoczynek"
+    description: "&7Zjedz 16 kawałków arbuza"
+    difficulty: EASY
+    type: EAT
+    target: MELON_SLICE
+    amount: 16
+    reward-xp: 150
+    reward-item: MELON
+    reward-item-amount: 4
+  eat_beetroot_soup:
+    name: "&cBarszcz Steve'a"
+    description: "&7Zjedz 6 misek zupy buraczanej"
+    difficulty: MEDIUM
+    type: EAT
+    target: BEETROOT_SOUP
+    amount: 6
+    reward-xp: 220
+    reward-item: BEETROOT
+    reward-item-amount: 16
+  breed_pigs:
+    name: "&dChrumkająca hodowla"
+    description: "&7Rozmnóż 8 świń"
+    difficulty: MEDIUM
+    type: BREED
+    target: PIG
+    amount: 8
+    reward-xp: 250
+    reward-item: CARROT
+    reward-item-amount: 24
+  breed_rabbits:
+    name: "&dKrólicza rodzinka"
+    description: "&7Rozmnóż 5 królików"
+    difficulty: MEDIUM
+    type: BREED
+    target: RABBIT
+    amount: 5
+    reward-xp: 240
+    reward-item: CARROT
+    reward-item-amount: 16
+  breed_wolves:
+    name: "&7Wilcza wataha"
+    description: "&7Rozmnóż 3 wilki"
+    difficulty: HARD
+    type: BREED
+    target: WOLF
+    amount: 3
+    reward-xp: 320
+    reward-item: BONE
+    reward-item-amount: 12
+  breed_bees:
+    name: "&ePszczela rodzina"
+    description: "&7Rozmnóż 4 pszczoły"
+    difficulty: HARD
+    type: BREED
+    target: BEE
+    amount: 4
+    reward-xp: 320
+    reward-item: HONEY_BOTTLE
+    reward-item-amount: 4
+  walk_750:
+    name: "&dSzlak odkrywcy"
+    description: "&7Przejdź 750 bloków"
+    difficulty: EASY
+    type: WALK
+    target: ANY
+    amount: 750
+    reward-xp: 140
+    reward-item: BAKED_POTATO
+    reward-item-amount: 8
+  walk_4000:
+    name: "&dDługa droga do domu"
+    description: "&7Przejdź 4000 bloków"
+    difficulty: HARD
+    type: WALK
+    target: ANY
+    amount: 4000
+    reward-xp: 420
+    reward-item: SADDLE
+    reward-item-amount: 1
+  swim_1200:
+    name: "&bMorski maratończyk"
+    description: "&7Przepłyń 1200 bloków"
+    difficulty: HARD
+    type: SWIM
+    target: ANY
+    amount: 1200
+    reward-xp: 380
+    reward-item: TROPICAL_FISH
+    reward-item-amount: 4
+  trade_emeralds_5:
+    name: "&aMały handel"
+    description: "&7Dokonaj 5 wymian z osadnikami"
+    difficulty: EASY
+    type: TRADE
+    target: ANY
+    amount: 5
+    reward-xp: 180
+    reward-item: EMERALD
+    reward-item-amount: 3
+  anvil_repairs_3:
+    name: "&7Naprawa na medal"
+    description: "&7Użyj kowadła 3 razy"
+    difficulty: EASY
+    type: ANVIL
+    target: ANY
+    amount: 3
+    reward-xp: 180
+    reward-item: IRON_INGOT
+    reward-item-amount: 6
+
+  # Codzienne zadania — rozszerzenie lekkiej puli 1.1.3
+  easy_harvest_carrots:
+    name: "&6Marchewkowe pole"
+    description: "&7Zbierz 24 dojrzałe uprawy marchwi"
+    difficulty: EASY
+    type: BREAK
+    dimension: OVERWORLD
+    target: CARROTS
+    amount: 24
+    reward-xp: 130
+    reward-item: BREAD
+    reward-item-amount: 4
+  easy_harvest_potatoes:
+    name: "&eZiemniaczana gorączka"
+    description: "&7Zbierz 24 dojrzałe uprawy ziemniaków"
+    difficulty: EASY
+    type: BREAK
+    dimension: OVERWORLD
+    target: POTATOES
+    amount: 24
+    reward-xp: 130
+    reward-item: BAKED_POTATO
+    reward-item-amount: 6
+  easy_harvest_beetroots:
+    name: "&cCzerwone zbiory"
+    description: "&7Zbierz 16 dojrzałych upraw buraków"
+    difficulty: EASY
+    type: BREAK
+    dimension: OVERWORLD
+    target: BEETROOTS
+    amount: 16
+    reward-xp: 140
+    reward-item: BEETROOT_SOUP
+    reward-item-amount: 2
+  easy_harvest_wheat:
+    name: "&eChleb powszedni"
+    description: "&7Zbierz 16 dojrzałych kłosów pszenicy"
+    difficulty: EASY
+    type: BREAK
+    dimension: OVERWORLD
+    target: WHEAT
+    amount: 16
+    reward-xp: 130
+    reward-item: BREAD
+    reward-item-amount: 5
+  easy_craft_ladders:
+    name: "&6Drabina do nieba"
+    description: "&7Wytwórz 12 drabin"
+    difficulty: EASY
+    type: CRAFT
+    dimension: OVERWORLD
+    target: LADDER
+    amount: 12
+    reward-xp: 140
+    reward-item: STICK
+    reward-item-amount: 16
+  easy_craft_signs:
+    name: "&eTabliczkowy szyfr"
+    description: "&7Wytwórz 8 tabliczek"
+    difficulty: EASY
+    type: CRAFT
+    dimension: OVERWORLD
+    target: OAK_SIGN
+    amount: 8
+    reward-xp: 130
+    reward-item: OAK_PLANKS
+    reward-item-amount: 12
+  easy_craft_boat:
+    name: "&bRejs po przygodę"
+    description: "&7Wytwórz 2 dębowe łódki"
+    difficulty: EASY
+    type: CRAFT
+    dimension: OVERWORLD
+    target: OAK_BOAT
+    amount: 2
+    reward-xp: 140
+    reward-item: COOKED_COD
+    reward-item-amount: 3
+  medium_craft_books:
+    name: "&5Biblioteka Aleksandryjska"
+    description: "&7Wytwórz 6 książek"
+    difficulty: MEDIUM
+    type: CRAFT
+    dimension: OVERWORLD
+    target: BOOK
+    amount: 6
+    reward-xp: 190
+    reward-item: PAPER
+    reward-item-amount: 12
+  medium_craft_fence:
+    name: "&6Granice królestwa"
+    description: "&7Wytwórz 16 dębowych płotków"
+    difficulty: MEDIUM
+    type: CRAFT
+    dimension: OVERWORLD
+    target: OAK_FENCE
+    amount: 16
+    reward-xp: 190
+    reward-item: OAK_PLANKS
+    reward-item-amount: 16
+  easy_eat_chicken:
+    name: "&6Kolacja u Steve'a"
+    description: "&7Zjedz 8 pieczonych kurczaków"
+    difficulty: EASY
+    type: EAT
+    dimension: OVERWORLD
+    target: COOKED_CHICKEN
+    amount: 8
+    reward-xp: 140
+    reward-item: BAKED_POTATO
+    reward-item-amount: 6
+  easy_eat_apple:
+    name: "&cJabłko dziennie"
+    description: "&7Zjedz 6 jabłek"
+    difficulty: EASY
+    type: EAT
+    dimension: OVERWORLD
+    target: APPLE
+    amount: 6
+    reward-xp: 130
+    reward-item: GOLDEN_CARROT
+    reward-item-amount: 2
+  medium_eat_mutton:
+    name: "&6Uczta wędrowca"
+    description: "&7Zjedz 8 pieczonych baranin"
+    difficulty: MEDIUM
+    type: EAT
+    dimension: OVERWORLD
+    target: COOKED_MUTTON
+    amount: 8
+    reward-xp: 190
+    reward-item: COOKED_BEEF
+    reward-item-amount: 4

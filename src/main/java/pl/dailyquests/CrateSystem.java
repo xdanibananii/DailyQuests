@@ -49,6 +49,7 @@ public final class CrateSystem implements Listener {
         plugin.saveResource("rewards.yml", false);
         balanceExistingRewards();
         if (hadValidRewards) reduceExistingLowTierRewards();
+        fixExistingRewardLanguage();
         this.db = plugin.database();
         try (Statement st = db.createStatement()) {
             st.executeUpdate("CREATE TABLE IF NOT EXISTS dq_wallet (uuid TEXT PRIMARY KEY, stars INTEGER NOT NULL DEFAULT 0)");
@@ -58,6 +59,47 @@ public final class CrateSystem implements Listener {
         }
     }
 
+
+    private void fixExistingRewardLanguage() {
+        File marker = new File(plugin.getDataFolder(), "crate-language-v1.done");
+        if (marker.exists()) return;
+        File file = new File(plugin.getDataFolder(), "rewards.yml");
+        YamlConfiguration yaml = YamlConfiguration.loadConfiguration(file);
+        int changed = 0;
+        for (int i = 0; i < yaml.getMapList("rewards").size(); i++) {
+            String base = "rewards." + i + ".";
+            String material = yaml.getString(base + "material", "");
+            int amount = yaml.getInt(base + "amount", 1);
+            String name = ChatColor.stripColor(color(yaml.getString(base + "name", "")));
+            if ("GOLDEN_APPLE".equalsIgnoreCase(material) && amount == 1
+                    && "Złote jabłka".equalsIgnoreCase(name)) {
+                yaml.set(base + "name", "&7Złote jabłko");
+                changed++;
+            }
+            if ("DIAMOND".equalsIgnoreCase(material) && amount == 2) {
+                List<String> lore = yaml.getStringList(base + "lore");
+                for (int line = 0; line < lore.size(); line++) {
+                    if (lore.get(line).equalsIgnoreCase("&7Trzy błyszczące diamenty")
+                            || lore.get(line).equalsIgnoreCase("&7Dwa błyszczące diamenty")) {
+                        lore.set(line, amount == 1 ? "&7Jeden błyszczący diament" : "&7Dwa błyszczące diamenty");
+                        changed++;
+                    } else if (lore.get(line).equalsIgnoreCase("&7Trzy diamenty")
+                            || lore.get(line).equalsIgnoreCase("&7Dwa diamenty")) {
+                        lore.set(line, amount == 1 ? "&7Jeden diament" : "&7Dwa diamenty");
+                        changed++;
+                    }
+                }
+                yaml.set(base + "lore", lore);
+            }
+        }
+        try {
+            if (changed > 0) yaml.save(file);
+            marker.createNewFile();
+            if (changed > 0) plugin.getLogger().info("Poprawiono nazwy i opisy nagród w rewards.yml (" + changed + " zmian).");
+        } catch (java.io.IOException ex) {
+            plugin.getLogger().warning("Nie udało się poprawić języka nagród w rewards.yml: " + ex.getMessage());
+        }
+    }
 
     private void reduceExistingLowTierRewards() {
         File marker = new File(plugin.getDataFolder(), "crate-low-tier-quantities-v1.done");
@@ -112,24 +154,38 @@ public final class CrateSystem implements Listener {
             }
         }
 
-        File oddsMarker = new File(plugin.getDataFolder(), "crate-odds-v6.done");
+        File oddsMarker = new File(plugin.getDataFolder(), "crate-odds-v7.done");
         if (!oddsMarker.exists()) {
+            Map<String, Integer> tierTotals = Map.of(
+                    "COMMON", 6000,
+                    "UNCOMMON", 2500,
+                    "RARE", 1000,
+                    "EPIC", 400,
+                    "LEGENDARY", 100
+            );
+            Map<String, Integer> tierCounts = new HashMap<>();
+            Map<String, Integer> tierIndexes = new HashMap<>();
+            for (Map<?, ?> row : yaml.getMapList("rewards")) {
+                Object tierValue = row.get("tier");
+                String tier = (tierValue == null ? "COMMON" : String.valueOf(tierValue)).toUpperCase(Locale.ROOT);
+                if (!tierTotals.containsKey(tier)) tier = "COMMON";
+                tierCounts.merge(tier, 1, Integer::sum);
+            }
+
             for (int i = 0; i < yaml.getMapList("rewards").size(); i++) {
                 String base = "rewards." + i + ".";
                 String tier = yaml.getString(base + "tier", "COMMON").toUpperCase(Locale.ROOT);
-                int weight = switch (tier) {
-                    case "UNCOMMON" -> 3200;
-                    case "RARE" -> 600;
-                    case "EPIC" -> 390;
-                    case "LEGENDARY" -> 105;
-                    default -> 12000;
-                };
+                if (!tierTotals.containsKey(tier)) tier = "COMMON";
+                int count = tierCounts.getOrDefault(tier, 1);
+                int index = tierIndexes.merge(tier, 1, Integer::sum) - 1;
+                int target = tierTotals.get(tier);
+                int weight = target / count + (index < target % count ? 1 : 0);
                 yaml.set(base + "weight", weight);
             }
             try {
                 yaml.save(file);
                 if (oddsMarker.createNewFile()) {
-                    plugin.getLogger().info("Zastosowano nowe szanse skrzynki: COMMON 12000, UNCOMMON 3200, RARE 600, EPIC 390, LEGENDARY 105.");
+                    plugin.getLogger().info("Zastosowano nowe szanse skrzynki: COMMON 60%, UNCOMMON 25%, RARE 10%, EPIC 4%, LEGENDARY 1%.");
                 }
             } catch (java.io.IOException ex) {
                 plugin.getLogger().warning("Nie udało się zapisać nowych szans nagród: " + ex.getMessage());
@@ -283,13 +339,24 @@ public final class CrateSystem implements Listener {
         if (slot != 11 && slot != 15) return;
         boolean basic = slot == 11;
         int cost = basic ? BASIC_COST : PREMIUM_COST;
+        List<Reward> availableRewards = rewardsForCrate(basic);
+        if (availableRewards.isEmpty()) {
+            player.sendMessage(ChatColor.RED + "Pula nagród jest chwilowo niedostępna.");
+            return;
+        }
+        Reward selectedReward = choose(availableRewards);
+        if (!canFitReward(player, selectedReward)) {
+            player.sendMessage(ChatColor.RED + "Zwolnij miejsce w ekwipunku, aby rozpocząć losowanie.");
+            player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 0.8f, 0.7f);
+            return;
+        }
         if (!spend(player.getUniqueId(), cost)) {
             player.sendMessage(ChatColor.RED + "Nie masz wystarczająco gwiazdek! Potrzebujesz " + cost + " ★.");
             player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 0.8f, 0.7f);
             open(player);
             return;
         }
-        beginOpening(player, cost, basic);
+        beginOpening(player, cost, basic, selectedReward);
     }
 
     @EventHandler public void onDrag(InventoryDragEvent event) {
@@ -349,7 +416,18 @@ public final class CrateSystem implements Listener {
         return lore;
     }
 
-    private void beginOpening(Player player, int cost, boolean basic) {
+    private boolean canFitReward(Player player, Reward reward) {
+        Inventory simulation = Bukkit.createInventory(null, 36);
+        ItemStack[] contents = player.getInventory().getStorageContents();
+        for (int slot = 0; slot < Math.min(contents.length, simulation.getSize()); slot++) {
+            ItemStack item = contents[slot];
+            if (item != null && !item.getType().isAir()) simulation.setItem(slot, item.clone());
+        }
+        Map<Integer, ItemStack> overflow = simulation.addItem(rewardItem(reward, false));
+        return overflow.isEmpty();
+    }
+
+    private void beginOpening(Player player, int cost, boolean basic, Reward won) {
         List<Reward> rewards = rewardsForCrate(basic);
         if (rewards.isEmpty()) {
             awardStars(player, cost);
@@ -364,7 +442,6 @@ public final class CrateSystem implements Listener {
         final int finalOffset = winnerIndex - 4;
         List<Reward> strip = new ArrayList<>();
         for (int i = 0; i <= winnerIndex + 4; i++) strip.add(choose(rewards));
-        Reward won = choose(rewards);
         strip.set(winnerIndex, won);
 
         Inventory inv = Bukkit.createInventory(null, 54, TITLE);
@@ -507,12 +584,16 @@ public final class CrateSystem implements Listener {
         overflow.values().forEach(item -> player.getWorld().dropItemNaturally(player.getLocation(), item));
         ChatColor tierColor = tierColor(reward.tier);
         player.sendMessage(ChatColor.GOLD + "━━━━━━━━━━━━━━━━━━━━━━━━");
-        player.sendMessage(ChatColor.GOLD + "★ " + tierColor + "WYLOSOWANO: " + reward.name);
+        player.sendMessage(ChatColor.GOLD + "★ " + tierColor + "WYLOSOWANO: " + reward.name
+                + ChatColor.GRAY + " ×" + reward.amount);
         player.sendMessage(ChatColor.GRAY + "Rzadkość: " + tierColor + reward.tier);
         player.sendMessage(ChatColor.GOLD + "━━━━━━━━━━━━━━━━━━━━━━━━");
+        Bukkit.broadcastMessage(ChatColor.DARK_GRAY + "[Skarbiec] " + tierColor
+                + player.getName() + ChatColor.GRAY + " otwiera skrzynię i zdobywa: " + tierColor
+                + reward.name + ChatColor.GRAY + " ×" + reward.amount
+                + ChatColor.DARK_GRAY + " [" + tierColor + reward.tier + ChatColor.DARK_GRAY + "]");
         player.playSound(player.getLocation(), reward.tier.equals("LEGENDARY") ? Sound.UI_TOAST_CHALLENGE_COMPLETE : Sound.ENTITY_PLAYER_LEVELUP, 1f, reward.tier.equals("LEGENDARY") ? 0.8f : 1.2f);
         if (reward.tier.equals("LEGENDARY")) {
-            Bukkit.broadcastMessage(ChatColor.GOLD + "★ " + ChatColor.YELLOW + player.getName() + ChatColor.WHITE + " trafił(a) " + ChatColor.GOLD + "LEGENDARY " + reward.name + ChatColor.GOLD + " ze skrzynki DailyQuests!");
             player.getWorld().spawnParticle(Particle.TOTEM_OF_UNDYING, player.getLocation().add(0, 1, 0), 50, 0.6, 0.8, 0.6, 0.15);
         } else if (reward.tier.equals("EPIC")) {
             player.getWorld().spawnParticle(Particle.FIREWORK, player.getLocation().add(0, 1, 0), 25, 0.5, 0.7, 0.5, 0.08);

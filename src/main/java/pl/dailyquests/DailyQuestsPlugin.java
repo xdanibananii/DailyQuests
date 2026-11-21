@@ -1,6 +1,8 @@
 package pl.dailyquests;
 
 import org.bukkit.*;
+import org.bukkit.block.Block;
+// Used by kelp column progress counting.
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
@@ -10,6 +12,7 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.*;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.inventory.*;
 import org.bukkit.event.player.*;
@@ -36,23 +39,29 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
     private final Map<UUID, Location> lastWalk = new ConcurrentHashMap<>();
     private final Random random = new Random();
     private final Set<UUID> rerollMode = ConcurrentHashMap.newKeySet();
+    private final Map<UUID, PendingMapHint> pendingMapHints = new ConcurrentHashMap<>();
     private static final String TITLE = ChatColor.DARK_GRAY + "Codzienne zadania";
     private CrateSystem crateSystem;
     private QuestNpcSystem npcSystem;
     private CrateNpcSystem crateNpcSystem;
+    private CartographerNpcSystem cartographerNpcSystem;
+    private FilipNpcSystem filipNpcSystem;
+    private SnafNpcSystem snafNpcSystem;
 
     private record TaskSlot(int slot, String taskId) { }
+    private record CampfireFood(Material result, int amount) { }
+    private record PendingMapHint(String mapId, long expiresAt) { }
 
     private static final class Task {
         String id, name, description, type, target, rewardItem, dimension, difficulty;
         int amount, xp, itemAmount, progress;
-        boolean claimed;
+        boolean claimed, requiresNether;
     }
 
     @Override public void onEnable() {
         saveDefaultConfig();
         saveResource("tasks.yml", false);
-        File poolMarker = new File(getDataFolder(), "quest-pool-v5.done");
+        File poolMarker = new File(getDataFolder(), "quest-pool-v8.done");
         if (!poolMarker.exists()) {
             mergeDefaultTasks();
             try { poolMarker.createNewFile(); } catch (java.io.IOException ex) { getLogger().warning("Nie zapisano znacznika aktualizacji puli zadan: " + ex.getMessage()); }
@@ -74,6 +83,7 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
                 s.executeUpdate("CREATE TABLE IF NOT EXISTS weekly_tasks (uuid TEXT NOT NULL, week TEXT NOT NULL, progress INTEGER NOT NULL DEFAULT 0, claimed INTEGER NOT NULL DEFAULT 0, challenge_id TEXT NOT NULL DEFAULT '', PRIMARY KEY(uuid,week))");
                 try { s.executeUpdate("ALTER TABLE weekly_tasks ADD COLUMN challenge_id TEXT NOT NULL DEFAULT ''"); } catch (SQLException ignored) { }
                 s.executeUpdate("CREATE TABLE IF NOT EXISTS task_history (uuid TEXT NOT NULL, task_id TEXT NOT NULL, assigned_day TEXT NOT NULL, PRIMARY KEY(uuid,task_id,assigned_day))");
+                s.executeUpdate("CREATE TABLE IF NOT EXISTS placed_wood_blocks (world TEXT NOT NULL, x INTEGER NOT NULL, y INTEGER NOT NULL, z INTEGER NOT NULL, material TEXT NOT NULL, PRIMARY KEY(world,x,y,z))");
                 File resetMarker = new File(getDataFolder(), "test-reset-v2.done");
                 if (!resetMarker.exists()) {
                     s.executeUpdate("DELETE FROM player_tasks");
@@ -87,8 +97,14 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
         crateSystem = new CrateSystem(this);
         npcSystem = new QuestNpcSystem(this, crateSystem);
         crateNpcSystem = new CrateNpcSystem(this, crateSystem);
+        cartographerNpcSystem = new CartographerNpcSystem(this, crateSystem);
+        filipNpcSystem = new FilipNpcSystem(this);
+        snafNpcSystem = new SnafNpcSystem(this);
         getServer().getPluginManager().registerEvents(npcSystem, this);
         getServer().getPluginManager().registerEvents(crateNpcSystem, this);
+        getServer().getPluginManager().registerEvents(cartographerNpcSystem, this);
+        getServer().getPluginManager().registerEvents(filipNpcSystem, this);
+        getServer().getPluginManager().registerEvents(snafNpcSystem, this);
         getServer().getPluginManager().registerEvents(this, this);
         getServer().getPluginManager().registerEvents(crateSystem, this);
         for (Player p : Bukkit.getOnlinePlayers()) ensureTasks(p);
@@ -171,35 +187,29 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
                 }
             }
         } catch(SQLException e) { getLogger().warning(e.getMessage()); }
-        if(found.size()==5) { cache.put(uuid,found); cacheDay.put(uuid,day); return found; }
+        if(found.size()==5) {
+            for(Task task:found) recordTaskHistory(uuid,task.id,day);
+            cache.put(uuid,found); cacheDay.put(uuid,day); return found;
+        }
 
         ConfigurationSection sec=pool();
         if(sec==null || sec.getKeys(false).isEmpty()) return found;
-        Set<String> recent=new HashSet<>();
-        try(PreparedStatement h=db.prepareStatement("SELECT task_id FROM task_history WHERE uuid=? AND assigned_day>=date(?, '-30 days')")) {
-            h.setString(1,p.getUniqueId().toString()); h.setString(2,day);
-            try(ResultSet r=h.executeQuery()) { while(r.next()) recent.add(r.getString(1)); }
-        } catch(SQLException ignored) { }
-        Set<String> assigned=new HashSet<>();
-        for(Task task:found) assigned.add(task.id);
+        Set<String> assignedToday=tasksAssignedToday(uuid);
+        // Ensure tasks created by older plugin versions are also recorded before any reroll.
+        for(Task task:found) {
+            assignedToday.add(task.id);
+            recordTaskHistory(uuid,task.id,day);
+        }
         List<String> ids=new ArrayList<>(sec.getKeys(false));
         ids.removeIf(id -> {
             Task candidate=loadTask(id);
-            return candidate==null || !isTaskEnabled(candidate) || assigned.contains(id);
+            return candidate==null || !isTaskEnabled(candidate) || assignedToday.contains(id);
         });
         Collections.shuffle(ids);
         List<Task> replacements=new ArrayList<>();
         for(String id:ids) {
-            if(recent.contains(id)) continue;
             Task task=loadTask(id);
             if(task!=null) { replacements.add(task); if(found.size()+replacements.size()>=5) break; }
-        }
-        if(found.size()+replacements.size()<5) {
-            for(String id:ids) {
-                if(assigned.contains(id) || replacements.stream().anyMatch(t->t.id.equals(id))) continue;
-                Task task=loadTask(id);
-                if(task!=null) { replacements.add(task); if(found.size()+replacements.size()>=5) break; }
-            }
         }
         try(PreparedStatement del=db.prepareStatement("DELETE FROM player_tasks WHERE uuid=? AND day=?")) {
             del.setString(1,p.getUniqueId().toString()); del.setString(2,day); del.executeUpdate();
@@ -212,9 +222,7 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
             while(slots.contains(nextSlot)) nextSlot++;
             save(p.getUniqueId(),nextSlot++,task);
             result.add(task);
-            try(PreparedStatement h=db.prepareStatement("INSERT OR REPLACE INTO task_history(uuid,task_id,assigned_day) VALUES(?,?,?)")) {
-                h.setString(1,p.getUniqueId().toString()); h.setString(2,task.id); h.setString(3,day); h.executeUpdate();
-            } catch(SQLException ignored) { }
+            recordTaskHistory(uuid,task.id,day);
         }
         cache.put(uuid,result);
         cacheDay.put(uuid,day);
@@ -227,7 +235,7 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
         t.id=id;t.name=color(c.getString("name",id));t.description=color(c.getString("description",""));
         t.type=c.getString("type","").toUpperCase(Locale.ROOT);t.target=c.getString("target","ANY").toUpperCase(Locale.ROOT);t.dimension=c.getString("dimension","OVERWORLD").toUpperCase(Locale.ROOT);t.difficulty=c.getString("difficulty","MEDIUM").toUpperCase(Locale.ROOT);
         t.amount=Math.max(1,c.getInt("amount",1));t.xp=Math.max(0,c.getInt("reward-xp",0));
-        t.rewardItem=c.getString("reward-item","").toUpperCase(Locale.ROOT);t.itemAmount=Math.max(1,c.getInt("reward-item-amount",1));return t;
+        t.rewardItem=c.getString("reward-item","").toUpperCase(Locale.ROOT);t.itemAmount=Math.max(1,c.getInt("reward-item-amount",1));t.requiresNether=c.getBoolean("requires-nether",false);return t;
     }
 
     private String color(String s){return ChatColor.translateAlternateColorCodes('&',s==null?"":s);}
@@ -236,6 +244,33 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
             p.setString(1,uuid.toString());p.setString(2,today());p.setInt(3,slot);p.setString(4,t.id);p.setInt(5,t.progress);p.setInt(6,t.claimed?1:0);p.executeUpdate();
         }catch(SQLException e){getLogger().warning("Blad zapisu zadania: "+e.getMessage());}
     }
+    private Set<String> tasksAssignedToday(UUID uuid) {
+        Set<String> assigned = new HashSet<>();
+        try (PreparedStatement query = db.prepareStatement(
+                "SELECT task_id FROM task_history WHERE uuid=? AND assigned_day=?")) {
+            query.setString(1, uuid.toString());
+            query.setString(2, today());
+            try (ResultSet result = query.executeQuery()) {
+                while (result.next()) assigned.add(result.getString(1));
+            }
+        } catch (SQLException ex) {
+            getLogger().warning("Nie udało się odczytać dzisiejszej historii zadań: " + ex.getMessage());
+        }
+        return assigned;
+    }
+
+    private void recordTaskHistory(UUID uuid, String taskId, String day) {
+        try (PreparedStatement history = db.prepareStatement(
+                "INSERT OR IGNORE INTO task_history(uuid,task_id,assigned_day) VALUES(?,?,?)")) {
+            history.setString(1, uuid.toString());
+            history.setString(2, taskId);
+            history.setString(3, day);
+            history.executeUpdate();
+        } catch (SQLException ex) {
+            getLogger().warning("Nie udało się zapisać historii zadania: " + ex.getMessage());
+        }
+    }
+
     private void update(Player p,Task t,int delta) {
         if(delta<=0 || !isTaskEnabled(t))return;
         List<Task> list=cache.get(p.getUniqueId());
@@ -246,16 +281,48 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
             actual.progress=Math.min(actual.amount,actual.progress+delta);
             save(p.getUniqueId(),i,actual);
             if(before<actual.amount && actual.progress>=actual.amount){
-                p.playSound(p.getLocation(),Sound.UI_TOAST_CHALLENGE_COMPLETE,0.8f,1.0f);
-                p.sendMessage(ChatColor.GOLD+"★ "+ChatColor.GREEN+"Ukończono zadanie: "+ChatColor.WHITE+ChatColor.stripColor(actual.name)+ChatColor.GRAY+" — nagroda czeka w "+ChatColor.YELLOW+"/zadania");
+                ChatColor difficultyColor = switch (actual.difficulty) {
+                    case "EASY" -> ChatColor.GREEN;
+                    case "HARD" -> ChatColor.RED;
+                    default -> ChatColor.YELLOW;
+                };
+                Component announcement = Component.text("★ ", NamedTextColor.GOLD)
+                        .append(Component.text(p.getName(), NamedTextColor.WHITE))
+                        .append(Component.text(" ukończył zadanie ", NamedTextColor.GRAY))
+                        .append(LegacyComponentSerializer.legacySection().deserialize(difficultyColor + actual.name)
+                                .hoverEvent(net.kyori.adventure.text.event.HoverEvent.showText(
+                                        LegacyComponentSerializer.legacySection().deserialize(
+                                                actual.description == null || actual.description.isBlank()
+                                                        ? "Brak opisu zadania." : actual.description))));
+                Bukkit.broadcast(announcement);
             }
             break;
         }
     }
 
     private void rerollAll(CommandSender sender) {
+        String day=today();
+        // Preserve every task already assigned today, including for offline players.
+        try (PreparedStatement existing=db.prepareStatement("SELECT uuid,task_id FROM player_tasks WHERE day=?")) {
+            existing.setString(1,day);
+            try(ResultSet rows=existing.executeQuery()) {
+                while(rows.next()) {
+                    try(PreparedStatement history=db.prepareStatement(
+                            "INSERT OR IGNORE INTO task_history(uuid,task_id,assigned_day) VALUES(?,?,?)")) {
+                        history.setString(1,rows.getString(1));
+                        history.setString(2,rows.getString(2));
+                        history.setString(3,day);
+                        history.executeUpdate();
+                    }
+                }
+            }
+        } catch(SQLException ex) {
+            sender.sendMessage(ChatColor.RED+"Nie udalo sie zabezpieczyc historii zadan: "+ex.getMessage());
+            getLogger().warning("Blad zapisu historii przed /dq roll: "+ex.getMessage());
+            return;
+        }
         try (PreparedStatement st=db.prepareStatement("DELETE FROM player_tasks WHERE day=?")) {
-            st.setString(1,today());
+            st.setString(1,day);
             st.executeUpdate();
         } catch (SQLException ex) {
             sender.sendMessage(ChatColor.RED+"Nie udalo sie przerolowac zadan: "+ex.getMessage());
@@ -279,12 +346,22 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
         sender.sendMessage(ChatColor.YELLOW + "/dq weekly" + ChatColor.GRAY + " — pokazuje wyzwanie tygodnia i postęp");
         sender.sendMessage(ChatColor.YELLOW + "/dq top" + ChatColor.GRAY + " — wyświetla ranking graczy");
         sender.sendMessage(ChatColor.YELLOW + "/dq gwiazdki" + ChatColor.GRAY + " — sprawdza własne saldo gwiazdek");
+        sender.sendMessage(ChatColor.YELLOW + "/dq mapa pomoc" + ChatColor.GRAY + " — prosi Krzusława o wskazówkę do najbliższej skrzyni (5 poziomów XP)");
+        sender.sendMessage(ChatColor.YELLOW + "/dq mapa potwierdz" + ChatColor.GRAY + " — potwierdza zakup wskazówki");
         sender.sendMessage(ChatColor.GRAY + "Kontrakty dzienne znajdziesz u Michaiła Łomonosowa.");
         sender.sendMessage(ChatColor.GRAY + "Losowanie nagród za gwiazdki znajdziesz u Strażnika Skarbca.");
+        sender.sendMessage(ChatColor.GRAY + "Mapy skarbów i wyprawy znajdziesz u Krzusława Wędrownego.");
+        sender.sendMessage(ChatColor.GRAY + "Wspólny magazyn znajdziesz u Filipa Sznupacza.");
+        sender.sendMessage(ChatColor.GRAY + "Dzienną porcję zupy odbierzesz u Snafa.");
         if (sender.hasPermission("dailyquests.admin")) {
             sender.sendMessage(ChatColor.DARK_AQUA + "━━ KOMENDY ADMINISTRATORA ━━");
             sender.sendMessage(ChatColor.YELLOW + "/dq npc quest [postaw|usun|tp|rename <nazwa>]" + ChatColor.GRAY + " — zarządzanie Michaiłem");
             sender.sendMessage(ChatColor.YELLOW + "/dq npc skarbiec [postaw|usun|tp|rename <nazwa>]" + ChatColor.GRAY + " — zarządzanie Strażnikiem Skarbca");
+            sender.sendMessage(ChatColor.YELLOW + "/dq npc kartograf [postaw|usun|tp|rename <nazwa>]" + ChatColor.GRAY + " — zarządzanie Krzusławem Wędrownym");
+            sender.sendMessage(ChatColor.YELLOW + "/dq kartograf list" + ChatColor.GRAY + " — lista aktywnych map; kliknij współrzędne, aby się teleportować");
+            sender.sendMessage(ChatColor.YELLOW + "/dq kartograf wyczysc" + ChatColor.GRAY + " — czyści wpisy aktywnych map (wymaga potwierdzenia)");
+            sender.sendMessage(ChatColor.YELLOW + "/dq npc filip [postaw|usun|tp|rename <nazwa>]" + ChatColor.GRAY + " — zarządzanie Filipem Sznupaczem");
+            sender.sendMessage(ChatColor.YELLOW + "/dq npc snaf [postaw|usun|tp|rename <nazwa>]" + ChatColor.GRAY + " — zarządzanie Snafem");
             sender.sendMessage(ChatColor.YELLOW + "/dq gwiazdki <dodaj|usun|ustaw> <gracz> <ilość>" + ChatColor.GRAY + " — zarządzanie saldem");
             sender.sendMessage(ChatColor.YELLOW + "/dq gwiazdki sprawdz <gracz>" + ChatColor.GRAY + " — sprawdza saldo gracza");
             sender.sendMessage(ChatColor.YELLOW + "/dq roll" + ChatColor.GRAY + " — losuje ponownie zadania wszystkim graczom");
@@ -298,12 +375,19 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
         List<String> suggestions = new ArrayList<>();
         boolean admin = sender.hasPermission("dailyquests.admin");
         if (args.length == 1) {
-            suggestions.addAll(List.of("help", "top", "weekly", "gwiazdki"));
-            if (admin) suggestions.addAll(List.of("npc", "roll", "nether", "end", "reload"));
+            suggestions.addAll(List.of("help", "top", "weekly", "gwiazdki", "mapa"));
+            if (admin) suggestions.addAll(List.of("npc", "kartograf", "roll", "nether", "end", "reload"));
+        } else if (args.length == 2 && args[0].equalsIgnoreCase("mapa")) {
+            suggestions.addAll(List.of("pomoc", "potwierdz"));
+        } else if (args.length == 2 && args[0].equalsIgnoreCase("kartograf") && admin) {
+            suggestions.addAll(List.of("list", "wyczysc"));
+        } else if (args.length == 3 && args[0].equalsIgnoreCase("kartograf") && admin
+                && args[1].equalsIgnoreCase("wyczysc")) {
+            suggestions.add("potwierdz");
         } else if (args.length == 2 && args[0].equalsIgnoreCase("npc") && admin) {
-            suggestions.addAll(List.of("quest", "skarbiec"));
+            suggestions.addAll(List.of("quest", "skarbiec", "kartograf", "filip", "snaf"));
         } else if (args.length == 3 && args[0].equalsIgnoreCase("npc") && admin
-                && (args[1].equalsIgnoreCase("quest") || args[1].equalsIgnoreCase("skarbiec"))) {
+                && Set.of("quest", "skarbiec", "kartograf", "filip", "snaf").contains(args[1].toLowerCase(Locale.ROOT))) {
             suggestions.addAll(List.of("postaw", "usun", "tp", "rename"));
         } else if (args.length == 2 && args[0].equalsIgnoreCase("gwiazdki") && admin) {
             suggestions.addAll(List.of("dodaj", "usun", "ustaw", "sprawdz"));
@@ -318,6 +402,102 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
         return suggestions;
     }
 
+
+    private void requestMapHint(Player player) {
+        UUID uuid=player.getUniqueId();
+        List<String> mapIds=new ArrayList<>();
+        String selectedId=null;
+        double nearestDistance=Double.MAX_VALUE;
+        try(PreparedStatement query=db.prepareStatement(
+                "SELECT map_id,world,x,z FROM dq_treasure_maps WHERE owner_uuid=? AND claimed=0 AND discovered=0")) {
+            query.setString(1,uuid.toString());
+            try(ResultSet rows=query.executeQuery()) {
+                while(rows.next()) {
+                    String worldName=rows.getString("world");
+                    mapIds.add(worldName);
+                    if(!player.getWorld().getName().equals(worldName)) continue;
+                    double distance=Math.hypot(player.getLocation().getX()-rows.getInt("x"),
+                            player.getLocation().getZ()-rows.getInt("z"));
+                    if(distance<nearestDistance) {
+                        nearestDistance=distance;
+                        selectedId=rows.getString("map_id");
+                    }
+                }
+            }
+        } catch(SQLException ex) {
+            getLogger().warning("Nie udało się znaleźć najbliższej mapy gracza: "+ex.getMessage());
+            player.sendMessage(ChatColor.RED+"Nie udało się odczytać Twoich map skarbów. Spróbuj później.");
+            return;
+        }
+        if(selectedId==null) {
+            if(mapIds.isEmpty()) {
+                player.sendMessage(ChatColor.RED+"Nie masz żadnej aktywnej mapy skarbów.");
+            } else {
+                player.sendMessage(ChatColor.YELLOW+"Twoje aktywne skarby znajdują się w innym świecie. Wróć do świata, w którym kupiłeś mapę, aby uzyskać wskazówkę.");
+            }
+            return;
+        }
+        long expires=System.currentTimeMillis()+30_000L;
+        pendingMapHints.put(uuid,new PendingMapHint(selectedId,expires));
+        player.sendMessage(ChatColor.GOLD+"✦ KRZUSŁAW WĘDROWNY — WSKAZÓWKA ✦");
+        player.sendMessage(ChatColor.YELLOW+"Mogę wskazać kierunek do najbliższej Twojej skrzyni.");
+        player.sendMessage(ChatColor.GRAY+"Koszt: "+ChatColor.GOLD+"5 poziomów doświadczenia");
+        player.sendMessage(ChatColor.GRAY+"Aby potwierdzić, wpisz "+ChatColor.YELLOW+"/dq mapa potwierdz");
+        player.sendMessage(ChatColor.DARK_GRAY+"Potwierdzenie wygaśnie za 30 sekund.");
+    }
+
+    private void confirmMapHint(Player player) {
+        UUID uuid=player.getUniqueId();
+        PendingMapHint pending=pendingMapHints.remove(uuid);
+        if(pending==null || System.currentTimeMillis()>pending.expiresAt()) {
+            player.sendMessage(ChatColor.RED+"Nie masz aktywnej prośby o wskazówkę. Użyj /dq mapa pomoc.");
+            return;
+        }
+        if(player.getLevel()<5) {
+            player.sendMessage(ChatColor.RED+"Potrzebujesz 5 poziomów doświadczenia, aby kupić wskazówkę.");
+            return;
+        }
+        String worldName=null;
+        int x=0,z=0;
+        try(PreparedStatement query=db.prepareStatement(
+                "SELECT world,x,z FROM dq_treasure_maps WHERE map_id=? AND owner_uuid=? AND claimed=0 AND discovered=0")) {
+            query.setString(1,pending.mapId());
+            query.setString(2,uuid.toString());
+            try(ResultSet row=query.executeQuery()) {
+                if(!row.next()) {
+                    player.sendMessage(ChatColor.RED+"Ta mapa nie jest już aktywna. Poproś o nową wskazówkę.");
+                    return;
+                }
+                worldName=row.getString("world");
+                x=row.getInt("x");
+                z=row.getInt("z");
+            }
+        } catch(SQLException ex) {
+            getLogger().warning("Nie udało się odczytać celu wskazówki: "+ex.getMessage());
+            player.sendMessage(ChatColor.RED+"Nie udało się pobrać wskazówki. Nie pobrano poziomów.");
+            return;
+        }
+        if(!player.getWorld().getName().equals(worldName)) {
+            player.sendMessage(ChatColor.YELLOW+"Musisz znajdować się w świecie, w którym ukryto tę skrzynię. Nie pobrano poziomów.");
+            return;
+        }
+        player.setLevel(player.getLevel()-5);
+        double dx=x-player.getLocation().getX();
+        double dz=z-player.getLocation().getZ();
+        double bearing=(Math.toDegrees(Math.atan2(dx,-dz))+360.0)%360.0;
+        String[] directions={"północ","północny wschód","wschód","południowy wschód",
+                "południe","południowy zachód","zachód","północny zachód"};
+        String direction=directions[(int)Math.floor((bearing+22.5)/45.0)%8];
+        int distance=(int)Math.round(Math.hypot(dx,dz));
+        player.sendMessage(ChatColor.GOLD+"✦ KRZUSŁAW WĘDROWNY — WSKAZÓWKA ✦");
+        player.sendMessage(ChatColor.YELLOW+"Skarb znajduje się na "+ChatColor.GOLD+direction
+                +ChatColor.YELLOW+" od Ciebie.");
+        player.sendMessage(ChatColor.YELLOW+"Do skrzyni pozostało około "+ChatColor.GOLD+distance
+                +ChatColor.YELLOW+" bloków w linii prostej.");
+        player.sendMessage(ChatColor.DARK_GRAY+"Wskazówka kosztowała 5 poziomów doświadczenia.");
+        player.playSound(player.getLocation(),Sound.BLOCK_NOTE_BLOCK_CHIME,0.8f,1.2f);
+    }
+
     @Override public boolean onCommand(CommandSender sender,Command command,String label,String[] args) {
         // /zadania ma otwierać GUI; aliasy /dq i /dailyquest bez argumentów pokazują pomoc.
         if(command.getName().equalsIgnoreCase("zadania") && args.length==0) {
@@ -326,30 +506,79 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
             return true;
         }
         if(label.equalsIgnoreCase("dailyquest") && args.length==0) { showHelp(sender); return true; }
+        if(args.length>0 && args[0].equalsIgnoreCase("mapa")) {
+            if(!(sender instanceof Player player)) {
+                sender.sendMessage(ChatColor.YELLOW+"Tej komendy użyj w grze.");
+                return true;
+            }
+            if(args.length==2 && args[1].equalsIgnoreCase("pomoc")) {
+                requestMapHint(player);
+            } else if(args.length==2 && args[1].equalsIgnoreCase("potwierdz")) {
+                confirmMapHint(player);
+            } else {
+                player.sendMessage(ChatColor.YELLOW+"Użycie: /dq mapa pomoc lub /dq mapa potwierdz");
+            }
+            return true;
+        }
+        if(args.length>0 && args[0].equalsIgnoreCase("kartograf")) {
+            if(!sender.hasPermission("dailyquests.admin")) { sender.sendMessage(ChatColor.RED+"Brak uprawnień."); return true; }
+            if(args.length==2 && args[1].equalsIgnoreCase("list")) {
+                cartographerNpcSystem.listPurchasedMaps(sender);
+            } else if(args.length==3 && args[1].equalsIgnoreCase("tp") && sender instanceof Player player) {
+                cartographerNpcSystem.teleportToTreasure(player,args[2]);
+            } else if(args.length==2 && args[1].equalsIgnoreCase("wyczysc")) {
+                sender.sendMessage(ChatColor.RED+"To usunie wszystkie nieodebrane wpisy map kartografa. Skrzynie w świecie nie zostaną usunięte, ale przestaną być śledzone.");
+                sender.sendMessage(ChatColor.YELLOW+"Potwierdź komendą /dq kartograf wyczysc potwierdz");
+            } else if(args.length==3 && args[1].equalsIgnoreCase("wyczysc") && args[2].equalsIgnoreCase("potwierdz")) {
+                try {
+                    int removed=cartographerNpcSystem.clearActiveMaps();
+                    sender.sendMessage(ChatColor.GREEN+"Wyczyszczono "+removed+" aktywnych wpisów map kartografa.");
+                } catch(SQLException ex) {
+                    getLogger().warning("Nie udało się wyczyścić listy map kartografa: "+ex.getMessage());
+                    sender.sendMessage(ChatColor.RED+"Nie udało się wyczyścić listy map kartografa.");
+                }
+            } else {
+                sender.sendMessage(ChatColor.YELLOW+"Użycie: /dq kartograf <list|tp <id>|wyczysc [potwierdz]>");
+            }
+            return true;
+        }
         if(args.length>0 && args[0].equalsIgnoreCase("npc")) {
             if(!sender.hasPermission("dailyquests.admin")) { sender.sendMessage(ChatColor.RED+"Brak uprawnień."); return true; }
-            if(args.length<2 || (!args[1].equalsIgnoreCase("quest") && !args[1].equalsIgnoreCase("skarbiec"))) {
-                sender.sendMessage(ChatColor.YELLOW+"Użycie: /dq npc <quest|skarbiec> [postaw|usun|tp|rename <nazwa>]"); return true;
+            if(args.length<2 || !Set.of("quest","skarbiec","kartograf","filip","snaf").contains(args[1].toLowerCase(Locale.ROOT))) {
+                sender.sendMessage(ChatColor.YELLOW+"Użycie: /dq npc <quest|skarbiec|kartograf|filip|snaf> [postaw|usun|tp|rename <nazwa>]"); return true;
             }
-            boolean questNpc=args[1].equalsIgnoreCase("quest");
+            String npcType=args[1].toLowerCase(Locale.ROOT);
             String action=args.length>=3?args[2].toLowerCase(Locale.ROOT):"postaw";
             if(action.equals("rename")) {
-                if(args.length<4) { sender.sendMessage(ChatColor.YELLOW+"Użycie: /dq npc "+(questNpc?"quest":"skarbiec")+" rename <nazwa>"); return true; }
+                if(args.length<4) { sender.sendMessage(ChatColor.YELLOW+"Użycie: /dq npc "+npcType+" rename <nazwa>"); return true; }
                 String npcName=String.join(" ",Arrays.copyOfRange(args,3,args.length));
                 if(npcName.isBlank()) { sender.sendMessage(ChatColor.RED+"Nazwa nie może być pusta."); return true; }
-                if(questNpc) npcSystem.renameNpc(npcName,sender::sendMessage);
-                else crateNpcSystem.renameNpc(npcName,sender::sendMessage);
+                if(npcType.equals("quest")) npcSystem.renameNpc(npcName,sender::sendMessage);
+                else if(npcType.equals("skarbiec")) crateNpcSystem.renameNpc(npcName,sender::sendMessage);
+                else if(npcType.equals("kartograf")) cartographerNpcSystem.renameNpc(npcName,sender::sendMessage);
+                else if(npcType.equals("filip")) filipNpcSystem.renameNpc(npcName,sender::sendMessage);
+                else snafNpcSystem.renameNpc(npcName,sender::sendMessage);
             } else if(action.equals("postaw")) {
                 if(!(sender instanceof Player p)) { sender.sendMessage("Tej komendy użyj w grze."); return true; }
-                if(questNpc) npcSystem.spawnAt(p.getLocation(), sender::sendMessage);
-                else { crateNpcSystem.spawnAt(p.getLocation()); sender.sendMessage(ChatColor.GREEN+"Postawiono Strażnika Skarbca."); }
+                if(npcType.equals("quest")) npcSystem.spawnAt(p.getLocation(), sender::sendMessage);
+                else if(npcType.equals("skarbiec")) { crateNpcSystem.spawnAt(p.getLocation()); sender.sendMessage(ChatColor.GREEN+"Postawiono Strażnika Skarbca."); }
+                else if(npcType.equals("kartograf")) cartographerNpcSystem.spawnAt(p.getLocation(), sender::sendMessage);
+                else if(npcType.equals("filip")) filipNpcSystem.spawnAt(p.getLocation(), sender::sendMessage);
+                else snafNpcSystem.spawnAt(p.getLocation(), sender::sendMessage);
             } else if(action.equals("usun")) {
-                if(questNpc) { npcSystem.removeNpc(); sender.sendMessage(ChatColor.GREEN+"Usunięto Michaiła Łomonosowa."); }
-                else { crateNpcSystem.remove(); sender.sendMessage(ChatColor.GREEN+"Usunięto Strażnika Skarbca."); }
+                if(npcType.equals("quest")) { npcSystem.removeNpc(); sender.sendMessage(ChatColor.GREEN+"Usunięto Michaiła Łomonosowa."); }
+                else if(npcType.equals("skarbiec")) { crateNpcSystem.remove(); sender.sendMessage(ChatColor.GREEN+"Usunięto Strażnika Skarbca."); }
+                else if(npcType.equals("kartograf")) { cartographerNpcSystem.removeNpc(); sender.sendMessage(ChatColor.GREEN+"Usunięto Krzusława Wędrownego."); }
+                else if(npcType.equals("filip")) { filipNpcSystem.removeNpc(); sender.sendMessage(ChatColor.GREEN+"Usunięto Filipa Sznupacza."); }
+                else { snafNpcSystem.removeNpc(); sender.sendMessage(ChatColor.GREEN+"Usunięto Snafa."); }
             } else if(action.equals("tp")) {
                 if(!(sender instanceof Player p)) { sender.sendMessage("Tej komendy użyj w grze."); return true; }
-                if(questNpc) npcSystem.teleportToNpc(p); else crateNpcSystem.teleport(p);
-            } else sender.sendMessage(ChatColor.YELLOW+"Użycie: /dq npc <quest|skarbiec> [postaw|usun|tp|rename <nazwa>]");
+                if(npcType.equals("quest")) npcSystem.teleportToNpc(p);
+                else if(npcType.equals("skarbiec")) crateNpcSystem.teleport(p);
+                else if(npcType.equals("kartograf")) cartographerNpcSystem.teleport(p);
+                else if(npcType.equals("filip")) filipNpcSystem.teleport(p);
+                else snafNpcSystem.teleport(p);
+            } else sender.sendMessage(ChatColor.YELLOW+"Użycie: /dq npc "+npcType+" [postaw|usun|tp|rename <nazwa>]");
             return true;
         }
         if(args.length>0 && args[0].equalsIgnoreCase("help")) { showHelp(sender); return true; }
@@ -497,7 +726,8 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
     }
 
     private boolean isTaskEnabled(Task task) {
-        return task != null && isDimensionEnabled(task.dimension);
+        return task != null && isDimensionEnabled(task.dimension)
+                && (!task.requiresNether || isDimensionEnabled("NETHER"));
     }
 
     private boolean dimensionMatches(Task t, World world) {
@@ -527,6 +757,9 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
                     u.executeUpdate();
                 }
                 p.sendMessage(ChatColor.GOLD + "Seria ukończonych dni: " + ChatColor.YELLOW + streak + " ★");
+                Bukkit.broadcastMessage(ChatColor.GOLD + "✦ " + ChatColor.WHITE + p.getName()
+                        + ChatColor.GRAY + " ukończył wszystkie 5 zadań dziennych! "
+                        + ChatColor.GOLD + "Seria: " + ChatColor.YELLOW + "dzień " + streak + " ★");
                 if (streak % 7 == 0) {
                     p.giveExp(500);
                     p.sendMessage(ChatColor.LIGHT_PURPLE + "7-dniowa seria! Bonus: 500 XP.");
@@ -579,6 +812,14 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
         if(amount<=0) return;
         WeeklyChallenge c=weeklyChallenge();
         if(!isDimensionEnabled(c.dimension()) || !c.type().equals(type)||(!c.target().equals("ANY")&&!c.target().equals(target))) return;
+        String week = weekKey();
+        int previous = 0;
+        try {
+            int[] before = weeklyProgress(p.getUniqueId(), c);
+            previous = before[0];
+        } catch (SQLException ex) {
+            getLogger().warning("Błąd odczytu postępu weekly: " + ex.getMessage());
+        }
         try(PreparedStatement q=db.prepareStatement(
                 "INSERT INTO weekly_tasks(uuid,week,progress,claimed,challenge_id) VALUES(?,?,?,0,?) " +
                 "ON CONFLICT(uuid,week) DO UPDATE SET " +
@@ -586,7 +827,12 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
                 "claimed=CASE WHEN weekly_tasks.challenge_id=excluded.challenge_id THEN weekly_tasks.claimed ELSE 0 END, " +
                 "challenge_id=excluded.challenge_id " +
                 "WHERE weekly_tasks.claimed=0 OR weekly_tasks.challenge_id<>excluded.challenge_id")) {
-            q.setString(1,p.getUniqueId().toString());q.setString(2,weekKey());q.setInt(3,amount);q.setString(4,weeklyChallengeId(c));q.executeUpdate();
+            q.setString(1,p.getUniqueId().toString());q.setString(2,week);q.setInt(3,amount);q.setString(4,weeklyChallengeId(c));q.executeUpdate();
+            int[] after = weeklyProgress(p.getUniqueId(), c);
+            if (previous < c.amount() && after[0] >= c.amount() && after[1] == 0) {
+                Bukkit.broadcastMessage(ChatColor.GOLD + "✦ " + ChatColor.YELLOW + p.getName()
+                        + ChatColor.GOLD + " ukończył wyzwanie weekendowe: " + ChatColor.YELLOW + c.title());
+            }
         } catch(SQLException e) { getLogger().warning("Błąd postępu weekly: "+e.getMessage()); }
     }
     void openWeeklyPreview(Player player) {
@@ -618,13 +864,14 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
                         claimed ? ChatColor.GREEN + "Nagroda odebrana"
                                 : current >= challenge.amount() ? ChatColor.GOLD + "Wyzwanie ukończone"
                                 : ChatColor.YELLOW + "W trakcie realizacji")));
-        inventory.setItem(15, make(Material.CHEST, ChatColor.GOLD + "NAGRODA",
+        inventory.setItem(15, make(claimed ? Material.LIME_SHULKER_BOX : Material.CHEST, ChatColor.GOLD + "NAGRODA",
                 List.of(ChatColor.GREEN + "+" + challenge.xp() + " XP",
                         ChatColor.GREEN + "+" + challenge.emeralds() + " szmaragdów",
                         ChatColor.YELLOW + "+10 ★",
                         "",
-                        ChatColor.DARK_GRAY + "Nagroda odbierana automatycznie",
-                        ChatColor.DARK_GRAY + "po ukończeniu wyzwania.")));
+                        claimed ? ChatColor.GREEN + "Nagroda odebrana"
+                                : current >= challenge.amount() ? ChatColor.YELLOW + "Kliknij, aby odebrać nagrodę"
+                                : ChatColor.DARK_GRAY + "Ukończ wyzwanie, aby odebrać nagrodę.")));
         inventory.setItem(22, make(Material.BARRIER, ChatColor.RED + "ZAMKNIJ PODGLĄD",
                 List.of(ChatColor.GRAY + "Powrót do gry.")));
         player.openInventory(inventory);
@@ -634,29 +881,95 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
     public void onWeeklyPreviewClick(InventoryClickEvent event) {
         if (!(ChatColor.DARK_GRAY + "✦ WYZWANIE TYGODNIA ✦").equals(event.getView().getTitle())) return;
         event.setCancelled(true);
-        if (event.getWhoClicked() instanceof Player player && event.getRawSlot() == 22) {
+        if (!(event.getWhoClicked() instanceof Player player)) return;
+        if (event.getRawSlot() == 22) {
             player.closeInventory();
+            return;
+        }
+        if (event.getRawSlot() == 15) {
+            claimWeeklyReward(player);
+            if (player.isOnline()) openWeeklyPreview(player);
         }
     }
 
+    private void claimWeeklyReward(Player player) {
+        WeeklyChallenge challenge = weeklyChallenge();
+        String week = weekKey();
+        int[] state;
+        try {
+            state = weeklyProgress(player.getUniqueId(), challenge);
+        } catch (SQLException ex) {
+            player.sendMessage(ChatColor.RED + "Nie udało się odczytać wyzwania tygodnia.");
+            getLogger().warning("Błąd odczytu nagrody tygodniowej: " + ex.getMessage());
+            return;
+        }
+
+        int progress = Math.min(state[0], challenge.amount());
+        if (state[1] == 1) {
+            player.sendMessage(ChatColor.GREEN + "Nagroda za wyzwanie tygodnia została już odebrana.");
+            return;
+        }
+        if (progress < challenge.amount()) {
+            player.sendMessage(ChatColor.RED + "Najpierw ukończ wyzwanie tygodnia: "
+                    + progress + "/" + challenge.amount() + ".");
+            return;
+        }
+
+        try (PreparedStatement claim = db.prepareStatement(
+                "UPDATE weekly_tasks SET claimed=1 WHERE uuid=? AND week=? AND challenge_id=? AND progress>=? AND claimed=0")) {
+            claim.setString(1, player.getUniqueId().toString());
+            claim.setString(2, week);
+            claim.setString(3, weeklyChallengeId(challenge));
+            claim.setInt(4, challenge.amount());
+            if (claim.executeUpdate() != 1) {
+                player.sendMessage(ChatColor.RED + "Nie udało się odebrać nagrody. Otwórz wyzwanie ponownie.");
+                return;
+            }
+        } catch (SQLException ex) {
+            player.sendMessage(ChatColor.RED + "Wystąpił błąd podczas odbierania nagrody.");
+            getLogger().warning("Błąd zapisu odbioru nagrody tygodniowej: " + ex.getMessage());
+            return;
+        }
+
+        player.giveExp(challenge.xp());
+        Map<Integer, ItemStack> overflow = player.getInventory().addItem(
+                new ItemStack(Material.EMERALD, challenge.emeralds()));
+        overflow.values().forEach(item -> player.getWorld().dropItemNaturally(player.getLocation(), item));
+        crateSystem.awardStars(player, 10);
+        player.sendMessage(ChatColor.GREEN + "Odebrano nagrodę za wyzwanie tygodnia: "
+                + challenge.xp() + " XP, " + challenge.emeralds() + " szmaragdów i 10 ★.");
+    }
+
     private void showWeekly(CommandSender sender) {
-        if(!(sender instanceof Player p)){sender.sendMessage("Tylko gracz może sprawdzić wyzwanie.");return;}
-        WeeklyChallenge c=weeklyChallenge();String week=weekKey();int progress=0;boolean claimed=false;
-        try { int[] state=weeklyProgress(p.getUniqueId(),c); progress=state[0]; claimed=state[1]==1; }
-        catch(SQLException e){p.sendMessage(ChatColor.RED+"Błąd odczytu wyzwania.");return;}
-        p.sendMessage(ChatColor.GOLD+"━━━━━━━━ WYZWANIE TYGODNIA ━━━━━━━━");
-        p.sendMessage(ChatColor.YELLOW+c.title());p.sendMessage(ChatColor.GRAY+c.description()+".");
-        p.sendMessage(ChatColor.GRAY+"Postęp: "+ChatColor.AQUA+Math.min(progress,c.amount())+"/"+c.amount());
-        if(progress>=c.amount()&&!claimed) {
-            try(PreparedStatement u=db.prepareStatement(
-                    "INSERT INTO weekly_tasks(uuid,week,progress,claimed,challenge_id) VALUES(?,?,?,1,?) " +
-                    "ON CONFLICT(uuid,week) DO UPDATE SET progress=excluded.progress,claimed=1,challenge_id=excluded.challenge_id")) {
-                u.setString(1,p.getUniqueId().toString());u.setString(2,week);u.setInt(3,c.amount());u.setString(4,weeklyChallengeId(c));u.executeUpdate();
-            } catch(SQLException ignored) {}
-            p.giveExp(c.xp());p.getInventory().addItem(new ItemStack(Material.EMERALD,c.emeralds()));crateSystem.awardStars(p,10);
-            p.sendMessage(ChatColor.GREEN+"Wyzwanie ukończone! Nagroda: "+c.xp()+" XP, "+c.emeralds()+" szmaragdów i 10 ★.");
-        } else if(claimed)p.sendMessage(ChatColor.GREEN+"Nagroda odebrana.");
-        else p.sendMessage(ChatColor.GRAY+"Nagroda: "+ChatColor.GREEN+c.xp()+" XP, "+c.emeralds()+" szmaragdów i 10 ★");
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage("Tylko gracz może sprawdzić wyzwanie.");
+            return;
+        }
+        WeeklyChallenge challenge = weeklyChallenge();
+        int progress;
+        boolean claimed;
+        try {
+            int[] state = weeklyProgress(player.getUniqueId(), challenge);
+            progress = state[0];
+            claimed = state[1] == 1;
+        } catch (SQLException ex) {
+            player.sendMessage(ChatColor.RED + "Błąd odczytu wyzwania.");
+            return;
+        }
+
+        player.sendMessage(ChatColor.GOLD + "━━━━━━━━ WYZWANIE TYGODNIA ━━━━━━━━");
+        player.sendMessage(ChatColor.YELLOW + challenge.title());
+        player.sendMessage(ChatColor.GRAY + challenge.description() + ".");
+        player.sendMessage(ChatColor.GRAY + "Postęp: " + ChatColor.AQUA
+                + Math.min(progress, challenge.amount()) + "/" + challenge.amount());
+        if (progress >= challenge.amount() && !claimed) {
+            claimWeeklyReward(player);
+        } else if (claimed) {
+            player.sendMessage(ChatColor.GREEN + "Nagroda odebrana.");
+        } else {
+            player.sendMessage(ChatColor.GRAY + "Nagroda: " + ChatColor.GREEN
+                    + challenge.xp() + " XP, " + challenge.emeralds() + " szmaragdów i 10 ★");
+        }
     }
 
     private void showLeaderboard(CommandSender sender){sender.sendMessage(ChatColor.GOLD+"━━ RANKING DAILY QUESTS ━━");try(Statement s=db.createStatement();ResultSet r=s.executeQuery("SELECT uuid,total_completed,streak FROM player_stats ORDER BY total_completed DESC LIMIT 10")){int i=1;while(r.next()){OfflinePlayer op=Bukkit.getOfflinePlayer(UUID.fromString(r.getString(1)));sender.sendMessage(ChatColor.YELLOW+"#"+i+" "+ChatColor.WHITE+(op.getName()==null?"Gracz":op.getName())+ChatColor.GRAY+" — "+ChatColor.GREEN+r.getInt(2)+" zadań "+ChatColor.DARK_GRAY+"(seria: "+r.getInt(3)+")");i++;}if(i==1)sender.sendMessage(ChatColor.GRAY+"Brak wyników.");}catch(SQLException e){sender.sendMessage(ChatColor.RED+"Błąd rankingu.");}}
@@ -769,19 +1082,98 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
     @EventHandler public void onJoin(PlayerJoinEvent e){ensureTasks(e.getPlayer());lastWalk.put(e.getPlayer().getUniqueId(),e.getPlayer().getLocation());}
     @EventHandler public void onQuit(PlayerQuitEvent e){UUID uuid=e.getPlayer().getUniqueId();lastWalk.remove(uuid);movementRemainder.remove(uuid);cache.remove(uuid);cacheDay.remove(uuid);rerollMode.remove(uuid);}
     private String normalizedBlockType(Material material) {
-        String type=material.name();
+        String type = material.name();
+
+        // Treat regular and deepslate ore blocks as the same ore for BREAK quests.
+        // The quest counts the block-break event, not the dropped item
+        // (e.g. diamond ore drops DIAMOND, not DIAMOND_ORE).
+        if (type.startsWith("DEEPSLATE_") && type.endsWith("_ORE")) {
+            type = type.substring("DEEPSLATE_".length());
+        }
+
         // Kelp has a bottom block (KELP) and upper plant segments (KELP_PLANT).
         // Both represent harvested kelp for quest progress.
         return type.equals("KELP_PLANT") ? "KELP" : type;
     }
 
+    private boolean isWoodLog(Material material) {
+        String name = material.name();
+        return name.endsWith("_LOG") || name.endsWith("_WOOD")
+                || name.endsWith("_STEM") || name.endsWith("_HYPHAE");
+    }
+
+    @EventHandler public void onWoodPlace(BlockPlaceEvent event) {
+        if (event.isCancelled() || !isWoodLog(event.getBlockPlaced().getType())) return;
+        Location location = event.getBlockPlaced().getLocation();
+        try (PreparedStatement statement = db.prepareStatement(
+                "INSERT OR REPLACE INTO placed_wood_blocks(world,x,y,z,material) VALUES(?,?,?,?,?)")) {
+            statement.setString(1, location.getWorld().getUID().toString());
+            statement.setInt(2, location.getBlockX());
+            statement.setInt(3, location.getBlockY());
+            statement.setInt(4, location.getBlockZ());
+            statement.setString(5, event.getBlockPlaced().getType().name());
+            statement.executeUpdate();
+        } catch (SQLException ex) {
+            getLogger().warning("Nie udało się zapisać postawionego pnia: " + ex.getMessage());
+        }
+    }
+
+    private boolean consumePlacedWoodMarker(Location location, Material brokenType) {
+        String worldId = location.getWorld().getUID().toString();
+        String storedMaterial = null;
+        try (PreparedStatement query = db.prepareStatement(
+                "SELECT material FROM placed_wood_blocks WHERE world=? AND x=? AND y=? AND z=?")) {
+            query.setString(1, worldId);
+            query.setInt(2, location.getBlockX());
+            query.setInt(3, location.getBlockY());
+            query.setInt(4, location.getBlockZ());
+            try (ResultSet result = query.executeQuery()) {
+                if (result.next()) storedMaterial = result.getString(1);
+            }
+            if (storedMaterial == null) return false;
+
+            try (PreparedStatement delete = db.prepareStatement(
+                    "DELETE FROM placed_wood_blocks WHERE world=? AND x=? AND y=? AND z=?")) {
+                delete.setString(1, worldId);
+                delete.setInt(2, location.getBlockX());
+                delete.setInt(3, location.getBlockY());
+                delete.setInt(4, location.getBlockZ());
+                delete.executeUpdate();
+            }
+            return storedMaterial.equals(brokenType.name());
+        } catch (SQLException ex) {
+            getLogger().warning("Nie udało się sprawdzić postawionego pnia: " + ex.getMessage());
+            // Fail closed: do not award progress when the anti-exploit check fails.
+            return true;
+        }
+    }
+
+    private int countKelpSegments(Block brokenBlock) {
+        int count = 0;
+        int maxY = brokenBlock.getWorld().getMaxHeight();
+        for (int y = brokenBlock.getY(); y < maxY; y++) {
+            Material type = brokenBlock.getWorld().getBlockAt(
+                    brokenBlock.getX(), y, brokenBlock.getZ()).getType();
+            if (type != Material.KELP && type != Material.KELP_PLANT) break;
+            count++;
+        }
+        return Math.max(1, count);
+    }
+
     @EventHandler public void onBreak(BlockBreakEvent e){
         if(e.isCancelled())return;
-        String type=normalizedBlockType(e.getBlock().getType());
-        updateWeekly(e.getPlayer(),"BREAK",type,1);
+        Material brokenType = e.getBlock().getType();
+        if (isWoodLog(brokenType) && consumePlacedWoodMarker(e.getBlock().getLocation(), brokenType)) return;
+        String type=normalizedBlockType(brokenType);
+        // Breaking one kelp segment causes the whole column above it to collapse.
+        // Bukkit fires one BlockBreakEvent for the player-broken block, so count
+        // every kelp segment that is about to be harvested.
+        int amount = (brokenType == Material.KELP || brokenType == Material.KELP_PLANT)
+                ? countKelpSegments(e.getBlock()) : 1;
+        updateWeekly(e.getPlayer(),"BREAK",type,amount);
         for(Task t:ensureTasks(e.getPlayer()))if(t.type.equals("BREAK")&&dimensionMatches(t,e.getBlock().getWorld())
                 &&(t.target.equals("ANY")||t.target.equals(type)
-                ||(t.target.equals("KELP_PLANT")&&type.equals("KELP"))))update(e.getPlayer(),t,1);
+                ||(t.target.equals("KELP_PLANT")&&type.equals("KELP"))))update(e.getPlayer(),t,amount);
     }
     @EventHandler public void onKill(EntityDeathEvent e){
         Player p=e.getEntity().getKiller();if(p==null)return;
@@ -789,46 +1181,101 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
         updateWeekly(p,"KILL",type,1);
         for(Task t:ensureTasks(p))if(t.type.equals("KILL")&&dimensionMatches(t,e.getEntity().getWorld())&&(t.target.equals("ANY")||t.target.equals(type)))update(p,t,1);
     }
-    private int getCraftedAmount(CraftItemEvent e) {
-        ItemStack result = e.getRecipe().getResult();
-        int outputPerCraft = Math.max(1, result.getAmount());
-        if (!e.isShiftClick()) return outputPerCraft;
-        ItemStack[] matrix = e.getInventory().getMatrix();
-        int crafts = Integer.MAX_VALUE;
-        if (e.getRecipe() instanceof ShapedRecipe shaped) {
-            Map<Character, ItemStack> ingredients = shaped.getIngredientMap();
-            Map<Character, Integer> required = new HashMap<>();
-            for (String line : shaped.getShape()) for (char symbol : line.toCharArray())
-                if (symbol != ' ' && ingredients.get(symbol) != null) required.merge(symbol, 1, Integer::sum);
-            for (Map.Entry<Character, Integer> entry : required.entrySet()) {
-                ItemStack ingredient = ingredients.get(entry.getKey());
-                int available = 0;
-                for (ItemStack item : matrix) if (item != null && item.getType() == ingredient.getType()) available += item.getAmount();
-                crafts = Math.min(crafts, available / entry.getValue());
-            }
-        } else if (e.getRecipe() instanceof ShapelessRecipe shapeless) {
-            Map<Material, Integer> required = new HashMap<>();
-            for (ItemStack ingredient : shapeless.getIngredientList())
-                if (ingredient != null && !ingredient.getType().isAir()) required.merge(ingredient.getType(), 1, Integer::sum);
-            for (Map.Entry<Material, Integer> entry : required.entrySet()) {
-                int available = 0;
-                for (ItemStack item : matrix) if (item != null && item.getType() == entry.getKey()) available += item.getAmount();
-                crafts = Math.min(crafts, available / entry.getValue());
-            }
-        } else return outputPerCraft;
-        if (crafts == Integer.MAX_VALUE || crafts <= 0) return outputPerCraft;
-        return crafts * outputPerCraft;
+    private long countCraftedItems(Player player, Material material) {
+        long total = 0;
+        for (ItemStack item : player.getInventory().getStorageContents()) {
+            if (item != null && item.getType() == material) total += item.getAmount();
+        }
+        ItemStack cursor = player.getItemOnCursor();
+        if (cursor != null && cursor.getType() == material) total += cursor.getAmount();
+        return total;
     }
 
     @EventHandler public void onCraft(CraftItemEvent e) {
         if (!(e.getWhoClicked() instanceof Player p) || e.isCancelled()) return;
-        String type = e.getRecipe().getResult().getType().name();
-        int count = getCraftedAmount(e);
-        updateWeekly(p,"CRAFT",type,count);
-        for (Task t : ensureTasks(p))
-            if (t.type.equals("CRAFT") && (t.target.equals("ANY") || t.target.equals(type))) update(p, t, count);
+
+        // CraftItemEvent is fired before Minecraft has completed the click.
+        // Measure the real result on the next tick: this includes every item
+        // produced by shift-click crafting, including ingredients pulled from
+        // the player's inventory to refill the crafting grid.
+        Material resultType = e.getRecipe().getResult().getType();
+        long before = countCraftedItems(p, resultType);
+
+        Bukkit.getScheduler().runTask(this, () -> {
+            if (!p.isOnline() || e.isCancelled()) return;
+
+            long after = countCraftedItems(p, resultType);
+            long crafted = Math.max(0L, after - before);
+            if (crafted <= 0) return;
+
+            int count = (int) Math.min(Integer.MAX_VALUE, crafted);
+            updateCraftProgress(p, resultType, count);
+        });
     }
 
+
+    private void updateCraftProgress(Player player, Material result, int amount) {
+        if (amount <= 0) return;
+        String type = result.name();
+        updateWeekly(player, "CRAFT", type, amount);
+        for (Task task : ensureTasks(player)) {
+            if (task.type.equals("CRAFT") && (task.target.equals("ANY") || task.target.equals(type))) {
+                update(player, task, amount);
+            }
+        }
+    }
+
+    @EventHandler
+    public void onFurnaceExtract(FurnaceExtractEvent event) {
+        updateCraftProgress(event.getPlayer(), event.getItemType(), event.getItemAmount());
+    }
+
+    @EventHandler
+    public void onCampfireTake(PlayerInteractEvent event) {
+        if (event.isCancelled() || event.getAction() != org.bukkit.event.block.Action.RIGHT_CLICK_BLOCK || event.getClickedBlock() == null) return;
+        Material blockType = event.getClickedBlock().getType();
+        if (blockType != Material.CAMPFIRE && blockType != Material.SOUL_CAMPFIRE) return;
+        if (!(event.getClickedBlock().getState() instanceof org.bukkit.block.Campfire campfire)) return;
+
+        Map<Integer, CampfireFood> readyFood = new HashMap<>();
+        for (int slot = 0; slot < 4; slot++) {
+            ItemStack input = campfire.getItem(slot);
+            if (input == null || input.getType().isAir()) continue;
+            if (campfire.getCookTime(slot) < campfire.getCookTimeTotal(slot)) continue;
+            Material result = campfireResult(input.getType());
+            if (result != null) readyFood.put(slot, new CampfireFood(result, input.getAmount()));
+        }
+        if (readyFood.isEmpty()) return;
+
+        Player player = event.getPlayer();
+        org.bukkit.block.Block campfireBlock = event.getClickedBlock();
+        Bukkit.getScheduler().runTask(this, () -> {
+            if (!player.isOnline() || !campfireBlock.getType().equals(blockType)) return;
+            if (!(campfireBlock.getState() instanceof org.bukkit.block.Campfire after)) return;
+            for (Map.Entry<Integer, CampfireFood> entry : readyFood.entrySet()) {
+                int slot = entry.getKey(); CampfireFood food = entry.getValue();
+                ItemStack remaining = after.getItem(slot);
+                int remainingAmount = remaining != null && remaining.getType() != Material.AIR ? remaining.getAmount() : 0;
+                int removed = Math.max(0, food.amount() - remainingAmount);
+                if (removed > 0) updateCraftProgress(player, food.result(), removed);
+            }
+        });
+    }
+
+    private Material campfireResult(Material input) {
+        return switch (input) {
+            case BEEF -> Material.COOKED_BEEF;
+            case PORKCHOP -> Material.COOKED_PORKCHOP;
+            case CHICKEN -> Material.COOKED_CHICKEN;
+            case MUTTON -> Material.COOKED_MUTTON;
+            case RABBIT -> Material.COOKED_RABBIT;
+            case COD -> Material.COOKED_COD;
+            case SALMON -> Material.COOKED_SALMON;
+            case POTATO -> Material.BAKED_POTATO;
+            case KELP -> Material.DRIED_KELP;
+            default -> null;
+        };
+    }
     @EventHandler public void onFish(PlayerFishEvent e){
         if(e.getState()!=PlayerFishEvent.State.CAUGHT_FISH)return;
         if (!(e.getCaught() instanceof org.bukkit.entity.Item caught)) return;
@@ -878,7 +1325,18 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
         e.setCancelled(true);if(!(e.getWhoClicked() instanceof Player p))return;
         int slot=e.getRawSlot();
         if (slot == 31) {
-            openWeeklyPreview(p);
+            WeeklyChallenge challenge = weeklyChallenge();
+            try {
+                int[] state = weeklyProgress(p.getUniqueId(), challenge);
+                if (state[0] >= challenge.amount() && state[1] == 0) {
+                    claimWeeklyReward(p);
+                    open(p);
+                } else {
+                    openWeeklyPreview(p);
+                }
+            } catch (SQLException ex) {
+                p.sendMessage(ChatColor.RED + "Nie udało się odczytać wyzwania tygodnia.");
+            }
             return;
         }
         if(slot==40) {
@@ -903,12 +1361,16 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
                 open(p);
                 return;
             }
-            Set<String> assigned=new HashSet<>();
-            for(Task existing:tasks) if(!existing.id.equals(t.id)) assigned.add(existing.id);
+            Set<String> assignedToday=tasksAssignedToday(p.getUniqueId());
+            // Also protect against task assignments made before daily history was introduced.
+            for(Task existing:tasks) {
+                assignedToday.add(existing.id);
+                recordTaskHistory(p.getUniqueId(),existing.id,today());
+            }
             ConfigurationSection available=pool();
             List<Task> candidates=new ArrayList<>();
             if(available!=null) for(String id:available.getKeys(false)) {
-                if(assigned.contains(id)) continue;
+                if(assignedToday.contains(id)) continue;
                 Task candidate=loadTask(id);
                 if(candidate!=null && isTaskEnabled(candidate)) candidates.add(candidate);
             }
@@ -923,9 +1385,7 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
             cache.put(p.getUniqueId(),tasks);
             cacheDay.put(p.getUniqueId(),today());
             save(p.getUniqueId(),index,next);
-            try(PreparedStatement h=db.prepareStatement("INSERT OR REPLACE INTO task_history(uuid,task_id,assigned_day) VALUES(?,?,?)")) {
-                h.setString(1,p.getUniqueId().toString());h.setString(2,next.id);h.setString(3,today());h.executeUpdate();
-            } catch(SQLException ex) { getLogger().warning("Nie udało się zapisać historii przerzutu: "+ex.getMessage()); }
+            recordTaskHistory(p.getUniqueId(),next.id,today());
             p.playSound(p.getLocation(),Sound.ENTITY_EXPERIENCE_ORB_PICKUP,0.8f,1.4f);
             p.sendMessage(ChatColor.GREEN+"Wylosowano nowe zadanie za 5 poziomów XP: "+ChatColor.YELLOW+ChatColor.stripColor(next.name));
             open(p);
