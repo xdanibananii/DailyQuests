@@ -692,10 +692,10 @@ public final class CartographerNpcSystem implements Listener {
     }
 
     void listPurchasedMaps(CommandSender sender) {
-        String sql = "SELECT owner_uuid, world, x, y, z, tier FROM dq_treasure_maps WHERE claimed=0 AND discovered=0 ORDER BY created_at ASC";
+        String sql = "SELECT map_id, owner_uuid, world, x, y, z, tier FROM dq_treasure_maps WHERE claimed=0 AND discovered=0 ORDER BY created_at ASC";
         try (PreparedStatement query = db.prepareStatement(sql);
              ResultSet rows = query.executeQuery()) {
-            List<String> entries = new ArrayList<>();
+            List<Component> entries = new ArrayList<>();
             while (rows.next()) {
                 UUID ownerId;
                 try {
@@ -716,11 +716,18 @@ public final class CartographerNpcSystem implements Listener {
                     case "MYTHIC" -> "Mapa legendarna";
                     default -> "Nieznana mapa";
                 };
-                entries.add(ChatColor.YELLOW + playerName + ChatColor.DARK_GRAY + " — "
-                        + tierColor(rows.getString("tier")) + mapName + ChatColor.DARK_GRAY + " — "
-                        + ChatColor.GRAY + rows.getString("world") + " "
-                        + ChatColor.WHITE + rows.getInt("x") + " "
-                        + rows.getInt("y") + " " + rows.getInt("z"));
+                String mapId = rows.getString("map_id");
+                String coordinates = rows.getInt("x") + " " + rows.getInt("y") + " " + rows.getInt("z");
+                Component clickableCoordinates = Component.text(coordinates, net.kyori.adventure.text.format.NamedTextColor.WHITE)
+                        .clickEvent(net.kyori.adventure.text.event.ClickEvent.runCommand("/dq kartograf tp " + mapId))
+                        .hoverEvent(net.kyori.adventure.text.event.HoverEvent.showText(
+                                Component.text("Kliknij, aby teleportować się do tej skrzyni", net.kyori.adventure.text.format.NamedTextColor.YELLOW)));
+                Component entry = Component.text(playerName, net.kyori.adventure.text.format.NamedTextColor.YELLOW)
+                        .append(Component.text(" — ", net.kyori.adventure.text.format.NamedTextColor.DARK_GRAY))
+                        .append(Component.text(mapName, toAdventureColor(tierColor(rows.getString("tier")))))
+                        .append(Component.text(" — " + rows.getString("world") + " ", net.kyori.adventure.text.format.NamedTextColor.GRAY))
+                        .append(clickableCoordinates);
+                entries.add(entry);
             }
             sender.sendMessage(ChatColor.GOLD + "━━ AKTYWNE MAPY KRZUSŁAWA (" + entries.size() + ") ━━");
             if (entries.isEmpty()) {
@@ -728,11 +735,58 @@ public final class CartographerNpcSystem implements Listener {
                 return;
             }
             for (int i = 0; i < entries.size(); i++) {
-                sender.sendMessage(ChatColor.DARK_GRAY + "" + (i + 1) + ". " + entries.get(i));
+                sender.sendMessage(Component.text((i + 1) + ". ", net.kyori.adventure.text.format.NamedTextColor.DARK_GRAY).append(entries.get(i)));
             }
         } catch (SQLException ex) {
             plugin.getLogger().warning("Nie udało się wyświetlić listy map kartografa: " + ex.getMessage());
             sender.sendMessage(ChatColor.RED + "Nie udało się pobrać listy map skarbów z bazy danych.");
+        }
+    }
+
+    private net.kyori.adventure.text.format.NamedTextColor toAdventureColor(ChatColor color) {
+        return switch (color) {
+            case DARK_GREEN -> net.kyori.adventure.text.format.NamedTextColor.DARK_GREEN;
+            case GREEN -> net.kyori.adventure.text.format.NamedTextColor.GREEN;
+            case DARK_AQUA -> net.kyori.adventure.text.format.NamedTextColor.DARK_AQUA;
+            case AQUA -> net.kyori.adventure.text.format.NamedTextColor.AQUA;
+            case DARK_PURPLE -> net.kyori.adventure.text.format.NamedTextColor.DARK_PURPLE;
+            case LIGHT_PURPLE -> net.kyori.adventure.text.format.NamedTextColor.LIGHT_PURPLE;
+            case GOLD -> net.kyori.adventure.text.format.NamedTextColor.GOLD;
+            default -> net.kyori.adventure.text.format.NamedTextColor.YELLOW;
+        };
+    }
+
+    void teleportToTreasure(Player player, String mapId) {
+        try (PreparedStatement query = db.prepareStatement(
+                "SELECT world,x,y,z FROM dq_treasure_maps WHERE map_id=? AND claimed=0 AND discovered=0")) {
+            query.setString(1, mapId);
+            try (ResultSet row = query.executeQuery()) {
+                if (!row.next()) {
+                    player.sendMessage(ChatColor.RED + "Ta mapa nie znajduje się już na aktywnej liście.");
+                    return;
+                }
+                World world = Bukkit.getWorld(row.getString("world"));
+                if (world == null) {
+                    player.sendMessage(ChatColor.RED + "Świat tej skrzyni nie jest aktualnie dostępny.");
+                    return;
+                }
+                int x = row.getInt("x"), y = row.getInt("y"), z = row.getInt("z");
+                Location target = new Location(world, x + 0.5, y + 1.0, z + 0.5);
+                world.getChunkAt(target).load();
+                player.teleport(target);
+                player.sendMessage(ChatColor.GREEN + "Teleportowano do skrzyni: "
+                        + ChatColor.YELLOW + world.getName() + " " + x + " " + y + " " + z);
+            }
+        } catch (SQLException ex) {
+            plugin.getLogger().warning("Nie udało się teleportować do mapy kartografa: " + ex.getMessage());
+            player.sendMessage(ChatColor.RED + "Nie udało się odczytać lokalizacji tej skrzyni.");
+        }
+    }
+
+    int clearActiveMaps() throws SQLException {
+        try (PreparedStatement delete = db.prepareStatement(
+                "DELETE FROM dq_treasure_maps WHERE claimed=0")) {
+            return delete.executeUpdate();
         }
     }
 
