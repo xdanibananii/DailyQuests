@@ -1,5 +1,7 @@
 package pl.dailyquests;
 
+import net.kyori.adventure.text.Component;
+
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.Chest;
