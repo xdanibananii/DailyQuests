@@ -1,5 +1,5 @@
 name: DailyQuests
-version: 1.1.6
+version: 1.1.7
 main: pl.dailyquests.DailyQuestsPlugin
 api-version: '26.3'
 author: danibanannii
