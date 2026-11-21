@@ -358,7 +358,8 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
             sender.sendMessage(ChatColor.YELLOW + "/dq npc quest [postaw|usun|tp|rename <nazwa>]" + ChatColor.GRAY + " — zarządzanie Michaiłem");
             sender.sendMessage(ChatColor.YELLOW + "/dq npc skarbiec [postaw|usun|tp|rename <nazwa>]" + ChatColor.GRAY + " — zarządzanie Strażnikiem Skarbca");
             sender.sendMessage(ChatColor.YELLOW + "/dq npc kartograf [postaw|usun|tp|rename <nazwa>]" + ChatColor.GRAY + " — zarządzanie Krzusławem Wędrownym");
-            sender.sendMessage(ChatColor.YELLOW + "/dq kartograf list" + ChatColor.GRAY + " — lista aktywnych map i współrzędnych skrzyń");
+            sender.sendMessage(ChatColor.YELLOW + "/dq kartograf list" + ChatColor.GRAY + " — lista aktywnych map; kliknij współrzędne, aby się teleportować");
+            sender.sendMessage(ChatColor.YELLOW + "/dq kartograf wyczysc" + ChatColor.GRAY + " — czyści wpisy aktywnych map (wymaga potwierdzenia)");
             sender.sendMessage(ChatColor.YELLOW + "/dq npc filip [postaw|usun|tp|rename <nazwa>]" + ChatColor.GRAY + " — zarządzanie Filipem Sznupaczem");
             sender.sendMessage(ChatColor.YELLOW + "/dq npc snaf [postaw|usun|tp|rename <nazwa>]" + ChatColor.GRAY + " — zarządzanie Snafem");
             sender.sendMessage(ChatColor.YELLOW + "/dq gwiazdki <dodaj|usun|ustaw> <gracz> <ilość>" + ChatColor.GRAY + " — zarządzanie saldem");
@@ -379,7 +380,10 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
         } else if (args.length == 2 && args[0].equalsIgnoreCase("mapa")) {
             suggestions.addAll(List.of("pomoc", "potwierdz"));
         } else if (args.length == 2 && args[0].equalsIgnoreCase("kartograf") && admin) {
-            suggestions.add("list");
+            suggestions.addAll(List.of("list", "wyczysc"));
+        } else if (args.length == 3 && args[0].equalsIgnoreCase("kartograf") && admin
+                && args[1].equalsIgnoreCase("wyczysc")) {
+            suggestions.add("potwierdz");
         } else if (args.length == 2 && args[0].equalsIgnoreCase("npc") && admin) {
             suggestions.addAll(List.of("quest", "skarbiec", "kartograf", "filip", "snaf"));
         } else if (args.length == 3 && args[0].equalsIgnoreCase("npc") && admin
@@ -520,8 +524,21 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
             if(!sender.hasPermission("dailyquests.admin")) { sender.sendMessage(ChatColor.RED+"Brak uprawnień."); return true; }
             if(args.length==2 && args[1].equalsIgnoreCase("list")) {
                 cartographerNpcSystem.listPurchasedMaps(sender);
+            } else if(args.length==3 && args[1].equalsIgnoreCase("tp") && sender instanceof Player player) {
+                cartographerNpcSystem.teleportToTreasure(player,args[2]);
+            } else if(args.length==2 && args[1].equalsIgnoreCase("wyczysc")) {
+                sender.sendMessage(ChatColor.RED+"To usunie wszystkie nieodebrane wpisy map kartografa. Skrzynie w świecie nie zostaną usunięte, ale przestaną być śledzone.");
+                sender.sendMessage(ChatColor.YELLOW+"Potwierdź komendą /dq kartograf wyczysc potwierdz");
+            } else if(args.length==3 && args[1].equalsIgnoreCase("wyczysc") && args[2].equalsIgnoreCase("potwierdz")) {
+                try {
+                    int removed=cartographerNpcSystem.clearActiveMaps();
+                    sender.sendMessage(ChatColor.GREEN+"Wyczyszczono "+removed+" aktywnych wpisów map kartografa.");
+                } catch(SQLException ex) {
+                    getLogger().warning("Nie udało się wyczyścić listy map kartografa: "+ex.getMessage());
+                    sender.sendMessage(ChatColor.RED+"Nie udało się wyczyścić listy map kartografa.");
+                }
             } else {
-                sender.sendMessage(ChatColor.YELLOW+"Użycie: /dq kartograf list");
+                sender.sendMessage(ChatColor.YELLOW+"Użycie: /dq kartograf <list|tp <id>|wyczysc [potwierdz]>");
             }
             return true;
         }
