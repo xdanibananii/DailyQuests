@@ -668,8 +668,17 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
                 ensureTasks(online);
                 if(TITLE.equals(online.getOpenInventory().getTitle())) open(online);
             }
-            sender.sendMessage(ChatColor.GREEN+"DailyQuests: zadania "+(dimension.equals("NETHER")?"Netheru":"Endu")+
-                    (enabled?" włączone. Nowe losowania mogą je uwzględniać.":" wyłączone. Zastąpiono tylko zadania z tego wymiaru; pozostały postęp zachowano."));
+            String dimensionMessage;
+            if(dimension.equals("NETHER")) {
+                dimensionMessage=enabled
+                        ? " włączone. Dodano 3 dodatkowe zadania; dzienny zestaw ma teraz 8 zadań."
+                        : " wyłączone. Usunięto 3 zadania Netheru; pozostałe 5 zadań i ich postęp zachowano.";
+            } else {
+                dimensionMessage=enabled
+                        ? " włączone. Zadania Endu mogą pojawiać się w codziennej puli."
+                        : " wyłączone. Zastąpiono zadania z tego wymiaru; pozostały postęp zachowano.";
+            }
+            sender.sendMessage(ChatColor.GREEN+"DailyQuests: zadania "+(dimension.equals("NETHER")?"Netheru":"Endu")+dimensionMessage);
             return true;
         }
         if(args.length>0 && args[0].equalsIgnoreCase("reload")){
