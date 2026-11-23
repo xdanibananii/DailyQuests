@@ -1,29 +1,46 @@
 name: Build DailyQuests
+
 on:
   push:
-    branches: [ main ]
+    branches: [ main, develop ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, develop ]
   workflow_dispatch:
+
 permissions:
   contents: read
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
       - name: Set up Java 25
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '25'
           cache: maven
+
+      - name: Read project version
+        id: project-version
+        shell: bash
+        run: |
+          VERSION=$(python3 -c 'import xml.etree.ElementTree as ET; root=ET.parse("pom.xml").getroot(); ns={"m":"http://maven.apache.org/POM/4.0.0"}; print(root.findtext("m:version", namespaces=ns))')
+          if [ -z "$VERSION" ]; then
+            echo "Could not read project version from pom.xml"
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
       - name: Build plugin
         run: mvn -B clean package
+
       - name: Upload plugin JAR
         uses: actions/upload-artifact@v4
         with:
-          name: DailyQuests-1.1.9
-          path: target/DailyQuests-1.1.9.jar
+          name: DailyQuests-${{ steps.project-version.outputs.version }}
+          path: target/DailyQuests-${{ steps.project-version.outputs.version }}.jar
           if-no-files-found: error
