@@ -1,73 +1,76 @@
 # DailyQuests
 
-**DailyQuests 1.1.9** to samodzielny plugin do Paper, który dodaje indywidualne codzienne zadania, kontrakty u Michaiła Łomonosowa, system gwiazdek i skrzynek z nagrodami.
+**DailyQuests 1.1.9** to plugin Minecraft dla serwerów Paper. Dodaje indywidualne zadania dzienne, kontrakty NPC, system gwiazdek i skrzynek, wyzwania tygodniowe oraz system map skarbów.
 
-Plugin opiera się na **Paper API** i SQLite. Nie wymaga Citizens ani żadnego innego dodatkowego pluginu.
+Plugin korzysta z Paper API i SQLite. Nie wymaga Citizens ani innych pluginów zewnętrznych.
 
 ## Wymagania
 
-- Serwer **Paper** zgodny z API **26.3**.
-- **Java 25**.
-- Brak wymaganych pluginów zewnętrznych.
+- Paper zgodny z API 26.3.
+- Java 25.
 - SQLite jest dołączone do pliku JAR.
 
-> Projekt jest budowany pod Paper 26.3 i Java 25. Nie należy zakładać zgodności ze starszymi wersjami Paper/Minecraft.
+Nie zakładaj zgodności ze starszymi wersjami Paper/Minecraft bez osobnego testu.
 
-## Instalacja
+## Instalacja i aktualizacja
 
 1. Zatrzymaj serwer.
-2. Pobierz `DailyQuests-1.1.9.jar` z artefaktów GitHub Actions.
-3. Umieść plik JAR w katalogu `plugins`.
-4. Uruchom serwer.
-5. Plugin utworzy katalog `plugins/DailyQuests/` z plikami konfiguracyjnymi i bazą danych.
+2. Zrób kopię całego katalogu `plugins/DailyQuests/`, szczególnie `dailyquests.db`.
+3. Umieść `DailyQuests-1.1.9.jar` w katalogu `plugins`.
+4. Uruchom serwer i sprawdź konsolę pod kątem błędów.
 
-Po aktualizacji zalecana jest kopia zapasowa całego katalogu `plugins/DailyQuests/`. Nie usuwaj pliku `dailyquests.db`, jeśli chcesz zachować postępy, gwiazdki i kontrakty graczy.
+Nie usuwaj bazy `dailyquests.db), jeśli chcesz zachować postępy i dane graczy. Nie aktualizuj działającego serwera bez kopii zapasowej.
 
 ## Funkcje
 
-- 5 indywidualnych zadań dziennych dla każdego gracza; po włączeniu Netheru dochodzą 3 dodatkowe zadania (łącznie 8). Zadania losowane są z puli 264 wyzwań, w tym z Netheru i Endu.
-- Zadania z różnych aktywności: kopanie, walka, crafting, łowienie, chodzenie, pływanie, jedzenie, zaklinanie, rozmnażanie zwierząt, handel i kowadło.
-- Postęp zadań zapisywany w SQLite.
-- Nagrody XP i przedmioty, odbierane ręcznie w GUI.
-- Bonus za ukończenie całego dziennego zestawu (5 zadań lub 8 po włączeniu Netheru): **250 XP i 5 gwiazdek**.
-- Historia zadań zapobiegająca powtórkom przez 30 dni, gdy pula pozwala na pełną rotację.
-- Wyzwanie tygodniowe, serie ukończeń i ranking.
-- Gwiazdki i skrzynka z animowaną ruletką nagród.
-- Michaił Łomonosow – Villager z indywidualnym kontraktem dziennym dla gracza.
-- Konfiguracja puli zadań, kontraktów i nagród w plikach YAML.
-- Zadania z Netheru są osobną sekcją trzech dodatkowych wyzwań w GUI; zadania z Endu pozostają częścią zwykłej puli.
+- 5 indywidualnych zadań dziennych dla każdego gracza.
+- Po włączeniu Netheru dochodzą 3 dodatkowe zadania.
+- Pula 264 zadań obejmująca różne aktywności Minecrafta.
+- Zadania Netheru i Endu sterowane niezależnymi przełącznikami.
+- Nagrody XP i przedmioty odbierane ręcznie w GUI.
+- Bonus za ukończenie całego zestawu: 250 XP i 5 gwiazdek.
+- Historia przydzielonych zadań ograniczająca powtórki.
+- Wyzwania tygodniowe, serie ukończeń i ranking.
+- Gwiazdki i skrzynka z animacją losowania nagród.
+- Kontrakty Michaiła Łomonosowa — pula 79 kontraktów.
+- NPC Strażnik Skarbca, Krzusław Wędrowny, Filip Sznupacz i Snaf.
+- Mapy skarbów, wskazówki do skrzyń i funkcje NPC.
+- Konfiguracja zadań, kontraktów i nagród w YAML.
 
 ## Komendy gracza
 
-| Komenda | Opis |
+| Komenda / akcja | Opis |
 |---|---|
-| `/zadania` lub `/dq` | Otwiera panel codziennych zadań. |
+| `/zadania`, `/dq` | Otwiera panel codziennych zadań. |
 | `/dq weekly` | Wyświetla wyzwanie tygodnia. |
 | `/dq top` | Wyświetla ranking graczy. |
-| `/dq skrzynka` | Otwiera skrzynkę za 20 gwiazdek. |
-| `/dq gwiazdki` | Sprawdza własne saldo gwiazdek. |
-| Kliknięcie Michaiła Łomonosowa | Otwiera dialog i dzienny kontrakt NPC. |
+| `/dq gwiazdki` | Sprawdza saldo gwiazdek. |
+| `/dq mapa pomoc` | Prosi Krzusława o wskazówkę do aktywnej mapy. |
+| `/dq mapa potwierdz` | Potwierdza zakup wskazówki za 5 poziomów XP. |
+| Kliknięcie NPC | Otwiera funkcje danego NPC. |
 
-W panelu zadań można odebrać ukończone nagrody. Przerzut jednego zadania jest dostępny z poziomu GUI i kosztuje **5 poziomów doświadczenia**.
+W GUI można odebrać ukończone nagrody. Przerzut pojedynczego zadania kosztuje 5 poziomów doświadczenia.
 
 ## Komendy administratora
 
-Wszystkie poniższe komendy wymagają uprawnienia `dailyquests.admin` (domyślnie operator serwera).
+Wymagane uprawnienie: `dailyquests.admin` (domyślnie OP).
 
 | Komenda | Opis |
 |---|---|
-| `/dq help` | Wyświetla pomoc. |
-| `/dq roll` | Losuje ponownie dzienne zadania wszystkim graczom; zeruje dzisiejszy postęp. |
-| `/dq nether on` / `/dq nether off` | Dodaje lub usuwa trzy dodatkowe zadania Netheru (łącznie 8 lub 5 zadań dziennie). |
-| `/dq end on` / `/dq end off` | Włącza lub wyłącza zadania z Endu i losuje zadania ponownie. |
-| `/dq reload` | Przeładowuje główną konfigurację i pulę zadań. |
-| `/dq npc postaw` | Stawia Michaiła Łomonosowa w miejscu administratora. |
-| `/dq npc usun` | Usuwa Michaiła Łomonosowa. |
-| `/dq npc tp` | Teleportuje administratora do NPC. |
-| `/dq gwiazdki dodaj <gracz> <ilość>` | Dodaje graczowi gwiazdki. |
-| `/dq gwiazdki usun <gracz> <ilość>` | Odejmuje graczowi gwiazdki. |
+| `/dq help` lub `/dailyquest` | Wyświetla pomoc. |
+| `/dq roll` | Losuje zadania ponownie wszystkim graczom i zeruje dzisiejszy postęp. |
+| `/dq nether on|off` | Włącza/wyłącza dodatkowe zadania Netheru. |
+| `/dq end on|off` | Włącza/wyłącza zadania z Endu. |
+| `/dq reload` | Przeładowuje konfigurację i pulę zadań. |
+| `/dq gwiazdki dodaj <gracz> <ilość>` | Dodaje gwiazdki. |
+| `/dq gwiazdki usun <gracz> <ilość>` | Odejmuje gwiazdki. |
 | `/dq gwiazdki ustaw <gracz> <ilość>` | Ustawia saldo gwiazdek. |
-| `/dq gwiazdki sprawdz <gracz>` | Sprawdza saldo wskazanego gracza. |
+| `/dq gwiazdki sprawdz <gracz>` | Sprawdza saldo gracza. |
+| `/dq npc <quest|skarbiec|kartograf|filip|snaf> <postaw|usun|tp>` | Zarządza NPC. |
+| `/dq npc <typ> rename <nazwa>` | Zmienia nazwę NPC. |
+| `/dq kartograf list` | Wyświetla aktywne mapy. |
+| `/dq kartograf tp <id>` | Teleportuje do wskazanej mapy. |
+| `/dq kartograf wyczysc` | Czyści aktywne wpisy map (wymaga potwierdzenia). |
 
 ## Konfiguracja
 
@@ -75,73 +78,45 @@ Pliki znajdują się w `plugins/DailyQuests/`.
 
 ### `config.yml`
 
-- `timezone` – strefa czasowa resetu, domyślnie `Europe/Warsaw`.
-- `dimensions.nether-enabled` – czy losować zadania z Netheru.
-- `dimensions.end-enabled` – czy losować zadania z Endu.
+- `timezone` — strefa czasowa resetu, domyślnie `Europe/Warsaw`.
+- `daily-tasks` — podstawowa liczba zadań.
+- `gui-title`, `gui-size` — ustawienia GUI.
+- `dimensions.nether-enabled` — zadania Netheru (domyślnie wyłączone).
+- `dimensions.end-enabled` — zadania Endu (domyślnie wyłączone).
 
 ### `tasks.yml`
 
-Pula zadań dziennych. Każde zadanie ma własny identyfikator oraz pola:
+Pula zadań dziennych. Każde zadanie ma unikalny identyfikator i pola takie jak:
 
-- `name` – nazwa wyświetlana (obsługuje kolory `&`).
-- `description` – opis.
-- `type` – typ zadania, np. `BREAK`, `KILL`, `CRAFT`, `FISH`, `WALK`, `SWIM`, `EAT`, `ENCHANT`, `BREED`, `TRADE`, `ANVIL`.
-- `target` – materiał/typ celu lub `ANY`.
-- `amount` – wymagany postęp.
-- `reward-xp` – nagroda doświadczenia.
-- `reward-item` i `reward-item-amount` – opcjonalna nagroda przedmiotowa.
-- `difficulty` – oznaczenie poziomu trudności.
-- `dimension` – opcjonalnie `OVERWORLD`, `NETHER` lub `THE_END`.
+- `name`, `description` — nazwa i opis.
+- `type` — typ aktywności, np. `BREAK`, `KILL`, `CRAFT`, `FISH`, `WALK`, `SWIM`, `EAT`, `ENCHANT`, `BREED`, `TRADE`, `ANVIL`.
+- `target`, `amount` — cel i wymagany postęp.
+- `reward-xp`, `reward-item`, `reward-item-amount` — nagroda.
+- `difficulty`, `dimension` — poziom trudności i opcjonalny wymiar.
 
-Przykład:
-
-```yaml
-tasks:
-  collect_emeralds:
-    name: "&aSzmaragdowy interes"
-    description: "&7Zdobądź 8 szmaragdów"
-    type: BREAK
-    target: EMERALD_ORE
-    amount: 8
-    difficulty: MEDIUM
-    reward-xp: 200
-    reward-item: EMERALD
-    reward-item-amount: 2
-```
-
-Po zmianach w `tasks.yml` użyj `/dq reload`. Zachowuj unikalne identyfikatory zadań. Zadania z Netheru i Endu będą losowane dopiero po włączeniu odpowiedniego wymiaru.
+Po zmianach użyj `/dq reload`. Zachowuj unikalne identyfikatory. Nie usuwaj istniejących wpisów graczy bez uzgodnienia.
 
 ### `npc_quests.yml`
 
-Pula 59 kontraktów, bez powtórek przez 30 dni Michaiła Łomonosowa. Każdy kontrakt określa:
-
-- `name` i `description` – nazwę i opis.
-- `item` – wymagany materiał.
-- `amount` – wymaganą liczbę przedmiotów.
-- `reward-stars` – liczbę gwiazdek.
-- `reward-xp` – nagrodę XP.
-
-Kontrakt jest indywidualny dla gracza i odnawia się wraz z nowym dniem według ustawionej strefy czasowej.
+Pula kontraktów Michaiła. Pola obejmują `name`, `description`, `item`, `amount`, `reward-stars` i `reward-xp`.
 
 ### `rewards.yml`
 
-Lista nagród skrzynki. Każda pozycja posiada m.in. `tier`, `weight`, `material`, `amount`, `name`, `lore` i opcjonalne `enchants`. Wagi są względne – większa wartość oznacza większą szansę wylosowania nagrody.
+Nagrody skrzynki. Wpisy definiują m.in. `tier`, `weight`, `material`, `amount`, `name`, `lore` i opcjonalne zaklęcia. Wagi są względne.
 
 ## Dane i kopie zapasowe
 
-- `dailyquests.db` – baza SQLite: zadania, postęp, statystyki, saldo gwiazdek i kontrakty.
-- `quest_npc.yml` – zapis lokalizacji i identyfikatora Michaiła Łomonosowa.
-- `tasks.yml`, `npc_quests.yml`, `rewards.yml` – konfiguracje zawartości.
+- `dailyquests.db` — baza SQLite z postępami, statystykami, gwiazdkami i innymi danymi graczy.
+- `tasks.yml`, `npc_quests.yml`, `rewards.yml` — konfiguracje zawartości.
+- Pliki stanu NPC/map są przechowywane w katalogu pluginu.
 
-Przed aktualizacją lub ręczną edycją plików wykonaj kopię całego katalogu `plugins/DailyQuests/`. Nie edytuj bazy SQLite przy uruchomionym serwerze.
+Przed aktualizacją wykonaj kopię całego katalogu `plugins/DailyQuests/`. Nie edytuj bazy SQLite przy uruchomionym serwerze.
 
-## Uprawnienia
+## Dokumentacja dla osób rozwijających plugin
 
-| Uprawnienie | Domyślnie | Opis |
-|---|---|---|
-| `dailyquests.admin` | `op` | Dostęp do komend administracyjnych. |
+- [PROJECT_CONTEXT.md](PROJECT_CONTEXT.md) — aktualny stan, architektura i zasady projektu.
+- [TODO.md](TODO.md) — backlog i notatki audytowe.
+- [CHANGELOG.md](CHANGELOG.md) — historia wersji.
+- [CONTRIBUTING.md](CONTRIBUTING.md) — zasady pracy i kompilacji.
 
-## Wydanie
-
-**DailyQuests 1.1.9** – oficjalna linia wydania 1.0. Aktualizacje poprawkowe w ramach tej linii zachowują numer wersji pluginu.
-
+Przy rozpoczynaniu nowej sesji deweloperskiej zacznij od `PROJECT_CONTEXT.md`.
