@@ -61,7 +61,7 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
     @Override public void onEnable() {
         saveDefaultConfig();
         saveResource("tasks.yml", false);
-        File poolMarker = new File(getDataFolder(), "quest-pool-v8.done");
+        File poolMarker = new File(getDataFolder(), "quest-pool-v9.done");
         if (!poolMarker.exists()) {
             mergeDefaultTasks();
             try { poolMarker.createNewFile(); } catch (java.io.IOException ex) { getLogger().warning("Nie zapisano znacznika aktualizacji puli zadan: " + ex.getMessage()); }
@@ -167,65 +167,85 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
         return tasksConfig.getConfigurationSection("tasks");
     }
 
+    private int requiredTaskCount() {
+        return 5 + (isDimensionEnabled("NETHER") ? 3 : 0);
+    }
+
     private List<Task> ensureTasks(Player p) {
         String day=today();
         UUID uuid=p.getUniqueId();
+        boolean netherEnabled=isDimensionEnabled("NETHER");
+        int requiredBase=5;
+        int requiredNether=netherEnabled?3:0;
         List<Task> cached=cache.get(uuid);
-        if(cached!=null && cached.size()==5 && day.equals(cacheDay.get(uuid))
+        if(cached!=null && cached.size()==requiredBase+requiredNether && day.equals(cacheDay.get(uuid))
                 && cached.stream().allMatch(this::isTaskEnabled)) return cached;
-        List<Task> found=new ArrayList<>();
-        List<Integer> slots=new ArrayList<>();
-        try(PreparedStatement q=db.prepareStatement("SELECT slot,task_id,progress,claimed FROM player_tasks WHERE uuid=? AND day=? ORDER BY slot")) {
-            q.setString(1,p.getUniqueId().toString()); q.setString(2,day);
+
+        List<Task> base=new ArrayList<>();
+        List<Task> nether=new ArrayList<>();
+        try(PreparedStatement q=db.prepareStatement("SELECT task_id,progress,claimed FROM player_tasks WHERE uuid=? AND day=? ORDER BY slot")) {
+            q.setString(1,uuid.toString()); q.setString(2,day);
             try(ResultSet rs=q.executeQuery()) {
                 while(rs.next()) {
-                    Task task=loadTask(rs.getString(2));
-                    if(task!=null && isTaskEnabled(task)) {
-                        task.progress=rs.getInt(3); task.claimed=rs.getInt(4)==1;
-                        found.add(task); slots.add(rs.getInt(1));
-                    }
+                    Task task=loadTask(rs.getString(1));
+                    if(task==null || !isTaskEnabled(task)) continue;
+                    task.progress=rs.getInt(2);
+                    task.claimed=rs.getInt(3)==1;
+                    List<Task> destination=task.dimension.equals("NETHER")?nether:base;
+                    int limit=task.dimension.equals("NETHER")?requiredNether:requiredBase;
+                    if(destination.size()<limit) destination.add(task);
                 }
             }
         } catch(SQLException e) { getLogger().warning(e.getMessage()); }
-        if(found.size()==5) {
-            for(Task task:found) recordTaskHistory(uuid,task.id,day);
-            cache.put(uuid,found); cacheDay.put(uuid,day); return found;
-        }
 
-        ConfigurationSection sec=pool();
-        if(sec==null || sec.getKeys(false).isEmpty()) return found;
         Set<String> assignedToday=tasksAssignedToday(uuid);
-        // Ensure tasks created by older plugin versions are also recorded before any reroll.
-        for(Task task:found) {
+        for(Task task:base) {
             assignedToday.add(task.id);
             recordTaskHistory(uuid,task.id,day);
         }
-        List<String> ids=new ArrayList<>(sec.getKeys(false));
-        ids.removeIf(id -> {
-            Task candidate=loadTask(id);
-            return candidate==null || !isTaskEnabled(candidate) || assignedToday.contains(id);
-        });
-        Collections.shuffle(ids);
-        List<Task> replacements=new ArrayList<>();
-        for(String id:ids) {
-            Task task=loadTask(id);
-            if(task!=null) { replacements.add(task); if(found.size()+replacements.size()>=5) break; }
-        }
-        try(PreparedStatement del=db.prepareStatement("DELETE FROM player_tasks WHERE uuid=? AND day=?")) {
-            del.setString(1,p.getUniqueId().toString()); del.setString(2,day); del.executeUpdate();
-        } catch(SQLException ex) { getLogger().warning("Nie udało się odświeżyć zadań: "+ex.getMessage()); }
-        List<Task> result=new ArrayList<>(found);
-        for(int i=0;i<found.size();i++) save(p.getUniqueId(),slots.get(i),found.get(i));
-        int nextSlot=0;
-        for(Task task:found) nextSlot=Math.max(nextSlot,slots.get(result.indexOf(task))+1);
-        for(Task task:replacements) {
-            while(slots.contains(nextSlot)) nextSlot++;
-            save(p.getUniqueId(),nextSlot++,task);
-            result.add(task);
+        for(Task task:nether) {
+            assignedToday.add(task.id);
             recordTaskHistory(uuid,task.id,day);
+        }
+
+        ConfigurationSection sec=pool();
+        if(sec==null || sec.getKeys(false).isEmpty()) return combineTasks(base,nether);
+
+        List<Task> baseCandidates=new ArrayList<>();
+        List<Task> netherCandidates=new ArrayList<>();
+        for(String id:sec.getKeys(false)) {
+            if(assignedToday.contains(id)) continue;
+            Task candidate=loadTask(id);
+            if(candidate==null || !isTaskEnabled(candidate)) continue;
+            if(candidate.dimension.equals("NETHER")) {
+                if(netherEnabled) netherCandidates.add(candidate);
+            } else {
+                baseCandidates.add(candidate);
+            }
+        }
+        Collections.shuffle(baseCandidates);
+        Collections.shuffle(netherCandidates);
+        while(base.size()<requiredBase && !baseCandidates.isEmpty())
+            base.add(baseCandidates.remove(0));
+        while(nether.size()<requiredNether && !netherCandidates.isEmpty())
+            nether.add(netherCandidates.remove(0));
+
+        List<Task> result=combineTasks(base,nether);
+        try(PreparedStatement del=db.prepareStatement("DELETE FROM player_tasks WHERE uuid=? AND day=?")) {
+            del.setString(1,uuid.toString()); del.setString(2,day); del.executeUpdate();
+        } catch(SQLException ex) { getLogger().warning("Nie udało się odświeżyć zadań: "+ex.getMessage()); }
+        for(int i=0;i<result.size();i++) {
+            save(uuid,i,result.get(i));
+            recordTaskHistory(uuid,result.get(i).id,day);
         }
         cache.put(uuid,result);
         cacheDay.put(uuid,day);
+        return result;
+    }
+
+    private List<Task> combineTasks(List<Task> base,List<Task> nether) {
+        List<Task> result=new ArrayList<>(base);
+        result.addAll(nether);
         return result;
     }
 
@@ -1016,11 +1036,15 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
                     ChatColor.GRAY+"Kliknij, aby "+(rerollMode.contains(p.getUniqueId())?"wyłączyć":"włączyć")+" tryb przerzutu.",
                     ChatColor.DARK_GRAY+"Następnie kliknij wybrane zadanie.")));
         inv.setItem(49,make(Material.CLOCK,ChatColor.AQUA+"Postęp dnia",
-            List.of(ChatColor.GRAY+"Ukończone: "+ChatColor.GREEN+tasks.stream().filter(t->t.progress>=t.amount).count()+ChatColor.GRAY+"/5",
-                    ChatColor.GRAY+"Odebrane: "+ChatColor.YELLOW+tasks.stream().filter(t->t.claimed).count()+ChatColor.GRAY+"/5",
+            List.of(ChatColor.GRAY+"Ukończone: "+ChatColor.GREEN+tasks.stream().filter(t->t.progress>=t.amount).count()+ChatColor.GRAY+"/"+requiredTaskCount(),
+                    ChatColor.GRAY+"Odebrane: "+ChatColor.YELLOW+tasks.stream().filter(t->t.claimed).count()+ChatColor.GRAY+"/"+requiredTaskCount(),
                     ChatColor.DARK_GRAY+"Bonus za komplet: "+ChatColor.GOLD+"250 XP")));
-        int[] slots={20,21,22,23,24};
-        for(int i=0;i<tasks.size()&&i<5;i++){
+        if(isDimensionEnabled("NETHER")) {
+            inv.setItem(13,make(Material.NETHERRACK,ChatColor.RED+"✦ ZADANIA NETHERU ✦",
+                    List.of(ChatColor.GRAY+"Trzy dodatkowe wyzwania z Netheru.")));
+        }
+        int[] slots={20,21,22,23,24,28,30,32};
+        for(int i=0;i<tasks.size()&&i<slots.length;i++){
             Task t=tasks.get(i);
             Material icon=taskIcon(t);
             String status=t.claimed?ChatColor.GREEN+"✔ ODEBRANO":t.progress>=t.amount?ChatColor.GOLD+"★ GOTOWE — ODBIERZ!":ChatColor.YELLOW+"◷ W TRAKCIE";
@@ -1347,8 +1371,15 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
             open(p);
             return;
         }
-        if(slot<20||slot>24)return;
-        List<Task> tasks=ensureTasks(p);int index=slot-20;if(index>=tasks.size())return;
+        List<Task> tasks=ensureTasks(p);
+        int index=switch(slot) {
+            case 20,21,22,23,24 -> slot-20;
+            case 28 -> 5;
+            case 30 -> 6;
+            case 32 -> 7;
+            default -> -1;
+        };
+        if(index<0 || index>=tasks.size()) return;
         Task t=tasks.get(index);
         if(rerollMode.remove(p.getUniqueId())) {
             if(t.claimed) {
@@ -1369,10 +1400,12 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
             }
             ConfigurationSection available=pool();
             List<Task> candidates=new ArrayList<>();
+            boolean replacingNether=t.dimension.equals("NETHER");
             if(available!=null) for(String id:available.getKeys(false)) {
                 if(assignedToday.contains(id)) continue;
                 Task candidate=loadTask(id);
-                if(candidate!=null && isTaskEnabled(candidate)) candidates.add(candidate);
+                if(candidate!=null && isTaskEnabled(candidate)
+                        && candidate.dimension.equals("NETHER")==replacingNether) candidates.add(candidate);
             }
             if(candidates.isEmpty()) {
                 p.sendMessage(ChatColor.RED+"Brak innych dostępnych zadań do wylosowania.");
@@ -1399,8 +1432,8 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
         Material reward=material(t.rewardItem);
         if(reward!=null){ItemStack item=new ItemStack(reward,t.itemAmount);Map<Integer,ItemStack> overflow=p.getInventory().addItem(item);overflow.values().forEach(it->p.getWorld().dropItemNaturally(p.getLocation(),it));}
         p.sendMessage(ChatColor.GREEN+"Odebrano nagrode za: "+ChatColor.RESET+t.name);
-        boolean all=tasks.size()==5&&tasks.stream().allMatch(x->x.claimed);
-        if(all){p.giveExp(250);updateStreak(p);crateSystem.awardStars(p,5);p.sendMessage(ChatColor.GOLD+"Ukonczyles wszystkie 5 zadan! Bonus: 250 XP i +5 gwiazdek do skrzynki.");}
+        boolean all=tasks.size()==requiredTaskCount()&&tasks.stream().allMatch(x->x.claimed);
+        if(all){p.giveExp(250);updateStreak(p);crateSystem.awardStars(p,5);p.sendMessage(ChatColor.GOLD+"Ukończyłeś wszystkie "+tasks.size()+" zadań! Bonus: 250 XP i +5 gwiazdek do skrzynki.");}
         open(p);
     }
     @EventHandler public void onDrag(InventoryDragEvent e){if(TITLE.equals(e.getView().getTitle()))e.setCancelled(true);}
