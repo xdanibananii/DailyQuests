@@ -1,13 +1,13 @@
 name: DailyQuests
-version: 1.0.19
+version: 1.1.9
 main: pl.dailyquests.DailyQuestsPlugin
 api-version: '26.3'
 author: danibanannii
-description: Indywidualne zadania i kontrakty z Michaiłem Łomonosowem.
+description: Zadania, kontrakty, skrzynki i wyprawy po skarby.
 commands:
   zadania:
     description: Otwiera zadania, ranking i wyzwanie tygodnia.
-    usage: /dailyquest | /dq | /zadania | /dq weekly | /dq top | /dq gwiazdki | /dq npc <quest|skarbiec> [postaw|usun|tp]
+    usage: /dailyquest | /dq | /zadania | /dq weekly | /dq top | /dq gwiazdki | /dq npc <quest|skarbiec|kartograf|filip|snaf> [postaw|usun|tp|rename]
     aliases: [dailyquests, dailyquest, dq]
 permissions:
   dailyquests.admin:

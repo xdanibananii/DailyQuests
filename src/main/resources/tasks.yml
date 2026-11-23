@@ -3,6 +3,8 @@
 # reward-xp: punkty doświadczenia Minecrafta
 # reward-item: opcjonalny przedmiot, np. EMERALD
 # reward-item-amount: liczba przedmiotów
+# Balans Midgame: EASY 180-250 XP, MEDIUM 280-450 XP, HARD 480-760 XP.
+# Nagrody rzeczowe pozostają mieszane z XP; ograniczono tylko najbardziej progresję-przyspieszające dropy.
 tasks:
   break_stone:
     name: "&bRocky Balboa"
@@ -11,7 +13,7 @@ tasks:
     type: BREAK
     target: STONE
     amount: 64
-    reward-xp: 120
+    reward-xp: 200
     reward-item: IRON_INGOT
     reward-item-amount: 4
   break_oak:
@@ -21,7 +23,7 @@ tasks:
     type: BREAK
     target: OAK_LOG
     amount: 32
-    reward-xp: 100
+    reward-xp: 180
     reward-item: BREAD
     reward-item-amount: 8
   break_coal:
@@ -31,7 +33,7 @@ tasks:
     type: BREAK
     target: COAL_ORE
     amount: 24
-    reward-xp: 100
+    reward-xp: 180
     reward-item: TORCH
     reward-item-amount: 16
   break_iron:
@@ -41,7 +43,7 @@ tasks:
     type: BREAK
     target: IRON_ORE
     amount: 12
-    reward-xp: 150
+    reward-xp: 220
     reward-item: IRON_INGOT
     reward-item-amount: 4
   kill_zombie:
@@ -51,7 +53,7 @@ tasks:
     type: KILL
     target: ZOMBIE
     amount: 10
-    reward-xp: 150
+    reward-xp: 220
     reward-item: IRON_INGOT
     reward-item-amount: 3
   kill_skeleton:
@@ -61,7 +63,7 @@ tasks:
     type: KILL
     target: SKELETON
     amount: 8
-    reward-xp: 150
+    reward-xp: 220
     reward-item: ARROW
     reward-item-amount: 16
   kill_spider:
@@ -71,7 +73,7 @@ tasks:
     type: KILL
     target: SPIDER
     amount: 8
-    reward-xp: 150
+    reward-xp: 220
     reward-item: GOLD_INGOT
     reward-item-amount: 2
   kill_creeper:
@@ -81,7 +83,7 @@ tasks:
     type: KILL
     target: CREEPER
     amount: 5
-    reward-xp: 180
+    reward-xp: 290
     reward-item: TNT
     reward-item-amount: 2
   craft_torch:
@@ -91,7 +93,7 @@ tasks:
     type: CRAFT
     target: TORCH
     amount: 32
-    reward-xp: 100
+    reward-xp: 180
     reward-item: TORCH
     reward-item-amount: 16
   craft_bread:
@@ -101,7 +103,7 @@ tasks:
     type: CRAFT
     target: BREAD
     amount: 12
-    reward-xp: 120
+    reward-xp: 200
     reward-item: GOLD_INGOT
     reward-item-amount: 2
   craft_chest:
@@ -111,7 +113,7 @@ tasks:
     type: CRAFT
     target: CHEST
     amount: 8
-    reward-xp: 100
+    reward-xp: 180
     reward-item: IRON_INGOT
     reward-item-amount: 2
   fish_any:
@@ -121,7 +123,7 @@ tasks:
     type: FISH
     target: ANY
     amount: 5
-    reward-xp: 160
+    reward-xp: 280
     reward-item: COOKED_COD
     reward-item-amount: 4
   walk_1000:
@@ -131,7 +133,7 @@ tasks:
     type: WALK
     target: ANY
     amount: 1000
-    reward-xp: 180
+    reward-xp: 290
     reward-item: BAKED_POTATO
     reward-item-amount: 8
   walk_500:
@@ -141,7 +143,7 @@ tasks:
     type: WALK
     target: ANY
     amount: 500
-    reward-xp: 100
+    reward-xp: 180
     reward-item: BREAD
     reward-item-amount: 4
 
@@ -153,7 +155,7 @@ tasks:
     type: BREAK
     target: DIAMOND_ORE
     amount: 5
-    reward-xp: 350
+    reward-xp: 410
     reward-item: DIAMOND
     reward-item-amount: 2
   break_obsidian:
@@ -163,7 +165,7 @@ tasks:
     type: BREAK
     target: OBSIDIAN
     amount: 16
-    reward-xp: 400
+    reward-xp: 450
     reward-item: GOLDEN_APPLE
     reward-item-amount: 1
   kill_enderman_overworld:
@@ -173,7 +175,7 @@ tasks:
     type: KILL
     target: ENDERMAN
     amount: 5
-    reward-xp: 300
+    reward-xp: 380
     reward-item: ENDER_PEARL
     reward-item-amount: 4
   kill_phantom:
@@ -183,7 +185,7 @@ tasks:
     type: KILL
     target: PHANTOM
     amount: 4
-    reward-xp: 280
+    reward-xp: 370
     reward-item: PHANTOM_MEMBRANE
     reward-item-amount: 2
   craft_golden_apple:
@@ -193,7 +195,7 @@ tasks:
     type: CRAFT
     target: GOLDEN_APPLE
     amount: 2
-    reward-xp: 350
+    reward-xp: 410
     reward-item: GOLDEN_CARROT
     reward-item-amount: 8
   walk_3000:
@@ -203,7 +205,7 @@ tasks:
     type: WALK
     target: ANY
     amount: 3000
-    reward-xp: 350
+    reward-xp: 410
     reward-item: SADDLE
     reward-item-amount: 1
   fish_treasure:
@@ -213,9 +215,155 @@ tasks:
     type: FISH
     target: ANY
     amount: 12
-    reward-xp: 320
+    reward-xp: 390
     reward-item: NAME_TAG
     reward-item-amount: 2
+
+
+  # Midgame — zadania Overworld bez wymagań Netheru i Endu
+  mid_deepslate_diamond:
+    name: "&bGłębinowa gorączka"
+    description: "&7Wydobądź 4 rudy diamentu w łupku"
+    difficulty: HARD
+    type: BREAK
+    dimension: OVERWORLD
+    target: DEEPSLATE_DIAMOND_ORE
+    amount: 4
+    reward-xp: 540
+    reward-item: DIAMOND
+    reward-item-amount: 2
+  mid_deepslate_gold:
+    name: "&6Złoto spod skał"
+    description: "&7Wydobądź 12 rud złota w łupku"
+    difficulty: MEDIUM
+    type: BREAK
+    dimension: OVERWORLD
+    target: DEEPSLATE_GOLD_ORE
+    amount: 12
+    reward-xp: 390
+    reward-item: GOLD_INGOT
+    reward-item-amount: 8
+  mid_sculk_sensors:
+    name: "&5Cichy sygnał"
+    description: "&7Zbierz 6 czujników sculku"
+    difficulty: HARD
+    type: BREAK
+    dimension: OVERWORLD
+    target: SCULK_SENSOR
+    amount: 6
+    reward-xp: 550
+    reward-item: AMETHYST_SHARD
+    reward-item-amount: 16
+  mid_elder_guardian:
+    name: "&3Oko głębin"
+    description: "&7Pokonaj pradawnego strażnika"
+    difficulty: HARD
+    type: KILL
+    dimension: OVERWORLD
+    target: ELDER_GUARDIAN
+    amount: 1
+    reward-xp: 620
+    reward-item: SPONGE
+    reward-item-amount: 4
+  mid_enchanting_table:
+    name: "&5Wiedza ma swoją cenę"
+    description: "&7Wytwórz stół do zaklinania"
+    difficulty: MEDIUM
+    type: CRAFT
+    dimension: OVERWORLD
+    target: ENCHANTING_TABLE
+    amount: 1
+    reward-xp: 390
+    reward-item: LAPIS_LAZULI
+    reward-item-amount: 16
+  mid_diamond_pickaxe:
+    name: "&bNarzędzie mistrza"
+    description: "&7Wytwórz diamentowy kilof"
+    difficulty: MEDIUM
+    type: CRAFT
+    dimension: OVERWORLD
+    target: DIAMOND_PICKAXE
+    amount: 1
+    reward-xp: 450
+    reward-item: DIAMOND
+    reward-item-amount: 1
+  mid_diamond_chestplate:
+    name: "&bPancerz bohatera"
+    description: "&7Wytwórz diamentowy napierśnik"
+    difficulty: HARD
+    type: CRAFT
+    dimension: OVERWORLD
+    target: DIAMOND_CHESTPLATE
+    amount: 1
+    reward-xp: 580
+    reward-item: GOLDEN_APPLE
+    reward-item-amount: 1
+  mid_conduit:
+    name: "&3Serce oceanu"
+    description: "&7Wytwórz kanał"
+    difficulty: HARD
+    type: CRAFT
+    dimension: OVERWORLD
+    target: CONDUIT
+    amount: 1
+    reward-xp: 600
+    reward-item: NAUTILUS_SHELL
+    reward-item-amount: 4
+  mid_hopper:
+    name: "&6Automatyzacja królestwa"
+    description: "&7Wytwórz 16 lejów"
+    difficulty: MEDIUM
+    type: CRAFT
+    dimension: OVERWORLD
+    target: HOPPER
+    amount: 16
+    reward-xp: 410
+    reward-item: REDSTONE
+    reward-item-amount: 16
+  mid_comparator:
+    name: "&cSygnał pod kontrolą"
+    description: "&7Wytwórz 4 komparatory"
+    difficulty: MEDIUM
+    type: CRAFT
+    dimension: OVERWORLD
+    target: REDSTONE_COMPARATOR
+    amount: 4
+    reward-xp: 420
+    reward-item: REDSTONE
+    reward-item-amount: 12
+  mid_sticky_piston:
+    name: "&aLepka sprawa"
+    description: "&7Wytwórz 8 lepkich tłoków"
+    difficulty: HARD
+    type: CRAFT
+    dimension: OVERWORLD
+    target: STICKY_PISTON
+    amount: 8
+    reward-xp: 540
+    reward-item: SLIME_BALL
+    reward-item-amount: 8
+  mid_turtle_helmet:
+    name: "&3Żółwi rycerz"
+    description: "&7Wytwórz hełm żółwia"
+    difficulty: HARD
+    type: CRAFT
+    dimension: OVERWORLD
+    target: TURTLE_HELMET
+    amount: 1
+    reward-xp: 540
+    reward-item: SCUTE
+    reward-item-amount: 2
+  mid_fish_enchanted_book:
+    name: "&dWiedza z dna"
+    description: "&7Wyłów 2 zaklęte księgi"
+    difficulty: HARD
+    type: FISH
+    dimension: OVERWORLD
+    target: ENCHANTED_BOOK
+    amount: 2
+    reward-xp: 550
+    reward-item: EMERALD
+    reward-item-amount: 4
 
   # Nether — dostępne po /dq nether
   nether_quartz:
@@ -226,7 +374,7 @@ tasks:
     dimension: NETHER
     target: NETHER_QUARTZ_ORE
     amount: 48
-    reward-xp: 300
+    reward-xp: 380
     reward-item: QUARTZ
     reward-item-amount: 24
   nether_gold:
@@ -237,7 +385,7 @@ tasks:
     dimension: NETHER
     target: NETHER_GOLD_ORE
     amount: 24
-    reward-xp: 320
+    reward-xp: 390
     reward-item: GOLD_INGOT
     reward-item-amount: 8
   nether_magma:
@@ -248,7 +396,7 @@ tasks:
     dimension: NETHER
     target: MAGMA_BLOCK
     amount: 32
-    reward-xp: 250
+    reward-xp: 340
     reward-item: MAGMA_CREAM
     reward-item-amount: 8
   nether_blaze:
@@ -259,7 +407,7 @@ tasks:
     dimension: NETHER
     target: BLAZE
     amount: 8
-    reward-xp: 450
+    reward-xp: 550
     reward-item: BLAZE_ROD
     reward-item-amount: 6
   nether_wither_skeleton:
@@ -270,7 +418,7 @@ tasks:
     dimension: NETHER
     target: WITHER_SKELETON
     amount: 10
-    reward-xp: 500
+    reward-xp: 570
     reward-item: COAL
     reward-item-amount: 24
   nether_piglin:
@@ -281,7 +429,7 @@ tasks:
     dimension: NETHER
     target: PIGLIN
     amount: 12
-    reward-xp: 350
+    reward-xp: 410
     reward-item: GOLD_INGOT
     reward-item-amount: 10
   nether_walk:
@@ -292,7 +440,7 @@ tasks:
     dimension: NETHER
     target: ANY
     amount: 1500
-    reward-xp: 400
+    reward-xp: 450
     reward-item: POTION
     reward-item-amount: 2
   nether_ancient_debris:
@@ -303,9 +451,120 @@ tasks:
     dimension: NETHER
     target: ANCIENT_DEBRIS
     amount: 4
-    reward-xp: 650
+    reward-xp: 640
     reward-item: NETHERITE_SCRAP
-    reward-item-amount: 2
+    reward-item-amount: 1
+
+  nether_wart:
+    name: "&4Piekielne zbiory"
+    description: "&7Zbierz 48 brodawek Netheru"
+    difficulty: MEDIUM
+    type: BREAK
+    dimension: NETHER
+    target: NETHER_WART
+    amount: 48
+    reward-xp: 390
+    reward-item: NETHER_WART
+    reward-item-amount: 24
+  nether_gilded_blackstone:
+    name: "&6Złoto w czarnym kamieniu"
+    description: "&7Wydobądź 12 bloków pozłacanego czernitu"
+    difficulty: HARD
+    type: BREAK
+    dimension: NETHER
+    target: GILDED_BLACKSTONE
+    amount: 12
+    reward-xp: 540
+    reward-item: GOLD_INGOT
+    reward-item-amount: 8
+  nether_soul_soil:
+    name: "&8Ziemia niespokojnych"
+    description: "&7Zbierz 40 bloków gleby dusz"
+    difficulty: MEDIUM
+    type: BREAK
+    dimension: NETHER
+    target: SOUL_SOIL
+    amount: 40
+    reward-xp: 370
+    reward-item: SOUL_SAND
+    reward-item-amount: 24
+  nether_nether_bricks:
+    name: "&8Forteca z piekła rodem"
+    description: "&7Wydobądź 64 bloki netherowych cegieł"
+    difficulty: MEDIUM
+    type: BREAK
+    dimension: NETHER
+    target: NETHER_BRICKS
+    amount: 64
+    reward-xp: 410
+    reward-item: NETHER_BRICK
+    reward-item-amount: 32
+  nether_warped_wart:
+    name: "&3Spaczony ogród"
+    description: "&7Zbierz 32 bloki spaczonych brodawek"
+    difficulty: MEDIUM
+    type: BREAK
+    dimension: NETHER
+    target: WARPED_WART_BLOCK
+    amount: 32
+    reward-xp: 390
+    reward-item: WARPED_FUNGUS
+    reward-item-amount: 12
+  nether_crimson_stem:
+    name: "&cKarmazynowy las"
+    description: "&7Zbierz 32 karmazynowe łodygi"
+    difficulty: MEDIUM
+    type: BREAK
+    dimension: NETHER
+    target: CRIMSON_STEM
+    amount: 32
+    reward-xp: 410
+    reward-item: CRIMSON_FUNGUS
+    reward-item-amount: 8
+  nether_warped_stem:
+    name: "&3Las na opak"
+    description: "&7Zbierz 32 spaczonych łodyg"
+    difficulty: MEDIUM
+    type: BREAK
+    dimension: NETHER
+    target: WARPED_STEM
+    amount: 32
+    reward-xp: 410
+    reward-item: WARPED_FUNGUS
+    reward-item-amount: 8
+  nether_magma_cube:
+    name: "&cGalaretowaty koszmar"
+    description: "&7Pokonaj 10 kostek magmy"
+    difficulty: HARD
+    type: KILL
+    dimension: NETHER
+    target: MAGMA_CUBE
+    amount: 10
+    reward-xp: 550
+    reward-item: MAGMA_CREAM
+    reward-item-amount: 16
+  nether_shroomlight:
+    name: "&eŚwiatło w ciemności"
+    description: "&7Zbierz 24 bloki grzybni świetlnej"
+    difficulty: MEDIUM
+    type: BREAK
+    dimension: NETHER
+    target: SHROOMLIGHT
+    amount: 24
+    reward-xp: 380
+    reward-item: GLOWSTONE_DUST
+    reward-item-amount: 16
+  nether_crying_obsidian:
+    name: "&5Łzy otchłani"
+    description: "&7Wydobądź 16 bloków płaczącego obsydianu"
+    difficulty: HARD
+    type: BREAK
+    dimension: NETHER
+    target: CRYING_OBSIDIAN
+    amount: 16
+    reward-xp: 550
+    reward-item: OBSIDIAN
+    reward-item-amount: 24
 
   # End — dostępne po /dq end
   end_enderman:
@@ -316,7 +575,7 @@ tasks:
     dimension: THE_END
     target: ENDERMAN
     amount: 20
-    reward-xp: 500
+    reward-xp: 570
     reward-item: ENDER_PEARL
     reward-item-amount: 16
   end_chorus:
@@ -327,7 +586,7 @@ tasks:
     dimension: THE_END
     target: CHORUS_FLOWER
     amount: 32
-    reward-xp: 400
+    reward-xp: 450
     reward-item: CHORUS_FRUIT
     reward-item-amount: 16
   end_obsidian:
@@ -338,7 +597,7 @@ tasks:
     dimension: THE_END
     target: OBSIDIAN
     amount: 32
-    reward-xp: 450
+    reward-xp: 550
     reward-item: ENDER_PEARL
     reward-item-amount: 12
   end_shulker:
@@ -349,7 +608,7 @@ tasks:
     dimension: THE_END
     target: SHULKER
     amount: 8
-    reward-xp: 600
+    reward-xp: 620
     reward-item: SHULKER_SHELL
     reward-item-amount: 2
   end_walk:
@@ -360,7 +619,7 @@ tasks:
     dimension: THE_END
     target: ANY
     amount: 2500
-    reward-xp: 550
+    reward-xp: 600
     reward-item: ENDER_PEARL
     reward-item-amount: 16
   end_dragon_breath:
@@ -371,10 +630,11 @@ tasks:
     dimension: THE_END
     target: ENDER_DRAGON
     amount: 1
-    reward-xp: 900
+    reward-xp: 760
     reward-item: DRAGON_BREATH
     reward-item-amount: 2
   end_crystal:
+    requires-nether: true
     name: "&dSmocza technologia"
     description: "&7Wytwórz 4 kryształy Endu"
     difficulty: HARD
@@ -382,9 +642,10 @@ tasks:
     dimension: THE_END
     target: END_CRYSTAL
     amount: 4
-    reward-xp: 650
+    reward-xp: 640
     reward-item: END_CRYSTAL
-    reward-item-amount: 2
+    reward-item-amount: 1
+
   end_purpur:
     name: "&5Purpurowa architektura"
     description: "&7Wydobądź 64 bloki purpuru"
@@ -393,7 +654,7 @@ tasks:
     dimension: THE_END
     target: PURPUR_BLOCK
     amount: 64
-    reward-xp: 500
+    reward-xp: 570
     reward-item: SHULKER_SHELL
     reward-item-amount: 1
 
@@ -405,7 +666,7 @@ tasks:
     difficulty: MEDIUM
     target: ANY
     amount: 300
-    reward-xp: 220
+    reward-xp: 320
     reward-item: COD
     reward-item-amount: 8
   eat_food:
@@ -415,7 +676,7 @@ tasks:
     difficulty: EASY
     target: ANY
     amount: 16
-    reward-xp: 130
+    reward-xp: 210
     reward-item: COOKED_BEEF
     reward-item-amount: 6
   enchant_items:
@@ -425,7 +686,7 @@ tasks:
     difficulty: HARD
     target: ANY
     amount: 5
-    reward-xp: 400
+    reward-xp: 530
     reward-item: LAPIS_LAZULI
     reward-item-amount: 24
   breed_animals:
@@ -435,7 +696,7 @@ tasks:
     difficulty: MEDIUM
     target: ANY
     amount: 5
-    reward-xp: 250
+    reward-xp: 340
     reward-item: WHEAT
     reward-item-amount: 32
   villager_trades:
@@ -445,7 +706,7 @@ tasks:
     difficulty: MEDIUM
     target: ANY
     amount: 10
-    reward-xp: 300
+    reward-xp: 380
     reward-item: EMERALD
     reward-item-amount: 5
   anvil_repairs:
@@ -455,7 +716,7 @@ tasks:
     difficulty: HARD
     target: ANY
     amount: 5
-    reward-xp: 350
+    reward-xp: 500
     reward-item: IRON_INGOT
     reward-item-amount: 12
   # Dodatkowa pula sezonowa 1.0.1
@@ -466,7 +727,7 @@ tasks:
     type: BREAK
     target: GRANITE
     amount: 48
-    reward-xp: 150
+    reward-xp: 220
     reward-item: STONE_BRICKS
     reward-item-amount: 16
   break_diorite:
@@ -476,7 +737,7 @@ tasks:
     type: BREAK
     target: DIORITE
     amount: 32
-    reward-xp: 130
+    reward-xp: 210
     reward-item: QUARTZ
     reward-item-amount: 8
   break_andesite:
@@ -486,7 +747,7 @@ tasks:
     type: BREAK
     target: ANDESITE
     amount: 32
-    reward-xp: 130
+    reward-xp: 210
     reward-item: IRON_INGOT
     reward-item-amount: 6
   break_deepslate:
@@ -496,7 +757,7 @@ tasks:
     type: BREAK
     target: DEEPSLATE
     amount: 64
-    reward-xp: 220
+    reward-xp: 320
     reward-item: TORCH
     reward-item-amount: 24
   break_copper:
@@ -506,7 +767,7 @@ tasks:
     type: BREAK
     target: COPPER_ORE
     amount: 20
-    reward-xp: 160
+    reward-xp: 230
     reward-item: COPPER_INGOT
     reward-item-amount: 12
   break_gold:
@@ -516,7 +777,7 @@ tasks:
     type: BREAK
     target: GOLD_ORE
     amount: 10
-    reward-xp: 240
+    reward-xp: 340
     reward-item: GOLD_INGOT
     reward-item-amount: 6
   break_redstone:
@@ -526,7 +787,7 @@ tasks:
     type: BREAK
     target: REDSTONE_ORE
     amount: 24
-    reward-xp: 240
+    reward-xp: 340
     reward-item: REDSTONE
     reward-item-amount: 32
   break_lapis:
@@ -536,7 +797,7 @@ tasks:
     type: BREAK
     target: LAPIS_ORE
     amount: 12
-    reward-xp: 230
+    reward-xp: 330
     reward-item: LAPIS_LAZULI
     reward-item-amount: 24
   break_gravel:
@@ -546,7 +807,7 @@ tasks:
     type: BREAK
     target: GRAVEL
     amount: 48
-    reward-xp: 120
+    reward-xp: 200
     reward-item: FLINT
     reward-item-amount: 16
   break_sand:
@@ -556,7 +817,7 @@ tasks:
     type: BREAK
     target: SAND
     amount: 64
-    reward-xp: 120
+    reward-xp: 200
     reward-item: GLASS
     reward-item-amount: 16
   break_clay:
@@ -566,7 +827,7 @@ tasks:
     type: BREAK
     target: CLAY
     amount: 32
-    reward-xp: 150
+    reward-xp: 220
     reward-item: BRICK
     reward-item-amount: 16
   break_snow:
@@ -576,7 +837,7 @@ tasks:
     type: BREAK
     target: SNOW_BLOCK
     amount: 48
-    reward-xp: 140
+    reward-xp: 220
     reward-item: SNOWBALL
     reward-item-amount: 32
   break_ice:
@@ -586,7 +847,7 @@ tasks:
     type: BREAK
     target: ICE
     amount: 24
-    reward-xp: 190
+    reward-xp: 300
     reward-item: PACKED_ICE
     reward-item-amount: 4
   break_cobweb:
@@ -596,7 +857,7 @@ tasks:
     type: BREAK
     target: COBWEB
     amount: 8
-    reward-xp: 220
+    reward-xp: 320
     reward-item: STRING
     reward-item-amount: 16
   break_moss:
@@ -606,7 +867,7 @@ tasks:
     type: BREAK
     target: MOSS_BLOCK
     amount: 32
-    reward-xp: 150
+    reward-xp: 220
     reward-item: BONE_MEAL
     reward-item-amount: 24
   break_bamboo:
@@ -616,7 +877,7 @@ tasks:
     type: BREAK
     target: BAMBOO
     amount: 64
-    reward-xp: 150
+    reward-xp: 220
     reward-item: SCAFFOLDING
     reward-item-amount: 16
   break_cactus:
@@ -626,7 +887,7 @@ tasks:
     type: BREAK
     target: CACTUS
     amount: 24
-    reward-xp: 150
+    reward-xp: 220
     reward-item: GREEN_DYE
     reward-item-amount: 16
   break_sugar_cane:
@@ -636,7 +897,7 @@ tasks:
     type: BREAK
     target: SUGAR_CANE
     amount: 48
-    reward-xp: 150
+    reward-xp: 220
     reward-item: SUGAR
     reward-item-amount: 24
   break_nether_wart:
@@ -647,7 +908,7 @@ tasks:
     type: BREAK
     target: NETHER_WART
     amount: 32
-    reward-xp: 230
+    reward-xp: 330
     reward-item: SOUL_SAND
     reward-item-amount: 16
   break_pumpkin:
@@ -657,7 +918,7 @@ tasks:
     type: BREAK
     target: PUMPKIN
     amount: 16
-    reward-xp: 140
+    reward-xp: 220
     reward-item: PUMPKIN_PIE
     reward-item-amount: 4
   break_melon:
@@ -667,7 +928,7 @@ tasks:
     type: BREAK
     target: MELON
     amount: 48
-    reward-xp: 140
+    reward-xp: 220
     reward-item: MELON_SLICE
     reward-item-amount: 16
   break_hay:
@@ -677,7 +938,7 @@ tasks:
     type: BREAK
     target: HAY_BLOCK
     amount: 12
-    reward-xp: 150
+    reward-xp: 220
     reward-item: WHEAT
     reward-item-amount: 24
   break_sea_lantern:
@@ -687,7 +948,7 @@ tasks:
     type: BREAK
     target: SEA_LANTERN
     amount: 8
-    reward-xp: 420
+    reward-xp: 540
     reward-item: PRISMARINE_SHARD
     reward-item-amount: 16
   break_prismarine:
@@ -697,7 +958,7 @@ tasks:
     type: BREAK
     target: PRISMARINE
     amount: 32
-    reward-xp: 280
+    reward-xp: 370
     reward-item: PRISMARINE_SHARD
     reward-item-amount: 16
   break_amethyst:
@@ -707,7 +968,7 @@ tasks:
     type: BREAK
     target: AMETHYST_BLOCK
     amount: 16
-    reward-xp: 300
+    reward-xp: 380
     reward-item: AMETHYST_SHARD
     reward-item-amount: 24
   break_sculk:
@@ -717,7 +978,7 @@ tasks:
     type: BREAK
     target: SCULK
     amount: 16
-    reward-xp: 450
+    reward-xp: 550
     reward-item: ECHO_SHARD
     reward-item-amount: 2
   break_mud:
@@ -727,7 +988,7 @@ tasks:
     type: BREAK
     target: MUD
     amount: 32
-    reward-xp: 130
+    reward-xp: 210
     reward-item: CLAY_BALL
     reward-item-amount: 16
   break_terracotta:
@@ -737,7 +998,7 @@ tasks:
     type: BREAK
     target: TERRACOTTA
     amount: 32
-    reward-xp: 210
+    reward-xp: 320
     reward-item: BRICK
     reward-item-amount: 16
   break_white_wool:
@@ -747,7 +1008,7 @@ tasks:
     type: BREAK
     target: WHITE_WOOL
     amount: 32
-    reward-xp: 140
+    reward-xp: 220
     reward-item: STRING
     reward-item-amount: 16
   break_glass:
@@ -757,7 +1018,7 @@ tasks:
     type: BREAK
     target: GLASS
     amount: 32
-    reward-xp: 140
+    reward-xp: 220
     reward-item: GLASS_PANE
     reward-item-amount: 32
   kill_drowned:
@@ -767,7 +1028,7 @@ tasks:
     type: KILL
     target: DROWNED
     amount: 8
-    reward-xp: 240
+    reward-xp: 340
     reward-item: COPPER_INGOT
     reward-item-amount: 8
   kill_husk:
@@ -777,7 +1038,7 @@ tasks:
     type: KILL
     target: HUSK
     amount: 8
-    reward-xp: 240
+    reward-xp: 340
     reward-item: SAND
     reward-item-amount: 24
   kill_stray:
@@ -787,7 +1048,7 @@ tasks:
     type: KILL
     target: STRAY
     amount: 8
-    reward-xp: 260
+    reward-xp: 350
     reward-item: ARROW
     reward-item-amount: 24
   kill_slime:
@@ -797,7 +1058,7 @@ tasks:
     type: KILL
     target: SLIME
     amount: 10
-    reward-xp: 260
+    reward-xp: 350
     reward-item: SLIME_BALL
     reward-item-amount: 16
   kill_witch:
@@ -807,7 +1068,7 @@ tasks:
     type: KILL
     target: WITCH
     amount: 4
-    reward-xp: 360
+    reward-xp: 510
     reward-item: REDSTONE
     reward-item-amount: 24
   kill_pillager:
@@ -817,7 +1078,7 @@ tasks:
     type: KILL
     target: PILLAGER
     amount: 10
-    reward-xp: 280
+    reward-xp: 370
     reward-item: CROSSBOW
     reward-item-amount: 1
   kill_vindicator:
@@ -827,7 +1088,7 @@ tasks:
     type: KILL
     target: VINDICATOR
     amount: 5
-    reward-xp: 380
+    reward-xp: 520
     reward-item: IRON_AXE
     reward-item-amount: 1
   kill_guardian:
@@ -837,7 +1098,7 @@ tasks:
     type: KILL
     target: GUARDIAN
     amount: 6
-    reward-xp: 420
+    reward-xp: 540
     reward-item: PRISMARINE_SHARD
     reward-item-amount: 20
   kill_polar_bear:
@@ -847,7 +1108,7 @@ tasks:
     type: KILL
     target: POLAR_BEAR
     amount: 3
-    reward-xp: 360
+    reward-xp: 510
     reward-item: COD
     reward-item-amount: 12
   kill_phantom_night:
@@ -857,7 +1118,7 @@ tasks:
     type: KILL
     target: PHANTOM
     amount: 8
-    reward-xp: 420
+    reward-xp: 540
     reward-item: PHANTOM_MEMBRANE
     reward-item-amount: 4
   kill_cave_spider:
@@ -867,7 +1128,7 @@ tasks:
     type: KILL
     target: CAVE_SPIDER
     amount: 8
-    reward-xp: 280
+    reward-xp: 370
     reward-item: SPIDER_EYE
     reward-item-amount: 8
   kill_magma_cube:
@@ -878,7 +1139,7 @@ tasks:
     type: KILL
     target: MAGMA_CUBE
     amount: 8
-    reward-xp: 380
+    reward-xp: 520
     reward-item: MAGMA_CREAM
     reward-item-amount: 8
   kill_pig:
@@ -888,7 +1149,7 @@ tasks:
     type: KILL
     target: PIG
     amount: 8
-    reward-xp: 120
+    reward-xp: 200
     reward-item: PORKCHOP
     reward-item-amount: 12
   kill_cow:
@@ -898,7 +1159,7 @@ tasks:
     type: KILL
     target: COW
     amount: 8
-    reward-xp: 140
+    reward-xp: 220
     reward-item: BEEF
     reward-item-amount: 12
   kill_sheep:
@@ -908,7 +1169,7 @@ tasks:
     type: KILL
     target: SHEEP
     amount: 8
-    reward-xp: 130
+    reward-xp: 210
     reward-item: MUTTON
     reward-item-amount: 12
   kill_chicken:
@@ -918,7 +1179,7 @@ tasks:
     type: KILL
     target: CHICKEN
     amount: 10
-    reward-xp: 130
+    reward-xp: 210
     reward-item: CHICKEN
     reward-item-amount: 16
   kill_ravager:
@@ -928,7 +1189,7 @@ tasks:
     type: KILL
     target: RAVAGER
     amount: 1
-    reward-xp: 650
+    reward-xp: 640
     reward-item: EMERALD
     reward-item-amount: 12
   kill_evoker:
@@ -938,7 +1199,7 @@ tasks:
     type: KILL
     target: EVOKER
     amount: 1
-    reward-xp: 650
+    reward-xp: 640
     reward-item: EMERALD
     reward-item-amount: 16
   craft_furnace:
@@ -948,7 +1209,7 @@ tasks:
     type: CRAFT
     target: FURNACE
     amount: 4
-    reward-xp: 130
+    reward-xp: 210
     reward-item: COAL
     reward-item-amount: 16
   craft_lantern:
@@ -958,7 +1219,7 @@ tasks:
     type: CRAFT
     target: LANTERN
     amount: 12
-    reward-xp: 220
+    reward-xp: 320
     reward-item: IRON_NUGGET
     reward-item-amount: 32
   craft_bookshelf:
@@ -968,7 +1229,7 @@ tasks:
     type: CRAFT
     target: BOOKSHELF
     amount: 8
-    reward-xp: 260
+    reward-xp: 350
     reward-item: BOOK
     reward-item-amount: 12
   craft_bow:
@@ -978,7 +1239,7 @@ tasks:
     type: CRAFT
     target: BOW
     amount: 2
-    reward-xp: 150
+    reward-xp: 220
     reward-item: ARROW
     reward-item-amount: 32
   craft_shield:
@@ -988,7 +1249,7 @@ tasks:
     type: CRAFT
     target: SHIELD
     amount: 2
-    reward-xp: 200
+    reward-xp: 310
     reward-item: IRON_INGOT
     reward-item-amount: 8
   craft_bucket:
@@ -998,7 +1259,7 @@ tasks:
     type: CRAFT
     target: BUCKET
     amount: 4
-    reward-xp: 220
+    reward-xp: 320
     reward-item: IRON_INGOT
     reward-item-amount: 8
   craft_piston:
@@ -1008,17 +1269,18 @@ tasks:
     type: CRAFT
     target: PISTON
     amount: 8
-    reward-xp: 260
+    reward-xp: 350
     reward-item: REDSTONE
     reward-item-amount: 16
   craft_observer:
+    requires-nether: true
     name: "&cOko mechanizmu"
     description: "&7Wytwórz 4 obserwatory"
     difficulty: HARD
     type: CRAFT
     target: OBSERVER
     amount: 4
-    reward-xp: 350
+    reward-xp: 500
     reward-item: REDSTONE
     reward-item-amount: 24
   craft_rail:
@@ -1028,7 +1290,7 @@ tasks:
     type: CRAFT
     target: RAIL
     amount: 64
-    reward-xp: 240
+    reward-xp: 340
     reward-item: IRON_INGOT
     reward-item-amount: 12
   craft_compass:
@@ -1038,7 +1300,7 @@ tasks:
     type: CRAFT
     target: COMPASS
     amount: 2
-    reward-xp: 220
+    reward-xp: 320
     reward-item: IRON_INGOT
     reward-item-amount: 8
   craft_clock:
@@ -1048,7 +1310,7 @@ tasks:
     type: CRAFT
     target: CLOCK
     amount: 2
-    reward-xp: 230
+    reward-xp: 330
     reward-item: GOLD_INGOT
     reward-item-amount: 6
   craft_cake:
@@ -1058,7 +1320,7 @@ tasks:
     type: CRAFT
     target: CAKE
     amount: 2
-    reward-xp: 240
+    reward-xp: 340
     reward-item: SUGAR
     reward-item-amount: 16
   craft_cooked_beef:
@@ -1068,7 +1330,7 @@ tasks:
     type: CRAFT
     target: COOKED_BEEF
     amount: 32
-    reward-xp: 150
+    reward-xp: 220
     reward-item: BAKED_POTATO
     reward-item-amount: 16
   craft_arrow:
@@ -1078,7 +1340,7 @@ tasks:
     type: CRAFT
     target: ARROW
     amount: 64
-    reward-xp: 160
+    reward-xp: 230
     reward-item: FEATHER
     reward-item-amount: 16
   craft_firework:
@@ -1088,17 +1350,18 @@ tasks:
     type: CRAFT
     target: FIREWORK_ROCKET
     amount: 32
-    reward-xp: 260
+    reward-xp: 350
     reward-item: GUNPOWDER
     reward-item-amount: 16
   craft_ender_chest:
+    requires-nether: true
     name: "&cSkarbiec podróżnika"
     description: "&7Wytwórz 1 skrzynię Endu"
     difficulty: HARD
     type: CRAFT
     target: ENDER_CHEST
     amount: 1
-    reward-xp: 420
+    reward-xp: 540
     reward-item: ENDER_PEARL
     reward-item-amount: 4
   craft_anvil:
@@ -1108,17 +1371,18 @@ tasks:
     type: CRAFT
     target: ANVIL
     amount: 1
-    reward-xp: 420
+    reward-xp: 540
     reward-item: IRON_INGOT
     reward-item-amount: 12
   craft_brewing_stand:
+    requires-nether: true
     name: "&eLaboratorium alchemika"
     description: "&7Wytwórz 2 statywy alchemiczne"
     difficulty: MEDIUM
     type: CRAFT
     target: BREWING_STAND
     amount: 2
-    reward-xp: 260
+    reward-xp: 350
     reward-item: BLAZE_POWDER
     reward-item-amount: 4
   craft_lectern:
@@ -1128,7 +1392,7 @@ tasks:
     type: CRAFT
     target: LECTERN
     amount: 2
-    reward-xp: 240
+    reward-xp: 340
     reward-item: BOOK
     reward-item-amount: 8
   craft_item_frame:
@@ -1138,7 +1402,7 @@ tasks:
     type: CRAFT
     target: ITEM_FRAME
     amount: 12
-    reward-xp: 180
+    reward-xp: 250
     reward-item: LEATHER
     reward-item-amount: 8
   fish_cod:
@@ -1148,7 +1412,7 @@ tasks:
     type: FISH
     target: COD
     amount: 8
-    reward-xp: 220
+    reward-xp: 320
     reward-item: COOKED_COD
     reward-item-amount: 8
   fish_salmon:
@@ -1158,7 +1422,7 @@ tasks:
     type: FISH
     target: SALMON
     amount: 6
-    reward-xp: 220
+    reward-xp: 320
     reward-item: COOKED_SALMON
     reward-item-amount: 6
   fish_pufferfish:
@@ -1168,7 +1432,7 @@ tasks:
     type: FISH
     target: PUFFERFISH
     amount: 3
-    reward-xp: 300
+    reward-xp: 480
     reward-item: TROPICAL_FISH
     reward-item-amount: 4
   fish_tropical:
@@ -1178,7 +1442,7 @@ tasks:
     type: FISH
     target: TROPICAL_FISH
     amount: 4
-    reward-xp: 320
+    reward-xp: 490
     reward-item: PRISMARINE_SHARD
     reward-item-amount: 8
   walk_2000:
@@ -1188,7 +1452,7 @@ tasks:
     type: WALK
     target: ANY
     amount: 2000
-    reward-xp: 260
+    reward-xp: 350
     reward-item: LEATHER_BOOTS
     reward-item-amount: 1
   walk_5000:
@@ -1198,7 +1462,7 @@ tasks:
     type: WALK
     target: ANY
     amount: 5000
-    reward-xp: 480
+    reward-xp: 560
     reward-item: GOLDEN_CARROT
     reward-item-amount: 12
   swim_600:
@@ -1208,7 +1472,7 @@ tasks:
     type: SWIM
     target: ANY
     amount: 600
-    reward-xp: 300
+    reward-xp: 380
     reward-item: TRIDENT
     reward-item-amount: 1
   eat_golden_carrot:
@@ -1218,7 +1482,7 @@ tasks:
     type: EAT
     target: GOLDEN_CARROT
     amount: 12
-    reward-xp: 220
+    reward-xp: 320
     reward-item: GOLD_INGOT
     reward-item-amount: 4
   eat_baked_potato:
@@ -1228,7 +1492,7 @@ tasks:
     type: EAT
     target: BAKED_POTATO
     amount: 20
-    reward-xp: 160
+    reward-xp: 230
     reward-item: POTATO
     reward-item-amount: 32
   eat_golden_apple:
@@ -1238,7 +1502,7 @@ tasks:
     type: EAT
     target: GOLDEN_APPLE
     amount: 2
-    reward-xp: 380
+    reward-xp: 520
     reward-item: GOLD_INGOT
     reward-item-amount: 8
   breed_cows:
@@ -1248,7 +1512,7 @@ tasks:
     type: BREED
     target: COW
     amount: 8
-    reward-xp: 260
+    reward-xp: 350
     reward-item: WHEAT
     reward-item-amount: 24
   breed_sheep:
@@ -1258,7 +1522,7 @@ tasks:
     type: BREED
     target: SHEEP
     amount: 8
-    reward-xp: 260
+    reward-xp: 350
     reward-item: WHITE_WOOL
     reward-item-amount: 16
   breed_chickens:
@@ -1268,7 +1532,7 @@ tasks:
     type: BREED
     target: CHICKEN
     amount: 10
-    reward-xp: 240
+    reward-xp: 340
     reward-item: EGG
     reward-item-amount: 16
   breed_horses:
@@ -1278,7 +1542,7 @@ tasks:
     type: BREED
     target: HORSE
     amount: 2
-    reward-xp: 350
+    reward-xp: 500
     reward-item: GOLDEN_CARROT
     reward-item-amount: 8
   trade_emeralds:
@@ -1288,7 +1552,7 @@ tasks:
     type: TRADE
     target: ANY
     amount: 20
-    reward-xp: 320
+    reward-xp: 390
     reward-item: EMERALD
     reward-item-amount: 8
   anvil_uses:
@@ -1298,7 +1562,7 @@ tasks:
     type: ANVIL
     target: ANY
     amount: 10
-    reward-xp: 420
+    reward-xp: 540
     reward-item: IRON_BLOCK
     reward-item-amount: 2
   enchant_gear:
@@ -1308,7 +1572,7 @@ tasks:
     type: ENCHANT
     target: ANY
     amount: 8
-    reward-xp: 480
+    reward-xp: 560
     reward-item: LAPIS_LAZULI
     reward-item-amount: 32
   nether_soul_sand:
@@ -1319,7 +1583,7 @@ tasks:
     dimension: NETHER
     target: SOUL_SAND
     amount: 48
-    reward-xp: 300
+    reward-xp: 380
     reward-item: SOUL_SOIL
     reward-item-amount: 24
   nether_glowstone:
@@ -1330,7 +1594,7 @@ tasks:
     dimension: NETHER
     target: GLOWSTONE
     amount: 32
-    reward-xp: 320
+    reward-xp: 390
     reward-item: GLOWSTONE_DUST
     reward-item-amount: 24
   nether_crimson:
@@ -1341,7 +1605,7 @@ tasks:
     dimension: NETHER
     target: CRIMSON_STEM
     amount: 48
-    reward-xp: 300
+    reward-xp: 380
     reward-item: CRIMSON_FUNGUS
     reward-item-amount: 8
   nether_warped:
@@ -1352,7 +1616,7 @@ tasks:
     dimension: NETHER
     target: WARPED_STEM
     amount: 48
-    reward-xp: 300
+    reward-xp: 380
     reward-item: WARPED_FUNGUS
     reward-item-amount: 8
   nether_blackstone:
@@ -1363,7 +1627,7 @@ tasks:
     dimension: NETHER
     target: BLACKSTONE
     amount: 64
-    reward-xp: 300
+    reward-xp: 380
     reward-item: POLISHED_BLACKSTONE
     reward-item-amount: 32
   nether_basalt:
@@ -1374,7 +1638,7 @@ tasks:
     dimension: NETHER
     target: BASALT
     amount: 48
-    reward-xp: 280
+    reward-xp: 370
     reward-item: SMOOTH_BASALT
     reward-item-amount: 16
   nether_soul_torch:
@@ -1385,7 +1649,7 @@ tasks:
     dimension: NETHER
     target: SOUL_TORCH
     amount: 24
-    reward-xp: 320
+    reward-xp: 390
     reward-item: SOUL_LANTERN
     reward-item-amount: 4
   nether_ghast:
@@ -1396,7 +1660,7 @@ tasks:
     dimension: NETHER
     target: GHAST
     amount: 4
-    reward-xp: 450
+    reward-xp: 550
     reward-item: GHAST_TEAR
     reward-item-amount: 2
   nether_hoglin:
@@ -1407,7 +1671,7 @@ tasks:
     dimension: NETHER
     target: HOGLIN
     amount: 8
-    reward-xp: 420
+    reward-xp: 540
     reward-item: PORKCHOP
     reward-item-amount: 16
   nether_zoglin:
@@ -1418,7 +1682,7 @@ tasks:
     dimension: NETHER
     target: ZOGLIN
     amount: 4
-    reward-xp: 440
+    reward-xp: 550
     reward-item: ROTTEN_FLESH
     reward-item-amount: 24
   nether_strider:
@@ -1429,7 +1693,7 @@ tasks:
     dimension: NETHER
     target: STRIDER
     amount: 5
-    reward-xp: 280
+    reward-xp: 370
     reward-item: STRING
     reward-item-amount: 16
   nether_wither:
@@ -1440,9 +1704,10 @@ tasks:
     dimension: NETHER
     target: WITHER
     amount: 1
-    reward-xp: 900
-    reward-item: NETHER_STAR
-    reward-item-amount: 1
+    reward-xp: 760
+    reward-item: GOLDEN_APPLE
+    reward-item-amount: 2
+
   nether_walk_2500:
     name: "&cPiekielny maraton"
     description: "&7Przejdź 2500 bloków w Netherze"
@@ -1451,7 +1716,7 @@ tasks:
     dimension: NETHER
     target: ANY
     amount: 2500
-    reward-xp: 500
+    reward-xp: 570
     reward-item: OBSIDIAN
     reward-item-amount: 12
   nether_magma_cream:
@@ -1462,7 +1727,7 @@ tasks:
     dimension: NETHER
     target: MAGMA_CREAM
     amount: 12
-    reward-xp: 320
+    reward-xp: 390
     reward-item: BLAZE_POWDER
     reward-item-amount: 8
   nether_brew:
@@ -1473,7 +1738,7 @@ tasks:
     dimension: NETHER
     target: ANY
     amount: 8
-    reward-xp: 350
+    reward-xp: 500
     reward-item: POTION
     reward-item-amount: 4
   end_end_stone:
@@ -1484,7 +1749,7 @@ tasks:
     dimension: THE_END
     target: END_STONE
     amount: 64
-    reward-xp: 320
+    reward-xp: 390
     reward-item: END_STONE_BRICKS
     reward-item-amount: 32
   end_purpur_pillar:
@@ -1495,10 +1760,11 @@ tasks:
     dimension: THE_END
     target: PURPUR_PILLAR
     amount: 32
-    reward-xp: 380
+    reward-xp: 520
     reward-item: PURPUR_BLOCK
     reward-item-amount: 16
   end_end_rod:
+    requires-nether: true
     name: "&eŚwiatło krańca"
     description: "&7Wytwórz 16 prętów Endu"
     difficulty: MEDIUM
@@ -1506,7 +1772,7 @@ tasks:
     dimension: THE_END
     target: END_ROD
     amount: 16
-    reward-xp: 330
+    reward-xp: 400
     reward-item: BLAZE_ROD
     reward-item-amount: 4
   end_dragon_head:
@@ -1517,7 +1783,7 @@ tasks:
     dimension: THE_END
     target: DRAGON_HEAD
     amount: 1
-    reward-xp: 650
+    reward-xp: 640
     reward-item: DRAGON_BREATH
     reward-item-amount: 2
   end_enderman_hunt:
@@ -1528,7 +1794,7 @@ tasks:
     dimension: THE_END
     target: ENDERMAN
     amount: 30
-    reward-xp: 650
+    reward-xp: 640
     reward-item: ENDER_PEARL
     reward-item-amount: 24
   end_shulker_hunt:
@@ -1539,9 +1805,10 @@ tasks:
     dimension: THE_END
     target: SHULKER
     amount: 12
-    reward-xp: 700
+    reward-xp: 670
     reward-item: SHULKER_SHELL
-    reward-item-amount: 3
+    reward-item-amount: 2
+
   end_walk_4000:
     name: "&cWędrowiec krańca"
     description: "&7Przejdź 4000 bloków w Endzie"
@@ -1550,7 +1817,7 @@ tasks:
     dimension: THE_END
     target: ANY
     amount: 4000
-    reward-xp: 650
+    reward-xp: 640
     reward-item: ENDER_PEARL
     reward-item-amount: 20
   end_chorus_flowers:
@@ -1561,7 +1828,7 @@ tasks:
     dimension: THE_END
     target: CHORUS_FLOWER
     amount: 48
-    reward-xp: 360
+    reward-xp: 420
     reward-item: CHORUS_FRUIT
     reward-item-amount: 24
   end_dragon_breath_craft:
@@ -1572,10 +1839,11 @@ tasks:
     dimension: THE_END
     target: DRAGON_BREATH
     amount: 4
-    reward-xp: 500
+    reward-xp: 570
     reward-item: GLASS_BOTTLE
     reward-item-amount: 16
   end_crystal_craft:
+    requires-nether: true
     name: "&cKryształowa moc"
     description: "&7Wytwórz 8 kryształów Endu"
     difficulty: HARD
@@ -1583,7 +1851,7 @@ tasks:
     dimension: THE_END
     target: END_CRYSTAL
     amount: 8
-    reward-xp: 750
+    reward-xp: 690
     reward-item: GHAST_TEAR
     reward-item-amount: 4
   # Dodatkowe zadania Overworld – rozszerzenie sezonowe 1.0.1
@@ -1594,7 +1862,7 @@ tasks:
     type: BREAK
     target: BIRCH_LOG
     amount: 48
-    reward-xp: 150
+    reward-xp: 220
     reward-item: BIRCH_PLANKS
     reward-item-amount: 24
   break_spruce:
@@ -1604,7 +1872,7 @@ tasks:
     type: BREAK
     target: SPRUCE_LOG
     amount: 48
-    reward-xp: 150
+    reward-xp: 220
     reward-item: SPRUCE_PLANKS
     reward-item-amount: 24
   break_jungle:
@@ -1614,7 +1882,7 @@ tasks:
     type: BREAK
     target: JUNGLE_LOG
     amount: 32
-    reward-xp: 190
+    reward-xp: 300
     reward-item: JUNGLE_PLANKS
     reward-item-amount: 24
   break_acacia:
@@ -1624,7 +1892,7 @@ tasks:
     type: BREAK
     target: ACACIA_LOG
     amount: 32
-    reward-xp: 150
+    reward-xp: 220
     reward-item: ACACIA_PLANKS
     reward-item-amount: 24
   break_dark_oak:
@@ -1634,7 +1902,7 @@ tasks:
     type: BREAK
     target: DARK_OAK_LOG
     amount: 32
-    reward-xp: 190
+    reward-xp: 300
     reward-item: DARK_OAK_PLANKS
     reward-item-amount: 24
   break_mangrove:
@@ -1644,7 +1912,7 @@ tasks:
     type: BREAK
     target: MANGROVE_LOG
     amount: 32
-    reward-xp: 200
+    reward-xp: 310
     reward-item: MANGROVE_PLANKS
     reward-item-amount: 24
   break_cherry:
@@ -1654,7 +1922,7 @@ tasks:
     type: BREAK
     target: CHERRY_LOG
     amount: 32
-    reward-xp: 200
+    reward-xp: 310
     reward-item: CHERRY_PLANKS
     reward-item-amount: 24
   break_brown_mushroom:
@@ -1664,7 +1932,7 @@ tasks:
     type: BREAK
     target: BROWN_MUSHROOM
     amount: 16
-    reward-xp: 140
+    reward-xp: 220
     reward-item: MUSHROOM_STEW
     reward-item-amount: 4
   break_red_mushroom:
@@ -1674,7 +1942,7 @@ tasks:
     type: BREAK
     target: RED_MUSHROOM
     amount: 16
-    reward-xp: 140
+    reward-xp: 220
     reward-item: MUSHROOM_STEW
     reward-item-amount: 4
   break_lily_pad:
@@ -1684,7 +1952,7 @@ tasks:
     type: BREAK
     target: LILY_PAD
     amount: 16
-    reward-xp: 150
+    reward-xp: 220
     reward-item: OAK_BOAT
     reward-item-amount: 2
   break_vine:
@@ -1694,7 +1962,7 @@ tasks:
     type: BREAK
     target: VINE
     amount: 32
-    reward-xp: 150
+    reward-xp: 220
     reward-item: SHEARS
     reward-item-amount: 1
   break_fern:
@@ -1704,7 +1972,7 @@ tasks:
     type: BREAK
     target: FERN
     amount: 24
-    reward-xp: 130
+    reward-xp: 210
     reward-item: BONE_MEAL
     reward-item-amount: 16
   break_dead_bush:
@@ -1714,7 +1982,7 @@ tasks:
     type: BREAK
     target: DEAD_BUSH
     amount: 16
-    reward-xp: 130
+    reward-xp: 210
     reward-item: STICK
     reward-item-amount: 32
   break_seagrass:
@@ -1724,7 +1992,7 @@ tasks:
     type: BREAK
     target: SEAGRASS
     amount: 32
-    reward-xp: 150
+    reward-xp: 220
     reward-item: KELP
     reward-item-amount: 24
   break_kelp:
@@ -1734,7 +2002,7 @@ tasks:
     type: BREAK
     target: KELP
     amount: 48
-    reward-xp: 150
+    reward-xp: 220
     reward-item: DRIED_KELP
     reward-item-amount: 16
   break_turtle_egg:
@@ -1744,7 +2012,7 @@ tasks:
     type: BREAK
     target: TURTLE_EGG
     amount: 4
-    reward-xp: 360
+    reward-xp: 510
     reward-item: SCUTE
     reward-item-amount: 2
   break_sponge:
@@ -1754,7 +2022,7 @@ tasks:
     type: BREAK
     target: SPONGE
     amount: 8
-    reward-xp: 380
+    reward-xp: 520
     reward-item: WET_SPONGE
     reward-item-amount: 4
   break_campfire:
@@ -1764,7 +2032,7 @@ tasks:
     type: BREAK
     target: CAMPFIRE
     amount: 8
-    reward-xp: 220
+    reward-xp: 320
     reward-item: CHARCOAL
     reward-item-amount: 16
   break_bookshelf:
@@ -1774,7 +2042,7 @@ tasks:
     type: BREAK
     target: BOOKSHELF
     amount: 8
-    reward-xp: 220
+    reward-xp: 320
     reward-item: BOOK
     reward-item-amount: 8
   break_bell:
@@ -1784,7 +2052,7 @@ tasks:
     type: BREAK
     target: BELL
     amount: 1
-    reward-xp: 350
+    reward-xp: 500
     reward-item: GOLD_INGOT
     reward-item-amount: 4
   break_beehive:
@@ -1794,7 +2062,7 @@ tasks:
     type: BREAK
     target: BEEHIVE
     amount: 4
-    reward-xp: 260
+    reward-xp: 350
     reward-item: HONEYCOMB
     reward-item-amount: 8
   break_copper_block:
@@ -1804,7 +2072,7 @@ tasks:
     type: BREAK
     target: COPPER_BLOCK
     amount: 16
-    reward-xp: 220
+    reward-xp: 320
     reward-item: COPPER_INGOT
     reward-item-amount: 24
   break_iron_block:
@@ -1814,7 +2082,7 @@ tasks:
     type: BREAK
     target: IRON_BLOCK
     amount: 8
-    reward-xp: 260
+    reward-xp: 350
     reward-item: IRON_INGOT
     reward-item-amount: 16
   break_gold_block:
@@ -1824,7 +2092,7 @@ tasks:
     type: BREAK
     target: GOLD_BLOCK
     amount: 4
-    reward-xp: 320
+    reward-xp: 490
     reward-item: GOLD_INGOT
     reward-item-amount: 12
   break_diamond_block:
@@ -1834,7 +2102,7 @@ tasks:
     type: BREAK
     target: DIAMOND_BLOCK
     amount: 2
-    reward-xp: 500
+    reward-xp: 570
     reward-item: DIAMOND
     reward-item-amount: 2
   kill_zombie_villager:
@@ -1844,7 +2112,7 @@ tasks:
     type: KILL
     target: ZOMBIE_VILLAGER
     amount: 5
-    reward-xp: 280
+    reward-xp: 370
     reward-item: GOLDEN_APPLE
     reward-item-amount: 1
   kill_bat:
@@ -1854,7 +2122,7 @@ tasks:
     type: KILL
     target: BAT
     amount: 5
-    reward-xp: 120
+    reward-xp: 200
     reward-item: LEATHER
     reward-item-amount: 4
   kill_fox:
@@ -1864,7 +2132,7 @@ tasks:
     type: KILL
     target: FOX
     amount: 3
-    reward-xp: 220
+    reward-xp: 320
     reward-item: SWEET_BERRIES
     reward-item-amount: 16
   kill_goat:
@@ -1874,7 +2142,7 @@ tasks:
     type: KILL
     target: GOAT
     amount: 4
-    reward-xp: 220
+    reward-xp: 320
     reward-item: GOAT_HORN
     reward-item-amount: 1
   kill_dolphin:
@@ -1884,7 +2152,7 @@ tasks:
     type: KILL
     target: DOLPHIN
     amount: 2
-    reward-xp: 300
+    reward-xp: 480
     reward-item: COD
     reward-item-amount: 8
   kill_turtle:
@@ -1894,7 +2162,7 @@ tasks:
     type: KILL
     target: TURTLE
     amount: 3
-    reward-xp: 300
+    reward-xp: 480
     reward-item: SCUTE
     reward-item-amount: 1
   kill_panda:
@@ -1904,7 +2172,7 @@ tasks:
     type: KILL
     target: PANDA
     amount: 2
-    reward-xp: 300
+    reward-xp: 480
     reward-item: BAMBOO
     reward-item-amount: 16
   kill_llama:
@@ -1914,7 +2182,7 @@ tasks:
     type: KILL
     target: LLAMA
     amount: 4
-    reward-xp: 220
+    reward-xp: 320
     reward-item: LEATHER
     reward-item-amount: 6
   kill_iron_golem:
@@ -1924,7 +2192,7 @@ tasks:
     type: KILL
     target: IRON_GOLEM
     amount: 2
-    reward-xp: 360
+    reward-xp: 510
     reward-item: IRON_INGOT
     reward-item-amount: 8
   kill_silverfish:
@@ -1934,7 +2202,7 @@ tasks:
     type: KILL
     target: SILVERFISH
     amount: 12
-    reward-xp: 260
+    reward-xp: 350
     reward-item: STONE
     reward-item-amount: 24
   kill_endermite:
@@ -1944,7 +2212,7 @@ tasks:
     type: KILL
     target: ENDERMITE
     amount: 5
-    reward-xp: 340
+    reward-xp: 500
     reward-item: ENDER_PEARL
     reward-item-amount: 4
   craft_barrel:
@@ -1954,7 +2222,7 @@ tasks:
     type: CRAFT
     target: BARREL
     amount: 8
-    reward-xp: 160
+    reward-xp: 230
     reward-item: OAK_PLANKS
     reward-item-amount: 24
   craft_smoker:
@@ -1964,7 +2232,7 @@ tasks:
     type: CRAFT
     target: SMOKER
     amount: 3
-    reward-xp: 220
+    reward-xp: 320
     reward-item: COOKED_BEEF
     reward-item-amount: 8
   craft_blast_furnace:
@@ -1974,7 +2242,7 @@ tasks:
     type: CRAFT
     target: BLAST_FURNACE
     amount: 3
-    reward-xp: 250
+    reward-xp: 340
     reward-item: IRON_INGOT
     reward-item-amount: 12
   craft_cartography:
@@ -1984,7 +2252,7 @@ tasks:
     type: CRAFT
     target: CARTOGRAPHY_TABLE
     amount: 4
-    reward-xp: 230
+    reward-xp: 330
     reward-item: PAPER
     reward-item-amount: 24
   craft_fletching:
@@ -1994,7 +2262,7 @@ tasks:
     type: CRAFT
     target: FLETCHING_TABLE
     amount: 4
-    reward-xp: 230
+    reward-xp: 330
     reward-item: ARROW
     reward-item-amount: 24
   craft_grindstone:
@@ -2004,7 +2272,7 @@ tasks:
     type: CRAFT
     target: GRINDSTONE
     amount: 4
-    reward-xp: 240
+    reward-xp: 340
     reward-item: IRON_INGOT
     reward-item-amount: 8
   craft_shears:
@@ -2014,7 +2282,7 @@ tasks:
     type: CRAFT
     target: SHEARS
     amount: 4
-    reward-xp: 150
+    reward-xp: 220
     reward-item: IRON_INGOT
     reward-item-amount: 8
   craft_lead:
@@ -2024,7 +2292,7 @@ tasks:
     type: CRAFT
     target: LEAD
     amount: 8
-    reward-xp: 220
+    reward-xp: 320
     reward-item: SLIME_BALL
     reward-item-amount: 8
   eat_suspicious_stew:
@@ -2034,7 +2302,7 @@ tasks:
     type: EAT
     target: SUSPICIOUS_STEW
     amount: 3
-    reward-xp: 320
+    reward-xp: 490
     reward-item: BOWL
     reward-item-amount: 8
   eat_dried_kelp:
@@ -2044,6 +2312,442 @@ tasks:
     type: EAT
     target: DRIED_KELP
     amount: 24
-    reward-xp: 150
+    reward-xp: 220
     reward-item: KELP
     reward-item-amount: 32
+
+  # Dodatkowe zadania Overworld — rozszerzenie puli 1.0.23
+  break_oak_leaves:
+    name: "&2Jesienny ogrodnik"
+    description: "&7Zbierz 48 bloków liści dębu"
+    difficulty: EASY
+    type: BREAK
+    target: OAK_LEAVES
+    amount: 48
+    reward-xp: 220
+    reward-item: OAK_SAPLING
+    reward-item-amount: 8
+  break_dripstone:
+    name: "&6Jaskiniowy stalaktyt"
+    description: "&7Zbierz 24 bloki naciekowe"
+    difficulty: MEDIUM
+    type: BREAK
+    target: DRIPSTONE_BLOCK
+    amount: 24
+    reward-xp: 320
+    reward-item: POINTED_DRIPSTONE
+    reward-item-amount: 12
+  break_glow_lichen:
+    name: "&aŚwietlisty ślad"
+    description: "&7Zbierz 32 porosty jaskiniowe"
+    difficulty: EASY
+    type: BREAK
+    target: GLOW_LICHEN
+    amount: 32
+    reward-xp: 230
+    reward-item: GLOW_INK_SAC
+    reward-item-amount: 4
+  break_sea_pickle:
+    name: "&bMorskie ogrody"
+    description: "&7Zbierz 24 ogórki morskie"
+    difficulty: MEDIUM
+    type: BREAK
+    target: SEA_PICKLE
+    amount: 24
+    reward-xp: 320
+    reward-item: PRISMARINE_SHARD
+    reward-item-amount: 12
+  break_mangrove_roots:
+    name: "&6Korzenie bagien"
+    description: "&7Zbierz 32 namorzynowe korzenie"
+    difficulty: MEDIUM
+    type: BREAK
+    target: MANGROVE_ROOTS
+    amount: 32
+    reward-xp: 320
+    reward-item: MUD
+    reward-item-amount: 16
+  break_honeycomb_block:
+    name: "&eMiodowa robota"
+    description: "&7Zbierz 12 bloków plastra miodu"
+    difficulty: MEDIUM
+    type: BREAK
+    target: HONEYCOMB_BLOCK
+    amount: 12
+    reward-xp: 320
+    reward-item: HONEYCOMB
+    reward-item-amount: 16
+  kill_wolf:
+    name: "&7Wilczy trop"
+    description: "&7Pokonaj 4 wilki"
+    difficulty: HARD
+    type: KILL
+    target: WOLF
+    amount: 4
+    reward-xp: 510
+    reward-item: BONE
+    reward-item-amount: 24
+  kill_bee:
+    name: "&eNie drażnij ula"
+    description: "&7Pokonaj 5 pszczół"
+    difficulty: MEDIUM
+    type: KILL
+    target: BEE
+    amount: 5
+    reward-xp: 350
+    reward-item: HONEYCOMB
+    reward-item-amount: 8
+  craft_stonecutter:
+    name: "&6Precyzja kamieniarza"
+    description: "&7Wytwórz 3 kamieniarze"
+    difficulty: EASY
+    type: CRAFT
+    target: STONECUTTER
+    amount: 3
+    reward-xp: 240
+    reward-item: IRON_INGOT
+    reward-item-amount: 6
+  craft_loom:
+    name: "&dTkacki warsztat"
+    description: "&7Wytwórz 4 krosna"
+    difficulty: EASY
+    type: CRAFT
+    target: LOOM
+    amount: 4
+    reward-xp: 240
+    reward-item: WHITE_WOOL
+    reward-item-amount: 16
+  craft_composter:
+    name: "&aKompost dla królestwa"
+    description: "&7Wytwórz 4 kompostowniki"
+    difficulty: EASY
+    type: CRAFT
+    target: COMPOSTER
+    amount: 4
+    reward-xp: 230
+    reward-item: BONE_MEAL
+    reward-item-amount: 16
+  craft_campfire:
+    name: "&6Ognisko wędrowca"
+    description: "&7Wytwórz 3 ogniska"
+    difficulty: MEDIUM
+    type: CRAFT
+    target: CAMPFIRE
+    amount: 3
+    reward-xp: 320
+    reward-item: COOKED_BEEF
+    reward-item-amount: 8
+  craft_crossbow:
+    name: "&cŁowca z kuszą"
+    description: "&7Wytwórz 2 kusze"
+    difficulty: MEDIUM
+    type: CRAFT
+    target: CROSSBOW
+    amount: 2
+    reward-xp: 350
+    reward-item: ARROW
+    reward-item-amount: 24
+  craft_trapdoor:
+    name: "&6Sekretne przejście"
+    description: "&7Wytwórz 16 klap"
+    difficulty: EASY
+    type: CRAFT
+    target: OAK_TRAPDOOR
+    amount: 16
+    reward-xp: 220
+    reward-item: OAK_PLANKS
+    reward-item-amount: 24
+  craft_painting:
+    name: "&aGaleria Steve'a"
+    description: "&7Wytwórz 8 obrazów"
+    difficulty: EASY
+    type: CRAFT
+    target: PAINTING
+    amount: 8
+    reward-xp: 230
+    reward-item: ITEM_FRAME
+    reward-item-amount: 4
+  craft_armor_stand:
+    name: "&7Wystawa zbroi"
+    description: "&7Wytwórz 4 stojaki na zbroję"
+    difficulty: MEDIUM
+    type: CRAFT
+    target: ARMOR_STAND
+    amount: 4
+    reward-xp: 320
+    reward-item: IRON_INGOT
+    reward-item-amount: 8
+  craft_chest_minecart:
+    name: "&6Kolejowy magazyn"
+    description: "&7Wytwórz 2 wagoniki ze skrzynią"
+    difficulty: MEDIUM
+    type: CRAFT
+    target: CHEST_MINECART
+    amount: 2
+    reward-xp: 350
+    reward-item: RAIL
+    reward-item-amount: 24
+  eat_cookie:
+    name: "&6Słodka przerwa"
+    description: "&7Zjedz 16 ciastek"
+    difficulty: EASY
+    type: EAT
+    target: COOKIE
+    amount: 16
+    reward-xp: 230
+    reward-item: WHEAT
+    reward-item-amount: 16
+  eat_pumpkin_pie:
+    name: "&6Jesienny deser"
+    description: "&7Zjedz 8 ciast dyniowych"
+    difficulty: MEDIUM
+    type: EAT
+    target: PUMPKIN_PIE
+    amount: 8
+    reward-xp: 320
+    reward-item: PUMPKIN
+    reward-item-amount: 4
+  eat_melon_slice:
+    name: "&aOwocowy odpoczynek"
+    description: "&7Zjedz 16 kawałków arbuza"
+    difficulty: EASY
+    type: EAT
+    target: MELON_SLICE
+    amount: 16
+    reward-xp: 220
+    reward-item: MELON
+    reward-item-amount: 4
+  eat_beetroot_soup:
+    name: "&cBarszcz Steve'a"
+    description: "&7Zjedz 6 misek zupy buraczanej"
+    difficulty: MEDIUM
+    type: EAT
+    target: BEETROOT_SOUP
+    amount: 6
+    reward-xp: 320
+    reward-item: BEETROOT
+    reward-item-amount: 16
+  breed_pigs:
+    name: "&dChrumkająca hodowla"
+    description: "&7Rozmnóż 8 świń"
+    difficulty: MEDIUM
+    type: BREED
+    target: PIG
+    amount: 8
+    reward-xp: 340
+    reward-item: CARROT
+    reward-item-amount: 24
+  breed_rabbits:
+    name: "&dKrólicza rodzinka"
+    description: "&7Rozmnóż 5 królików"
+    difficulty: MEDIUM
+    type: BREED
+    target: RABBIT
+    amount: 5
+    reward-xp: 340
+    reward-item: CARROT
+    reward-item-amount: 16
+  breed_wolves:
+    name: "&7Wilcza wataha"
+    description: "&7Rozmnóż 3 wilki"
+    difficulty: HARD
+    type: BREED
+    target: WOLF
+    amount: 3
+    reward-xp: 490
+    reward-item: BONE
+    reward-item-amount: 12
+  breed_bees:
+    name: "&ePszczela rodzina"
+    description: "&7Rozmnóż 4 pszczoły"
+    difficulty: HARD
+    type: BREED
+    target: BEE
+    amount: 4
+    reward-xp: 490
+    reward-item: HONEY_BOTTLE
+    reward-item-amount: 4
+  walk_750:
+    name: "&dSzlak odkrywcy"
+    description: "&7Przejdź 750 bloków"
+    difficulty: EASY
+    type: WALK
+    target: ANY
+    amount: 750
+    reward-xp: 220
+    reward-item: BAKED_POTATO
+    reward-item-amount: 8
+  walk_4000:
+    name: "&dDługa droga do domu"
+    description: "&7Przejdź 4000 bloków"
+    difficulty: HARD
+    type: WALK
+    target: ANY
+    amount: 4000
+    reward-xp: 540
+    reward-item: SADDLE
+    reward-item-amount: 1
+  swim_1200:
+    name: "&bMorski maratończyk"
+    description: "&7Przepłyń 1200 bloków"
+    difficulty: HARD
+    type: SWIM
+    target: ANY
+    amount: 1200
+    reward-xp: 520
+    reward-item: TROPICAL_FISH
+    reward-item-amount: 4
+  trade_emeralds_5:
+    name: "&aMały handel"
+    description: "&7Dokonaj 5 wymian z osadnikami"
+    difficulty: EASY
+    type: TRADE
+    target: ANY
+    amount: 5
+    reward-xp: 250
+    reward-item: EMERALD
+    reward-item-amount: 3
+  anvil_repairs_3:
+    name: "&7Naprawa na medal"
+    description: "&7Użyj kowadła 3 razy"
+    difficulty: EASY
+    type: ANVIL
+    target: ANY
+    amount: 3
+    reward-xp: 250
+    reward-item: IRON_INGOT
+    reward-item-amount: 6
+
+  # Codzienne zadania — rozszerzenie lekkiej puli 1.1.3
+  easy_harvest_carrots:
+    name: "&6Marchewkowe pole"
+    description: "&7Zbierz 24 dojrzałe uprawy marchwi"
+    difficulty: EASY
+    type: BREAK
+    dimension: OVERWORLD
+    target: CARROTS
+    amount: 24
+    reward-xp: 210
+    reward-item: BREAD
+    reward-item-amount: 4
+  easy_harvest_potatoes:
+    name: "&eZiemniaczana gorączka"
+    description: "&7Zbierz 24 dojrzałe uprawy ziemniaków"
+    difficulty: EASY
+    type: BREAK
+    dimension: OVERWORLD
+    target: POTATOES
+    amount: 24
+    reward-xp: 210
+    reward-item: BAKED_POTATO
+    reward-item-amount: 6
+  easy_harvest_beetroots:
+    name: "&cCzerwone zbiory"
+    description: "&7Zbierz 16 dojrzałych upraw buraków"
+    difficulty: EASY
+    type: BREAK
+    dimension: OVERWORLD
+    target: BEETROOTS
+    amount: 16
+    reward-xp: 220
+    reward-item: BEETROOT_SOUP
+    reward-item-amount: 2
+  easy_harvest_wheat:
+    name: "&eChleb powszedni"
+    description: "&7Zbierz 16 dojrzałych kłosów pszenicy"
+    difficulty: EASY
+    type: BREAK
+    dimension: OVERWORLD
+    target: WHEAT
+    amount: 16
+    reward-xp: 210
+    reward-item: BREAD
+    reward-item-amount: 5
+  easy_craft_ladders:
+    name: "&6Drabina do nieba"
+    description: "&7Wytwórz 12 drabin"
+    difficulty: EASY
+    type: CRAFT
+    dimension: OVERWORLD
+    target: LADDER
+    amount: 12
+    reward-xp: 220
+    reward-item: STICK
+    reward-item-amount: 16
+  easy_craft_signs:
+    name: "&eTabliczkowy szyfr"
+    description: "&7Wytwórz 8 tabliczek"
+    difficulty: EASY
+    type: CRAFT
+    dimension: OVERWORLD
+    target: OAK_SIGN
+    amount: 8
+    reward-xp: 210
+    reward-item: OAK_PLANKS
+    reward-item-amount: 12
+  easy_craft_boat:
+    name: "&bRejs po przygodę"
+    description: "&7Wytwórz 2 dębowe łódki"
+    difficulty: EASY
+    type: CRAFT
+    dimension: OVERWORLD
+    target: OAK_BOAT
+    amount: 2
+    reward-xp: 220
+    reward-item: COOKED_COD
+    reward-item-amount: 3
+  medium_craft_books:
+    name: "&5Biblioteka Aleksandryjska"
+    description: "&7Wytwórz 6 książek"
+    difficulty: MEDIUM
+    type: CRAFT
+    dimension: OVERWORLD
+    target: BOOK
+    amount: 6
+    reward-xp: 300
+    reward-item: PAPER
+    reward-item-amount: 12
+  medium_craft_fence:
+    name: "&6Granice królestwa"
+    description: "&7Wytwórz 16 dębowych płotków"
+    difficulty: MEDIUM
+    type: CRAFT
+    dimension: OVERWORLD
+    target: OAK_FENCE
+    amount: 16
+    reward-xp: 300
+    reward-item: OAK_PLANKS
+    reward-item-amount: 16
+  easy_eat_chicken:
+    name: "&6Kolacja u Steve'a"
+    description: "&7Zjedz 8 pieczonych kurczaków"
+    difficulty: EASY
+    type: EAT
+    dimension: OVERWORLD
+    target: COOKED_CHICKEN
+    amount: 8
+    reward-xp: 220
+    reward-item: BAKED_POTATO
+    reward-item-amount: 6
+  easy_eat_apple:
+    name: "&cJabłko dziennie"
+    description: "&7Zjedz 6 jabłek"
+    difficulty: EASY
+    type: EAT
+    dimension: OVERWORLD
+    target: APPLE
+    amount: 6
+    reward-xp: 210
+    reward-item: GOLDEN_CARROT
+    reward-item-amount: 2
+  medium_eat_mutton:
+    name: "&6Uczta wędrowca"
+    description: "&7Zjedz 8 pieczonych baranin"
+    difficulty: MEDIUM
+    type: EAT
+    dimension: OVERWORLD
+    target: COOKED_MUTTON
+    amount: 8
+    reward-xp: 300
+    reward-item: COOKED_BEEF
+    reward-item-amount: 4

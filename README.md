@@ -1,6 +1,6 @@
 # DailyQuests
 
-**DailyQuests 1.0.1** to samodzielny plugin do Paper, który dodaje indywidualne codzienne zadania, kontrakty u Michaiła Łomonosowa, system gwiazdek i skrzynek z nagrodami.
+**DailyQuests 1.1.9** to samodzielny plugin do Paper, który dodaje indywidualne codzienne zadania, kontrakty u Michaiła Łomonosowa, system gwiazdek i skrzynek z nagrodami.
 
 Plugin opiera się na **Paper API** i SQLite. Nie wymaga Citizens ani żadnego innego dodatkowego pluginu.
 
@@ -16,7 +16,7 @@ Plugin opiera się na **Paper API** i SQLite. Nie wymaga Citizens ani żadnego i
 ## Instalacja
 
 1. Zatrzymaj serwer.
-2. Pobierz `DailyQuests-1.0.1.jar` z artefaktów GitHub Actions.
+2. Pobierz `DailyQuests-1.1.9.jar` z artefaktów GitHub Actions.
 3. Umieść plik JAR w katalogu `plugins`.
 4. Uruchom serwer.
 5. Plugin utworzy katalog `plugins/DailyQuests/` z plikami konfiguracyjnymi i bazą danych.
@@ -25,17 +25,17 @@ Po aktualizacji zalecana jest kopia zapasowa całego katalogu `plugins/DailyQues
 
 ## Funkcje
 
-- 5 indywidualnych zadań dziennych dla każdego gracza, losowanych z puli 199 zadań (w tym zadania Netheru i Endu).
+- 5 indywidualnych zadań dziennych dla każdego gracza; po włączeniu Netheru dochodzą 3 dodatkowe zadania (łącznie 8). Zadania losowane są z puli 264 wyzwań, w tym z Netheru i Endu.
 - Zadania z różnych aktywności: kopanie, walka, crafting, łowienie, chodzenie, pływanie, jedzenie, zaklinanie, rozmnażanie zwierząt, handel i kowadło.
 - Postęp zadań zapisywany w SQLite.
 - Nagrody XP i przedmioty, odbierane ręcznie w GUI.
-- Bonus za ukończenie wszystkich 5 zadań: **250 XP i 5 gwiazdek**.
+- Bonus za ukończenie całego dziennego zestawu (5 zadań lub 8 po włączeniu Netheru): **250 XP i 5 gwiazdek**.
 - Historia zadań zapobiegająca powtórkom przez 30 dni, gdy pula pozwala na pełną rotację.
 - Wyzwanie tygodniowe, serie ukończeń i ranking.
 - Gwiazdki i skrzynka z animowaną ruletką nagród.
 - Michaił Łomonosow – Villager z indywidualnym kontraktem dziennym dla gracza.
 - Konfiguracja puli zadań, kontraktów i nagród w plikach YAML.
-- Opcjonalne zadania z Netheru i Endu.
+- Zadania z Netheru są osobną sekcją trzech dodatkowych wyzwań w GUI; zadania z Endu pozostają częścią zwykłej puli.
 
 ## Komendy gracza
 
@@ -58,7 +58,7 @@ Wszystkie poniższe komendy wymagają uprawnienia `dailyquests.admin` (domyślni
 |---|---|
 | `/dq help` | Wyświetla pomoc. |
 | `/dq roll` | Losuje ponownie dzienne zadania wszystkim graczom; zeruje dzisiejszy postęp. |
-| `/dq nether on` / `/dq nether off` | Włącza lub wyłącza zadania z Netheru i losuje zadania ponownie. |
+| `/dq nether on` / `/dq nether off` | Dodaje lub usuwa trzy dodatkowe zadania Netheru (łącznie 8 lub 5 zadań dziennie). |
 | `/dq end on` / `/dq end off` | Włącza lub wyłącza zadania z Endu i losuje zadania ponownie. |
 | `/dq reload` | Przeładowuje główną konfigurację i pulę zadań. |
 | `/dq npc postaw` | Stawia Michaiła Łomonosowa w miejscu administratora. |
@@ -143,5 +143,5 @@ Przed aktualizacją lub ręczną edycją plików wykonaj kopię całego katalogu
 
 ## Wydanie
 
-**DailyQuests 1.0.1** – oficjalna linia wydania 1.0. Aktualizacje poprawkowe w ramach tej linii zachowują numer wersji pluginu.
+**DailyQuests 1.1.9** – oficjalna linia wydania 1.0. Aktualizacje poprawkowe w ramach tej linii zachowują numer wersji pluginu.
 
