@@ -782,7 +782,7 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
                 }
                 p.sendMessage(ChatColor.GOLD + "Seria ukończonych dni: " + ChatColor.YELLOW + streak + " ★");
                 Bukkit.broadcastMessage(ChatColor.GOLD + "✦ " + ChatColor.WHITE + p.getName()
-                        + ChatColor.GRAY + " ukończył wszystkie 5 zadań dziennych! "
+                        + ChatColor.GRAY + " ukończył wszystkie " + requiredTaskCount() + " zadań dziennych! "
                         + ChatColor.GOLD + "Seria: " + ChatColor.YELLOW + "dzień " + streak + " ★");
                 if (streak % 7 == 0) {
                     p.giveExp(500);
@@ -1021,7 +1021,7 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
             getLogger().warning("Nie udało się odczytać podsumowania wyzwania tygodnia: " + ex.getMessage());
         }
         int weeklyCurrent = Math.min(weeklyProgress, weekly.amount());
-        inv.setItem(31, make(Material.CLOCK, ChatColor.LIGHT_PURPLE + "✦ WYZWANIE TYGODNIA ✦",
+        inv.setItem(38, make(Material.CLOCK, ChatColor.LIGHT_PURPLE + "✦ WYZWANIE TYGODNIA ✦",
                 List.of(ChatColor.YELLOW + weekly.title(),
                         ChatColor.GRAY + weekly.description(),
                         "",
@@ -1047,7 +1047,7 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
             inv.setItem(13,make(Material.NETHERRACK,ChatColor.RED+"✦ ZADANIA NETHERU ✦",
                     List.of(ChatColor.GRAY+"Trzy dodatkowe wyzwania z Netheru.")));
         }
-        int[] slots={20,21,22,23,24,28,30,32};
+        int[] slots={20,21,22,23,24,29,30,31};
         for(int i=0;i<tasks.size()&&i<slots.length;i++){
             Task t=tasks.get(i);
             Material icon=taskIcon(t);
@@ -1352,7 +1352,7 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
         if(!TITLE.equals(e.getView().getTitle()))return;
         e.setCancelled(true);if(!(e.getWhoClicked() instanceof Player p))return;
         int slot=e.getRawSlot();
-        if (slot == 31) {
+        if (slot == 38) {
             WeeklyChallenge challenge = weeklyChallenge();
             try {
                 int[] state = weeklyProgress(p.getUniqueId(), challenge);
@@ -1378,9 +1378,9 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
         List<Task> tasks=ensureTasks(p);
         int index=switch(slot) {
             case 20,21,22,23,24 -> slot-20;
-            case 28 -> 5;
+            case 29 -> 5;
             case 30 -> 6;
-            case 32 -> 7;
+            case 31 -> 7;
             default -> -1;
         };
         if(index<0 || index>=tasks.size()) return;
