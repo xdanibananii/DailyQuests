@@ -453,7 +453,9 @@ tasks:
     amount: 4
     reward-xp: 640
     reward-item: NETHERITE_SCRAP
-    reward-item-amount: 1  nether_wart:
+    reward-item-amount: 1
+
+  nether_wart:
     name: "&4Piekielne zbiory"
     description: "&7Zbierz 48 brodawek Netheru"
     difficulty: MEDIUM
@@ -642,7 +644,9 @@ tasks:
     amount: 4
     reward-xp: 640
     reward-item: END_CRYSTAL
-    reward-item-amount: 1  end_purpur:
+    reward-item-amount: 1
+
+  end_purpur:
     name: "&5Purpurowa architektura"
     description: "&7Wydobądź 64 bloki purpuru"
     difficulty: HARD
@@ -1702,7 +1706,9 @@ tasks:
     amount: 1
     reward-xp: 760
     reward-item: GOLDEN_APPLE
-    reward-item-amount: 2  nether_walk_2500:
+    reward-item-amount: 2
+
+  nether_walk_2500:
     name: "&cPiekielny maraton"
     description: "&7Przejdź 2500 bloków w Netherze"
     difficulty: HARD
@@ -1801,7 +1807,9 @@ tasks:
     amount: 12
     reward-xp: 670
     reward-item: SHULKER_SHELL
-    reward-item-amount: 2  end_walk_4000:
+    reward-item-amount: 2
+
+  end_walk_4000:
     name: "&cWędrowiec krańca"
     description: "&7Przejdź 4000 bloków w Endzie"
     difficulty: HARD
