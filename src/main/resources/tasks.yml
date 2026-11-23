@@ -464,17 +464,17 @@ tasks:
     reward-xp: 320
     reward-item: NETHER_WART
     reward-item-amount: 24
-  nether_soul_sand:
-    name: "&8Piaski potępionych"
-    description: "&7Zbierz 48 bloków piasku dusz"
-    difficulty: MEDIUM
+  nether_gilded_blackstone:
+    name: "&6Złoto w czarnym kamieniu"
+    description: "&7Wydobądź 12 bloków pozłacanego czernitu"
+    difficulty: HARD
     type: BREAK
     dimension: NETHER
-    target: SOUL_SAND
-    amount: 48
-    reward-xp: 300
-    reward-item: SOUL_TORCH
-    reward-item-amount: 16
+    target: GILDED_BLACKSTONE
+    amount: 12
+    reward-xp: 420
+    reward-item: GOLD_INGOT
+    reward-item-amount: 8
   nether_soul_soil:
     name: "&8Ziemia niespokojnych"
     description: "&7Zbierz 40 bloków gleby dusz"
@@ -486,28 +486,28 @@ tasks:
     reward-xp: 280
     reward-item: SOUL_SAND
     reward-item-amount: 24
-  nether_basalt:
-    name: "&7Bazaltowy szlak"
-    description: "&7Wydobądź 64 bloki bazaltu"
-    difficulty: EASY
-    type: BREAK
-    dimension: NETHER
-    target: BASALT
-    amount: 64
-    reward-xp: 240
-    reward-item: BLACKSTONE
-    reward-item-amount: 24
-  nether_blackstone:
-    name: "&8Czarna kuźnia"
-    description: "&7Wydobądź 48 bloków czernitu"
+  nether_nether_bricks:
+    name: "&8Forteca z piekła rodem"
+    description: "&7Wydobądź 64 bloki netherowych cegieł"
     difficulty: MEDIUM
     type: BREAK
     dimension: NETHER
-    target: BLACKSTONE
-    amount: 48
+    target: NETHER_BRICKS
+    amount: 64
+    reward-xp: 340
+    reward-item: NETHER_BRICK
+    reward-item-amount: 32
+  nether_warped_wart:
+    name: "&3Spaczony ogród"
+    description: "&7Zbierz 32 bloki spaczonych brodawek"
+    difficulty: MEDIUM
+    type: BREAK
+    dimension: NETHER
+    target: WARPED_WART_BLOCK
+    amount: 32
     reward-xp: 320
-    reward-item: GILDED_BLACKSTONE
-    reward-item-amount: 8
+    reward-item: WARPED_FUNGUS
+    reward-item-amount: 12
   nether_crimson_stem:
     name: "&cKarmazynowy las"
     description: "&7Zbierz 32 karmazynowe łodygi"
@@ -530,39 +530,39 @@ tasks:
     reward-xp: 340
     reward-item: WARPED_FUNGUS
     reward-item-amount: 8
-  nether_ghast:
-    name: "&fŁzy olbrzyma"
-    description: "&7Pokonaj 3 ghasty"
+  nether_magma_cube:
+    name: "&cGalaretowaty koszmar"
+    description: "&7Pokonaj 10 kostek magmy"
     difficulty: HARD
     type: KILL
     dimension: NETHER
-    target: GHAST
-    amount: 3
-    reward-xp: 500
-    reward-item: GHAST_TEAR
-    reward-item-amount: 2
-  nether_hoglin:
-    name: "&cNie drażnij bestii"
-    description: "&7Pokonaj 6 hoglinów"
-    difficulty: HARD
-    type: KILL
-    dimension: NETHER
-    target: HOGLIN
-    amount: 6
-    reward-xp: 450
-    reward-item: PORKCHOP
-    reward-item-amount: 12
-  nether_strider:
-    name: "&4Przeprawa przez lawę"
-    description: "&7Pokonaj 5 magmołazów"
-    difficulty: HARD
-    type: KILL
-    dimension: NETHER
-    target: STRIDER
-    amount: 5
-    reward-xp: 420
-    reward-item: STRING
+    target: MAGMA_CUBE
+    amount: 10
+    reward-xp: 460
+    reward-item: MAGMA_CREAM
     reward-item-amount: 16
+  nether_shroomlight:
+    name: "&eŚwiatło w ciemności"
+    description: "&7Zbierz 24 bloki grzybni świetlnej"
+    difficulty: MEDIUM
+    type: BREAK
+    dimension: NETHER
+    target: SHROOMLIGHT
+    amount: 24
+    reward-xp: 300
+    reward-item: GLOWSTONE_DUST
+    reward-item-amount: 16
+  nether_crying_obsidian:
+    name: "&5Łzy otchłani"
+    description: "&7Wydobądź 16 bloków płaczącego obsydianu"
+    difficulty: HARD
+    type: BREAK
+    dimension: NETHER
+    target: CRYING_OBSIDIAN
+    amount: 16
+    reward-xp: 440
+    reward-item: OBSIDIAN
+    reward-item-amount: 24
 
   # End — dostępne po /dq end
   end_enderman:
