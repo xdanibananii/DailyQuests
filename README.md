@@ -1,6 +1,6 @@
 # DailyQuests
 
-**DailyQuests 1.0.1** to samodzielny plugin do Paper, który dodaje indywidualne codzienne zadania, kontrakty u Michaiła Łomonosowa, system gwiazdek i skrzynek z nagrodami.
+**DailyQuests 1.1.9** to samodzielny plugin do Paper, który dodaje indywidualne codzienne zadania, kontrakty u Michaiła Łomonosowa, system gwiazdek i skrzynek z nagrodami.
 
 Plugin opiera się na **Paper API** i SQLite. Nie wymaga Citizens ani żadnego innego dodatkowego pluginu.
 
@@ -16,7 +16,7 @@ Plugin opiera się na **Paper API** i SQLite. Nie wymaga Citizens ani żadnego i
 ## Instalacja
 
 1. Zatrzymaj serwer.
-2. Pobierz `DailyQuests-1.0.1.jar` z artefaktów GitHub Actions.
+2. Pobierz `DailyQuests-1.1.9.jar` z artefaktów GitHub Actions.
 3. Umieść plik JAR w katalogu `plugins`.
 4. Uruchom serwer.
 5. Plugin utworzy katalog `plugins/DailyQuests/` z plikami konfiguracyjnymi i bazą danych.
@@ -143,5 +143,5 @@ Przed aktualizacją lub ręczną edycją plików wykonaj kopię całego katalogu
 
 ## Wydanie
 
-**DailyQuests 1.0.1** – oficjalna linia wydania 1.0. Aktualizacje poprawkowe w ramach tej linii zachowują numer wersji pluginu.
+**DailyQuests 1.1.9** – oficjalna linia wydania 1.0. Aktualizacje poprawkowe w ramach tej linii zachowują numer wersji pluginu.
 
