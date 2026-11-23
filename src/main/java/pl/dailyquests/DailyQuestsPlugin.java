@@ -1030,7 +1030,7 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
             getLogger().warning("Nie udało się odczytać podsumowania wyzwania tygodnia: " + ex.getMessage());
         }
         int weeklyCurrent = Math.min(weeklyProgress, weekly.amount());
-        inv.setItem(38, make(Material.CLOCK, ChatColor.LIGHT_PURPLE + "✦ WYZWANIE TYGODNIA ✦",
+        inv.setItem(48, make(Material.CLOCK, ChatColor.LIGHT_PURPLE + "✦ WYZWANIE TYGODNIA ✦",
                 List.of(ChatColor.YELLOW + weekly.title(),
                         ChatColor.GRAY + weekly.description(),
                         "",
@@ -1043,7 +1043,7 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
                         "",
                         ChatColor.GREEN + "Nagroda: " + weekly.xp() + " XP, " + weekly.emeralds() + " szmaragdów, 10 ★",
                         ChatColor.YELLOW + "Kliknij, aby zobaczyć szczegóły.")));
-        inv.setItem(40,make(rerollMode.contains(p.getUniqueId())?Material.REDSTONE_BLOCK:Material.EXPERIENCE_BOTTLE,
+        inv.setItem(50,make(rerollMode.contains(p.getUniqueId())?Material.REDSTONE_BLOCK:Material.EXPERIENCE_BOTTLE,
             rerollMode.contains(p.getUniqueId())?ChatColor.RED+"Anuluj przerzut":ChatColor.LIGHT_PURPLE+"Przerzuć jedno zadanie",
             List.of(ChatColor.GRAY+"Koszt: "+ChatColor.YELLOW+"5 poziomów XP",
                     ChatColor.GRAY+"Kliknij, aby "+(rerollMode.contains(p.getUniqueId())?"wyłączyć":"włączyć")+" tryb przerzutu.",
@@ -1052,11 +1052,14 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
             List.of(ChatColor.GRAY+"Ukończone: "+ChatColor.GREEN+tasks.stream().filter(t->t.progress>=t.amount).count()+ChatColor.GRAY+"/"+requiredTaskCount(),
                     ChatColor.GRAY+"Odebrane: "+ChatColor.YELLOW+tasks.stream().filter(t->t.claimed).count()+ChatColor.GRAY+"/"+requiredTaskCount(),
                     ChatColor.DARK_GRAY+"Bonus za komplet: "+ChatColor.GOLD+"250 XP")));
+        inv.setItem(13,make(Material.WRITABLE_BOOK,ChatColor.AQUA+"✦ ZADANIA CODZIENNE ✦",
+                List.of(ChatColor.GRAY+"Pięć podstawowych wyzwań na dziś.")));
         if(isDimensionEnabled("NETHER")) {
-            inv.setItem(13,make(Material.NETHERRACK,ChatColor.RED+"✦ ZADANIA NETHERU ✦",
+            inv.setItem(31,make(Material.NETHERRACK,ChatColor.RED+"✦ ZADANIA NETHERU ✦",
                     List.of(ChatColor.GRAY+"Trzy dodatkowe wyzwania z Netheru.")));
         }
-        int[] slots={20,21,22,23,24,29,30,31};
+        // Obie sekcje są wyśrodkowane: 5 zadań w rzędzie, 3 zadania w rzędzie.
+        int[] slots={20,21,22,23,24,38,39,40};
         for(int i=0;i<tasks.size()&&i<slots.length;i++){
             Task t=tasks.get(i);
             Material icon=taskIcon(t);
@@ -1361,7 +1364,7 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
         if(!TITLE.equals(e.getView().getTitle()))return;
         e.setCancelled(true);if(!(e.getWhoClicked() instanceof Player p))return;
         int slot=e.getRawSlot();
-        if (slot == 38) {
+        if (slot == 48) {
             WeeklyChallenge challenge = weeklyChallenge();
             try {
                 int[] state = weeklyProgress(p.getUniqueId(), challenge);
@@ -1376,7 +1379,7 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
             }
             return;
         }
-        if(slot==40) {
+        if(slot==50) {
             if(!rerollMode.add(p.getUniqueId())) rerollMode.remove(p.getUniqueId());
             p.sendMessage(rerollMode.contains(p.getUniqueId())
                     ?ChatColor.LIGHT_PURPLE+"Tryb przerzutu aktywny. Kliknij zadanie, które chcesz wylosować ponownie."
@@ -1387,9 +1390,9 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
         List<Task> tasks=ensureTasks(p);
         int index=switch(slot) {
             case 20,21,22,23,24 -> slot-20;
-            case 29 -> 5;
-            case 30 -> 6;
-            case 31 -> 7;
+            case 38 -> 5;
+            case 39 -> 6;
+            case 40 -> 7;
             default -> -1;
         };
         if(index<0 || index>=tasks.size()) return;
