@@ -1059,7 +1059,7 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
                     List.of(ChatColor.GRAY+"Trzy dodatkowe wyzwania z Netheru.")));
         }
         // Obie sekcje są wyśrodkowane: 5 zadań w rzędzie, 3 zadania w rzędzie.
-        int[] slots={20,21,22,23,24,38,39,40};
+        int[] slots={20,21,22,23,24,39,40,41};
         for(int i=0;i<tasks.size()&&i<slots.length;i++){
             Task t=tasks.get(i);
             Material icon=taskIcon(t);
@@ -1390,9 +1390,9 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
         List<Task> tasks=ensureTasks(p);
         int index=switch(slot) {
             case 20,21,22,23,24 -> slot-20;
-            case 38 -> 5;
-            case 39 -> 6;
-            case 40 -> 7;
+            case 39 -> 5;
+            case 40 -> 6;
+            case 41 -> 7;
             default -> -1;
         };
         if(index<0 || index>=tasks.size()) return;
