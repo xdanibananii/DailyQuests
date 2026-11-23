@@ -683,13 +683,17 @@ public final class DailyQuestsPlugin extends JavaPlugin implements Listener, Com
         return true;
     }
     private void replaceDisabledDimensionTasks(String dimension) {
+        // Nether tasks are an additional daily set. Disabling the Nether removes
+        // those three slots; ensureTasks() will rebuild the normal five-task set.
+        if (dimension.equals("NETHER")) return;
         String day=today();
         ConfigurationSection section=pool();
         if(section==null) return;
         List<String> candidateIds=new ArrayList<>();
         for(String id:section.getKeys(false)) {
             Task candidate=loadTask(id);
-            if(candidate!=null && !candidate.dimension.equals(dimension) && isTaskEnabled(candidate))
+            if(candidate!=null && !candidate.dimension.equals(dimension)
+                    && !candidate.dimension.equals("NETHER") && isTaskEnabled(candidate))
                 candidateIds.add(id);
         }
         try(PreparedStatement players=db.prepareStatement("SELECT DISTINCT uuid FROM player_tasks WHERE day=?")) {
